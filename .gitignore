@@ -1,0 +1,45 @@
+# Node / Next
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python
+.venv/
+**/.venv/
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Local secret files that must never be committed
+api/.env.txt
+platform/.env.local
+store-template/.env.local
+
+# Debug / e2e artifacts
+tmp*/
+tmp-*.log
+.sixth/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

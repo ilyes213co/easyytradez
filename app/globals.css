@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+
+  * {
+    box-sizing: border-box;
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #0a0a0f;
+    color: white;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes slide-in-from-bottom-4 {
+    from { transform: translateY(1rem); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  @keyframes slide-in-from-right-4 {
+    from { transform: translateX(1rem); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+  }
+
+  @keyframes zoom-in-95 {
+    from { transform: scale(0.95); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+
+  .animate-in { animation-fill-mode: both; }
+
+  .fade-in                { animation: fade-in 0.3s ease-out both; }
+  .slide-in-from-bottom-4 { animation: slide-in-from-bottom-4 0.3s ease-out both; }
+  .slide-in-from-right-4  { animation: slide-in-from-right-4 0.3s ease-out both; }
+  .zoom-in-95             { animation: zoom-in-95 0.2s ease-out both; }
+}

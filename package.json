@@ -1,0 +1,34 @@
+{
+  "name": "storegen-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "platform",
+    "store-template"
+  ],
+  "scripts": {
+    "dev:platform": "concurrently \"cd platform && npm run dev\" \"node scripts/warm-platform.mjs\"",
+    "dev:api": "cd api && .\\.venv\\Scripts\\python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+    "dev:template": "cd store-template && npm run dev",
+    "dev": "concurrently \"npm run dev:platform\" \"npm run dev:api\"",
+    "dev:full": "concurrently \"npm run dev:platform\" \"npm run dev:api\" \"npm run dev:template\"",
+    "build:platform": "cd platform && npm run build",
+    "build:template": "cd store-template && npm run build",
+    "type-check:platform": "cd platform && npm run type-check",
+    "test:api": "cd api && .\\.venv\\Scripts\\python -m pytest -q",
+    "install:api": "cd api && py -3.11 -m venv .venv && .\\.venv\\Scripts\\python -m pip install --upgrade pip && .\\.venv\\Scripts\\python -m pip install -r requirements.txt",
+    "install:all": "npm install && cd platform && npm install && cd ../store-template && npm install && cd .. && npm run install:api",
+    "lint": "cd platform && npm run lint"
+  },
+  "devDependencies": {
+    "@types/web-push": "^3.6.4",
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.95.0",
+    "@types/react-beautiful-dnd": "^13.1.8",
+    "react-beautiful-dnd": "^13.1.1",
+    "web-push": "^3.6.7",
+    "zod": "^4.3.6"
+  }
+}
