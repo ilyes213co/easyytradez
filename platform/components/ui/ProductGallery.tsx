@@ -35,11 +35,13 @@ function useSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
   const startX = useRef<number | null>(null);
 
   const onTouchStart = (e: React.TouchEvent) => {
-    startX.current = e.touches[0].clientX;
+    if (e.touches[0]) {
+      startX.current = e.touches[0].clientX;
+    }
   };
 
   const onTouchEnd = (e: React.TouchEvent) => {
-    if (startX.current === null) return;
+    if (startX.current === null || !e.changedTouches[0]) return;
     const diff = startX.current - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 40) {
       diff > 0 ? onSwipeLeft() : onSwipeRight();

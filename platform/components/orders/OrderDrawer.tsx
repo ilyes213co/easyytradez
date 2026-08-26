@@ -277,12 +277,12 @@ export function OrderDrawer({ open, onClose, order, onUpdated }: OrderDrawerProp
                   WhatsApp
                 </a>
               </div>
-              {order.shipping_address && (
+              {(order.shipping_address ?? order.customer_address) && (
                 <div className="flex items-start gap-2 px-4 py-3 text-sm text-white/50">
                   <svg className="mt-0.5 shrink-0" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
                   </svg>
-                  {order.shipping_address}
+                  {order.shipping_address ?? order.customer_address}
                 </div>
               )}
             </div>
@@ -320,11 +320,11 @@ export function OrderDrawer({ open, onClose, order, onUpdated }: OrderDrawerProp
               <div className="px-4 py-3 space-y-1.5">
                 <div className="flex justify-between text-xs text-white/35">
                   <span>Sous-total</span>
-                  <span>{order.subtotal.toLocaleString()} DZD</span>
+                  <span>{(order.subtotal ?? order.total_amount ?? 0).toLocaleString()} DZD</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold text-white pt-1.5 border-t border-white/[0.06]">
                   <span>Total</span>
-                  <span>{order.total.toLocaleString()} DZD</span>
+                  <span>{(order.total ?? order.total_amount ?? 0).toLocaleString()} DZD</span>
                 </div>
               </div>
             </div>

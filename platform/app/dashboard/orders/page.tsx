@@ -120,13 +120,20 @@ export default function OrdersPage() {
 
     const { data: storeData } = await supabase
       .from("stores").select("*").eq("owner_id", user.id).single();
-    setStore(storeData);
+    const st = storeData as unknown as Store | null;
+    setStore(st);
 
-    if (storeData) {
+    if (st) {
       const { data } = await supabase
-        .from("orders").select("*").eq("store_id", storeData.id)
+        .from("orders").select("*").eq("store_id", st.id)
         .order("created_at", { ascending: false });
-      setOrders(data ?? []);
+      const mappedOrders = ((data ?? []) as any[]).map((o) => ({
+        ...o,
+        total: o.total ?? o.total_amount ?? 0,
+        subtotal: o.subtotal ?? o.total_amount ?? 0,
+        shipping_address: o.shipping_address ?? o.customer_address ?? null,
+      })) as Order[];
+      setOrders(mappedOrders);
     }
 
     setLoading(false);
@@ -155,16 +162,28 @@ export default function OrdersPage() {
         },
         (payload) => {
           if (payload.eventType === "INSERT") {
-            const newOrder = payload.new as Order;
+            const raw = payload.new as any;
+            const newOrder: Order = {
+              ...raw,
+              total: raw.total ?? raw.total_amount ?? 0,
+              subtotal: raw.subtotal ?? raw.total_amount ?? 0,
+              shipping_address: raw.shipping_address ?? raw.customer_address ?? null,
+            };
             setOrders((prev) => [newOrder, ...prev]);
             setToast(`Nouvelle commande de ${newOrder.customer_name} — ${formatAmount(newOrder.total)}`);
           } else if (payload.eventType === "UPDATE") {
-            const updated = payload.new as Order;
+            const raw = payload.new as any;
+            const updated: Order = {
+              ...raw,
+              total: raw.total ?? raw.total_amount ?? 0,
+              subtotal: raw.subtotal ?? raw.total_amount ?? 0,
+              shipping_address: raw.shipping_address ?? raw.customer_address ?? null,
+            };
             setOrders((prev) => prev.map((o) => o.id === updated.id ? updated : o));
             // Keep drawer in sync
             setSelectedOrder((prev) => prev?.id === updated.id ? updated : prev);
           } else if (payload.eventType === "DELETE") {
-            setOrders((prev) => prev.filter((o) => o.id !== payload.old.id));
+            setOrders((prev) => prev.filter((o) => o.id !== (payload.old as any).id));
           }
         }
       )

@@ -143,7 +143,7 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
       .select("*")
       .eq("store_id", store.id)
       .eq("enabled", true)
-      .then(({ data }) => setZones(data ?? []));
+      .then(({ data }) => setZones(((data ?? []) as any[]) as DeliveryZone[]));
   }, [store.id, supabase]);
 
   // Recalculate fee when wilaya or qty changes
@@ -179,7 +179,9 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
     setServerError(null);
     setLoading(true);
 
-    const itemTotal = product.price * qty;
+    const fullAddress = selectedWilaya
+      ? `Wilaya ${selectedWilaya}${form.address.trim() ? " — " + form.address.trim() : ""}`
+      : form.address.trim() || null;
 
     const { data: order, error } = await supabase
       .from("orders")
@@ -187,7 +189,7 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
         store_id:         store.id,
         customer_name:    form.name.trim(),
         customer_phone:   form.phone.trim(),
-        shipping_address: form.address.trim() || null,
+        customer_address: fullAddress,
         notes:            form.notes.trim() || null,
         items: [
           {
@@ -200,24 +202,24 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
         ],
         subtotal: subtotal,
         total:    total,
-        shipping_address: selectedWilaya
-          ? `Wilaya ${selectedWilaya}${form.address.trim() ? " — " + form.address.trim() : ""}`
-          : form.address.trim() || null,
+        total_amount: total,
+        shipping_address: fullAddress,
         status:         "pending",
         payment_status: "pending",
-      })
+      } as any)
       .select()
       .single();
 
     setLoading(false);
 
-    if (error || !order) {
+    const createdOrder = order as unknown as { id: string } | null;
+    if (error || !createdOrder) {
       setServerError("Erreur lors de l'envoi. Veuillez réessayer.");
       return;
     }
 
     // Build WhatsApp message
-    const phone = (store.whatsapp_number ?? "").replace(/\D/g, "");
+    const phone = (store.whatsapp_phone ?? store.whatsapp_number ?? "").replace(/\D/g, "");
     const wilayaName = zones.find((z) => z.wilaya_code === selectedWilaya)
       ? `Wilaya ${selectedWilaya} — ${deliveryFee === 0 ? "Livraison gratuite" : deliveryFee.toLocaleString("fr-DZ") + " DZD livraison"}`
       : "";
@@ -233,14 +235,14 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
       form.address ? `📍 ${form.address}` : "",
       form.notes   ? `📝 ${form.notes}`   : "",
       ``,
-      `Réf. commande : #${order.id.slice(-6).toUpperCase()}`,
+      `Réf. commande : #${createdOrder.id.slice(-6).toUpperCase()}`,
     ].filter(Boolean).join("\n");
 
     const wa = phone
       ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
       : "";
 
-    setOrderId(order.id);
+    setOrderId(createdOrder.id);
     setWaLink(wa);
     setStep("success");
 

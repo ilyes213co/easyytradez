@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getSupabaseServerClient } from "@/lib/supabase";
+import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 
 interface LayoutProps {

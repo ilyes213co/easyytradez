@@ -6,9 +6,22 @@ export type { Json } from "@/types/supabase.generated";
 export type Database = GeneratedDatabase;
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
-export type Store = Database["public"]["Tables"]["stores"]["Row"];
-export type Product = Database["public"]["Tables"]["products"]["Row"];
-export type Order = Database["public"]["Tables"]["orders"]["Row"];
+export type Store = Database["public"]["Tables"]["stores"]["Row"] & {
+  whatsapp_number?: string | null;
+};
+export type Product = Omit<Database["public"]["Tables"]["products"]["Row"], "images"> & {
+  images: string[];
+  stock?: number;
+  compare_price?: number | null;
+  tags: string[];
+};
+export type Order = Database["public"]["Tables"]["orders"]["Row"] & {
+  total: number;
+  subtotal: number;
+  shipping_address?: string | null;
+};
+export type DeliveryZone = Database["public"]["Tables"]["delivery_zones"]["Row"];
+export type PushSubscription = Database["public"]["Tables"]["push_subscriptions"]["Row"];
 export type StoreAnalyticEvent = Database["public"]["Tables"]["store_analytics"]["Row"];
 export type GenerationJob = Database["public"]["Tables"]["generation_jobs"]["Row"];
 

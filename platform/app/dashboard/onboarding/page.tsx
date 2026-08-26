@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import type { Store } from "@/lib/supabase";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -461,16 +462,17 @@ export default function OnboardingPage() {
         .select()
         .single();
 
-      if (storeError) throw new Error(storeError.message);
+      if (storeError || !store) throw new Error(storeError?.message || "Erreur de création");
+      const createdStore = store as unknown as Store;
 
       // 2. Upload logo if provided
       if (s2.logoFile) {
-        const logoUrl = await uploadLogo(store.id);
+        const logoUrl = await uploadLogo(createdStore.id);
         if (logoUrl) {
           await supabase
             .from("stores")
             .update({ logo_url: logoUrl })
-            .eq("id", store.id);
+            .eq("id", createdStore.id);
         }
       }
 
@@ -512,7 +514,7 @@ export default function OnboardingPage() {
             Créons votre boutique 🚀
           </h1>
           <p className="mt-1.5 text-sm text-white/35">
-            Étape {step} sur {STEPS.length} — {STEPS[step - 1].label}
+            Étape {step} sur {STEPS.length} — {STEPS[step - 1]?.label ?? ""}
           </p>
         </div>
 

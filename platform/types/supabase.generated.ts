@@ -15,7 +15,8 @@ export type StoreStatus =
   | "generated"
   | "published"
   | "inactive"
-  | "suspended";
+  | "suspended"
+  | "active";
 
 export type ProductStatus = "active" | "draft" | "archived";
 export type PlanType = "free" | "pro" | "business";
@@ -397,6 +398,80 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      delivery_zones: {
+        Row: {
+          id: string;
+          store_id: string;
+          wilaya_code: string;
+          fee: number;
+          enabled: boolean;
+          free_above: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          wilaya_code: string;
+          fee?: number;
+          enabled?: boolean;
+          free_above?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          store_id?: string;
+          wilaya_code?: string;
+          fee?: number;
+          enabled?: boolean;
+          free_above?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "delivery_zones_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      push_subscriptions: {
+        Row: {
+          id: string;
+          store_id: string;
+          user_id: string;
+          endpoint: string;
+          p256dh: string | null;
+          auth: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          user_id: string;
+          endpoint: string;
+          p256dh?: string | null;
+          auth?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          store_id?: string;
+          user_id?: string;
+          endpoint?: string;
+          p256dh?: string | null;
+          auth?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

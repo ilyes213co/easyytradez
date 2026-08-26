@@ -1,6 +1,7 @@
-import { getSupabaseServerClient } from "@/lib/supabase";
+import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import type { Store, Product } from "@/lib/supabase";
 import Link from "next/link";
 import { OrderForm } from "./OrderForm";
 import { ProductGallery } from "@/components/ui/ProductGallery";
@@ -20,21 +21,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { data: store } = await supabase
     .from("stores").select("id, name").eq("slug", slug).single();
 
-  if (!store) return { title: "Produit introuvable" };
+  const s = store as any;
+  if (!s) return { title: "Produit introuvable" };
 
   const { data: product } = await supabase
     .from("products").select("name, description, images, price")
-    .eq("store_id", store.id).eq("slug", productSlug).single();
+    .eq("store_id", s.id).eq("slug", productSlug).single();
 
-  if (!product) return { title: "Produit introuvable" };
+  const p = product as any;
+  if (!p) return { title: "Produit introuvable" };
+
+  const firstImage = Array.isArray(p.images) && p.images[0]
+    ? typeof p.images[0] === "string" ? p.images[0] : p.images[0].url
+    : null;
 
   return {
-    title: `${product.name} — ${store.name}`,
-    description: product.description ?? `${product.name} à ${product.price.toLocaleString()} DZD`,
+    title: `${p.name} — ${s.name}`,
+    description: p.description ?? `${p.name} à ${p.price?.toLocaleString()} DZD`,
     openGraph: {
-      title: `${product.name} — ${store.name}`,
-      description: product.description ?? undefined,
-      images: product.images[0] ? [{ url: product.images[0] }] : [],
+      title: `${p.name} — ${s.name}`,
+      description: p.description ?? undefined,
+      images: firstImage ? [{ url: firstImage }] : [],
     },
   };
 }
@@ -46,26 +53,41 @@ export default async function ProductPage({ params }: PageProps) {
   const supabase = await getSupabaseServerClient();
 
   // Load store
-  const { data: store } = await supabase
+  const { data: storeRaw } = await supabase
     .from("stores").select("*").eq("slug", slug).eq("status", "active").single();
 
+  const store = storeRaw as unknown as Store | null;
   if (!store) notFound();
 
   // Load product
-  const { data: product } = await supabase
+  const { data: productRaw } = await supabase
     .from("products").select("*")
     .eq("store_id", store.id)
     .eq("slug", productSlug)
     .eq("status", "active")
     .single();
 
-  if (!product) notFound();
+  const rawP = productRaw as any;
+  if (!rawP) notFound();
+
+  const images: string[] = Array.isArray(rawP.images)
+    ? rawP.images.map((img: any) => typeof img === "string" ? img : img?.url || "").filter(Boolean)
+    : [];
+
+  const product: Product = {
+    ...rawP,
+    images,
+    price: Number(rawP.price ?? 0),
+    compare_price: rawP.compare_price ?? rawP.original_price ?? null,
+    stock: Number(rawP.stock ?? rawP.stock_quantity ?? 0),
+    tags: Array.isArray(rawP.tags) ? rawP.tags : [],
+  };
 
   const hasDiscount = product.compare_price && product.compare_price > product.price;
   const discountPct = hasDiscount
     ? Math.round((1 - product.price / product.compare_price!) * 100)
     : 0;
-  const outOfStock = product.stock === 0;
+  const outOfStock = (product.stock ?? 0) === 0;
 
   return (
     <>
@@ -158,7 +180,7 @@ export default async function ProductPage({ params }: PageProps) {
             {/* Tags */}
             {product.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {product.tags.map((tag) => (
+                {product.tags.map((tag: string) => (
                   <span key={tag} className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-500">
                     #{tag}
                   </span>

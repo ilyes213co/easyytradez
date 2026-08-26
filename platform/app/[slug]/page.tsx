@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from "@/lib/supabase";
+import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 import type { Store, Product } from "@/lib/supabase";
 import Link from "next/link";
@@ -196,13 +196,14 @@ export default async function StorePage({ params, searchParams }: PageProps) {
   const supabase       = await getSupabaseServerClient();
 
   // Load store
-  const { data: store } = await supabase
+  const { data: rawStore } = await supabase
     .from("stores")
     .select("*")
     .eq("slug", slug)
     .eq("status", "active")
     .single();
 
+  const store = rawStore as unknown as Store | null;
   if (!store) notFound();
 
   // Load active products
@@ -215,8 +216,17 @@ export default async function StorePage({ params, searchParams }: PageProps) {
 
   if (category) query = query.eq("category", category);
 
-  const { data: products } = await query;
-  const allProducts = products ?? [];
+  const { data: rawProducts } = await query;
+  const allProducts: Product[] = ((rawProducts ?? []) as any[]).map((p) => ({
+    ...p,
+    price: Number(p.price ?? 0),
+    compare_price: p.compare_price ?? p.original_price ?? null,
+    stock: Number(p.stock ?? p.stock_quantity ?? 0),
+    images: Array.isArray(p.images)
+      ? p.images.map((img: any) => typeof img === "string" ? img : img?.url || "").filter(Boolean)
+      : [],
+    tags: Array.isArray(p.tags) ? p.tags : [],
+  }));
 
   // Extract unique categories
   const { data: allCats } = await supabase
@@ -226,7 +236,7 @@ export default async function StorePage({ params, searchParams }: PageProps) {
     .eq("status", "active")
     .not("category", "is", null);
 
-  const categories = [...new Set((allCats ?? []).map((p) => p.category).filter(Boolean))] as string[];
+  const categories = [...new Set(((allCats ?? []) as any[]).map((p) => p.category).filter(Boolean))] as string[];
 
   return (
     <>

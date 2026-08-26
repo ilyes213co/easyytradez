@@ -3,40 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuth } from "@/components/auth/AuthProvider";
-
-// ─── Wilayas DZ ───────────────────────────────────────────────────────────────
-
-export const WILAYAS = [
-  { code: "01", name: "Adrar" },         { code: "02", name: "Chlef" },
-  { code: "03", name: "Laghouat" },      { code: "04", name: "Oum El Bouaghi" },
-  { code: "05", name: "Batna" },         { code: "06", name: "Béjaïa" },
-  { code: "07", name: "Biskra" },        { code: "08", name: "Béchar" },
-  { code: "09", name: "Blida" },         { code: "10", name: "Bouira" },
-  { code: "11", name: "Tamanrasset" },   { code: "12", name: "Tébessa" },
-  { code: "13", name: "Tlemcen" },       { code: "14", name: "Tiaret" },
-  { code: "15", name: "Tizi Ouzou" },    { code: "16", name: "Alger" },
-  { code: "17", name: "Djelfa" },        { code: "18", name: "Jijel" },
-  { code: "19", name: "Sétif" },         { code: "20", name: "Saïda" },
-  { code: "21", name: "Skikda" },        { code: "22", name: "Sidi Bel Abbès" },
-  { code: "23", name: "Annaba" },        { code: "24", name: "Guelma" },
-  { code: "25", name: "Constantine" },   { code: "26", name: "Médéa" },
-  { code: "27", name: "Mostaganem" },    { code: "28", name: "M'Sila" },
-  { code: "29", name: "Mascara" },       { code: "30", name: "Ouargla" },
-  { code: "31", name: "Oran" },          { code: "32", name: "El Bayadh" },
-  { code: "33", name: "Illizi" },        { code: "34", name: "Bordj Bou Arréridj" },
-  { code: "35", name: "Boumerdès" },     { code: "36", name: "El Tarf" },
-  { code: "37", name: "Tindouf" },       { code: "38", name: "Tissemsilt" },
-  { code: "39", name: "El Oued" },       { code: "40", name: "Khenchela" },
-  { code: "41", name: "Souk Ahras" },    { code: "42", name: "Tipaza" },
-  { code: "43", name: "Mila" },          { code: "44", name: "Aïn Defla" },
-  { code: "45", name: "Naâma" },         { code: "46", name: "Aïn Témouchent" },
-  { code: "47", name: "Ghardaïa" },      { code: "48", name: "Relizane" },
-  { code: "49", name: "Timimoun" },      { code: "50", name: "Bordj Badji Mokhtar" },
-  { code: "51", name: "Ouled Djellal" }, { code: "52", name: "Béni Abbès" },
-  { code: "53", name: "In Salah" },      { code: "54", name: "In Guezzam" },
-  { code: "55", name: "Touggourt" },     { code: "56", name: "Djanet" },
-  { code: "57", name: "El M'Ghair" },    { code: "58", name: "El Meniaa" },
-];
+import { WILAYAS } from "@/lib/wilayas";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -101,7 +68,7 @@ export default function DeliveryPage() {
     WILAYAS.forEach((w) => {
       map[w.code] = { wilaya_code: w.code, fee: 600, enabled: true, free_above: null };
     });
-    (existing ?? []).forEach((z: DeliveryZone & { store_id: string }) => {
+    ((existing ?? []) as any[]).forEach((z) => {
       map[z.wilaya_code] = { wilaya_code: z.wilaya_code, fee: z.fee, enabled: z.enabled, free_above: z.free_above };
     });
 
@@ -111,14 +78,19 @@ export default function DeliveryPage() {
 
   useEffect(() => { load(); }, [load]);
 
+function getZoneOrFallback(zone: DeliveryZone | undefined, code: string): DeliveryZone {
+  return zone ?? { wilaya_code: code, fee: 600, enabled: true, free_above: null };
+}
+
   // ── Apply global default to all enabled zones ─────────────────────────
   const applyDefault = () => {
     const fee = parseInt(defaultFee) || 0;
     const freeAbove = globalFreeAbove ? parseInt(globalFreeAbove) : null;
     setZones((prev) => {
-      const next = { ...prev };
+      const next: ZoneMap = { ...prev };
       WILAYAS.forEach((w) => {
-        next[w.code] = { ...next[w.code], fee, free_above: freeAbove };
+        const cur = getZoneOrFallback(next[w.code], w.code);
+        next[w.code] = { ...cur, fee, free_above: freeAbove };
       });
       return next;
     });
@@ -126,24 +98,33 @@ export default function DeliveryPage() {
 
   // ── Toggle / update zone ──────────────────────────────────────────────
   const toggleZone = (code: string) => {
-    setZones((prev) => ({
-      ...prev,
-      [code]: { ...prev[code], enabled: !prev[code].enabled },
-    }));
+    setZones((prev) => {
+      const cur = getZoneOrFallback(prev[code], code);
+      return {
+        ...prev,
+        [code]: { ...cur, enabled: !cur.enabled },
+      };
+    });
   };
 
   const updateFee = (code: string, val: string) => {
-    setZones((prev) => ({
-      ...prev,
-      [code]: { ...prev[code], fee: parseInt(val) || 0 },
-    }));
+    setZones((prev) => {
+      const cur = getZoneOrFallback(prev[code], code);
+      return {
+        ...prev,
+        [code]: { ...cur, fee: parseInt(val) || 0 },
+      };
+    });
   };
 
   const updateFreeAbove = (code: string, val: string) => {
-    setZones((prev) => ({
-      ...prev,
-      [code]: { ...prev[code], free_above: val ? parseInt(val) : null },
-    }));
+    setZones((prev) => {
+      const cur = getZoneOrFallback(prev[code], code);
+      return {
+        ...prev,
+        [code]: { ...cur, free_above: val ? parseInt(val) : null },
+      };
+    });
   };
 
   // ── Save all zones ────────────────────────────────────────────────────
@@ -288,9 +269,12 @@ export default function DeliveryPage() {
         </div>
         <button
           onClick={() => setZones((prev) => {
-            const next = { ...prev };
+            const next: ZoneMap = { ...prev };
             const allOn = filtered.every((w) => next[w.code]?.enabled);
-            filtered.forEach((w) => { next[w.code] = { ...next[w.code], enabled: !allOn }; });
+            filtered.forEach((w) => {
+              const cur = getZoneOrFallback(next[w.code], w.code);
+              next[w.code] = { ...cur, enabled: !allOn };
+            });
             return next;
           })}
           className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/50 hover:text-white/80 hover:bg-white/[0.07] transition-all whitespace-nowrap"
