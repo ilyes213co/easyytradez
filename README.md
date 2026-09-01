@@ -261,4 +261,5 @@ Email + SMS de confirmation au marchand
 
 *Construit avec â¤ï¸ pour les e-commerÃ§ants algÃ©riens*
 #   S h o p i f y c l o n e  
+ #   S h o p i f y c l o n e  
  
