@@ -9,7 +9,7 @@ import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
-from dependencies import get_current_user, get_supabase
+from dependencies import check_store_owner, get_current_user, get_supabase
 from models.schemas import DeployResponse, DeployStatusResponse
 from services.ai_generator import AIStoreGenerator
 from services.deployer import StoreDeployer
@@ -212,8 +212,20 @@ async def deploy_status(job_id: str, user=Depends(get_current_user)):
     job = _get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job introuvable")
-    if job.get("user_id") != user.id:
-        raise HTTPException(status_code=403, detail="Acces refuse")
+    # Ownership check: if user_id is stored, enforce strict match.
+    # If the column is missing in deploy_jobs (older schema), fall back to
+    # verifying store ownership so the polling endpoint still works.
+    stored_user_id = job.get("user_id")
+    if stored_user_id:
+        if stored_user_id != user.id:
+            raise HTTPException(status_code=403, detail="Acces refuse")
+    else:
+        store_id = job.get("store_id")
+        if store_id:
+            try:
+                await check_store_owner(store_id, user.id)
+            except HTTPException:
+                raise HTTPException(status_code=403, detail="Acces refuse")
     return _status_response(job)
 
 

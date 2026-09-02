@@ -16,7 +16,7 @@ import { useDropzone } from "react-dropzone";
 import { createClient } from "@/lib/supabase";
 import { cn, slugify, formatPrice } from "@/lib/utils";
 import { storesApi, productsApi, uploadApi, deployApi } from "@/lib/api";
-import type { Store as StoreType, Product, StoreInsert } from "@/types/database";
+import type { Store as StoreType, Product } from "@/types/database";
 
 // ─── Constants & Types ────────────────────────────────────────────────────────
 
@@ -216,11 +216,12 @@ export default function CreateStorePage() {
     window.scrollTo(0, 0);
   };
 
+  const POLL_DEADLINE_MS = 5 * 60 * 1000; // 5 minutes
+
   const pollDeployUntilReady = async (jobId: string, store: StoreType, startedAt: number) => {
     let currentStatus = "pending";
     let finalUrl = "";
-    const PROCESS_DEADLINE_MS = 5 * 60 * 1000;
-    while (Date.now() - startedAt < PROCESS_DEADLINE_MS) {
+    while (Date.now() - startedAt < POLL_DEADLINE_MS) {
       await new Promise(r => setTimeout(r, 2500));
       const statusRes = await deployApi.status(jobId);
       currentStatus = statusRes.status;
@@ -284,6 +285,168 @@ export default function CreateStorePage() {
     }
   };
 
+  // ─── Helper functions for handleGenerate ─────────────────────────────────────
+
+  async function createStoreInBase(
+    storesApi: any,
+    data: WizardState,
+    withTimeout: <T>(promise: Promise<T>, timeoutMs: number, message: string) => Promise<T>
+  ): Promise<any> {
+    const generatedSlug = slugify(data.name);
+    const storePayload = {
+      name: data.name,
+      ...(generatedSlug.length >= 2 ? { slug: generatedSlug } : {}),
+      description: data.description || undefined,
+      whatsapp_phone: data.whatsapp_phone || undefined,
+      category: data.category || undefined,
+      logo_url: isBlobUrl(data.logo_url) ? undefined : data.logo_url || undefined,
+      primary_color: data.primary_color,
+      font_family: data.font_family,
+      theme: data.theme,
+      animation_style: data.animation_style,
+    };
+
+    return await withTimeout(
+      storesApi.create(storePayload),
+      3_000_000,
+      "La création de la boutique dépasse 90 secondes. Vérifiez la connexion API/Supabase.",
+    );
+  }
+
+  async function uploadLogoImage(
+    uploadApi: any,
+    logoFile: File | null,
+    storeId: string,
+    withTimeout: <T>(promise: Promise<T>, timeoutMs: number, message: string) => Promise<T>
+  ): Promise<{ url: string; public_id: string }> {
+    if (!logoFile) return { url: "", public_id: "" };
+    return await withTimeout(
+      uploadApi.logo(logoFile, storeId),
+      60_000,
+      "L'upload du logo prend trop de temps. Réessayez.",
+    );
+  }
+
+  async function updateStoreLogo(
+    storesApi: any,
+    storeId: string,
+    logoUrl: string,
+    withTimeout: <T>(promise: Promise<T>, timeoutMs: number, message: string) => Promise<T>
+  ): Promise<any> {
+    return await withTimeout(
+      storesApi.update(storeId, { logo_url: logoUrl }),
+      60_000,
+      "La mise à jour du logo a expiré.",
+    );
+  }
+
+  async function registerProducts(
+    productsApi: any,
+    products: WizardProductDraft[],
+    storeId: string,
+    withTimeout: <T>(promise: Promise<T>, timeoutMs: number, message: string) => Promise<T>
+  ): Promise<void> {
+    await withTimeout(
+      Promise.all(
+        products.map(async (product, index) => {
+          const { pending_image_file, images, id, ...productPayload } = product as any;
+          let uploadedImages = Array.isArray(images)
+            ? images.filter(
+                (image: any) =>
+                  image?.url &&
+                  !isBlobUrl(image.url) &&
+                  !String(image.public_id ?? "").startsWith("local:")
+              )
+            : [];
+
+          if (pending_image_file) {
+            const uploadedImage = await uploadApi.image(pending_image_file, storeId);
+            uploadedImages = [{
+              url: uploadedImage.url,
+              public_id: uploadedImage.public_id,
+              width: uploadedImage.width,
+              height: uploadedImage.height,
+            }];
+          }
+
+          return productsApi.create({
+            ...productPayload,
+            store_id: storeId,
+            position: index,
+            images: uploadedImages,
+          });
+        })
+      ),
+      90_000,
+      "L'enregistrement des produits est trop long. Réessayez.",
+    );
+  }
+
+  function handleGenerationError(err: any) {
+    setIsGenerating(false);
+    setGenStep(0);
+
+    const status = err?.response?.status;
+    const detail = err?.response?.data?.detail;
+
+    if (typeof detail === "string" && detail.includes("Job introuvable")) {
+      clearPendingDeploy();
+    }
+
+    if (err?.message && (
+      err.message.includes("Échec du déploiement") ||
+      err.message.includes("Timeout global") ||
+      err.message.includes("Configuration GitHub") ||
+      err.message.includes("Configuration Vercel")
+    )) {
+      clearPendingDeploy();
+    }
+
+    if (err?.code === "ECONNABORTED") {
+      toast.error("La requête a expiré. Vérifiez que l'API FastAPI et Supabase répondent correctement.");
+      return;
+    }
+
+    if (status === 504) {
+      toast.error("Le serveur a dépassé son délai d'attente en base de données. Vérifiez Supabase.");
+      return;
+    }
+
+    if (status === 422) {
+      const quotaDetail = detail && typeof detail === "object" && !Array.isArray(detail) ? detail : null;
+      const code = quotaDetail?.code;
+      const existingStoreId = quotaDetail?.existing_store_id;
+      if (code === "STORE_QUOTA_EXCEEDED") {
+        toast.error(quotaDetail?.message ?? "Plan gratuit : 1 boutique maximum.", { duration: 5000 });
+        if (existingStoreId) {
+          setTimeout(() => router.push(`/dashboard/store/${existingStoreId}`), 900);
+        }
+        return;
+      }
+      if (Array.isArray(detail)) {
+        const first = detail[0];
+        const loc = Array.isArray(first?.loc) ? first.loc.filter((part: unknown) => part !== "body").join(".") : "";
+        const msg = first?.msg ?? "Données invalides";
+        toast.error(loc ? `${loc}: ${msg}` : msg);
+        return;
+      }
+      toast.error(typeof detail === "string" ? detail : "Impossible de créer la boutique. Vérifiez les champs saisis.");
+      return;
+    }
+
+    const fallback = typeof detail === "string"
+      ? detail
+      : err?.message ?? "Erreur lors de la création";
+    toast.error(fallback);
+  }
+
+  const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> => {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => window.setTimeout(() => reject(new Error(message)), timeoutMs)),
+    ]);
+  };
+
   const handleGenerate = async () => {
     clearPendingDeploy();
     setIsGenerating(true);
@@ -292,48 +455,16 @@ export default function CreateStorePage() {
 
     try {
       const startTime = Date.now();
-      const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> => {
-        return await Promise.race([
-          promise,
-          new Promise<T>((_, reject) => window.setTimeout(() => reject(new Error(message)), timeoutMs)),
-        ]);
-      };
+      let store: any = {};
 
-      const storePayload: StoreInsert = {
-        name: data.name,
-        slug: slugify(data.name),
-        description: data.description,
-        whatsapp_phone: data.whatsapp_phone,
-        category: data.category,
-        logo_url: isBlobUrl(data.logo_url) ? undefined : data.logo_url || undefined,
-        primary_color: data.primary_color,
-        font_family: data.font_family,
-        theme: data.theme,
-        animation_style: data.animation_style,
-        status: "draft",
-        owner_id: "",
-      };
-
-      let store = await withTimeout(
-        storesApi.create(storePayload),
-        90_000,
-        "La création de la boutique dépasse 90 secondes. Vérifiez la connexion API/Supabase.",
-      );
+      store = await createStoreInBase(storesApi, data, withTimeout);
       setResultStore(store);
 
       if (logoFile) {
         setGenStep(2);
-        setGenMessage("Boutique crÃ©Ã©e. Upload du logo...");
-        const uploadedLogo = await withTimeout(
-          uploadApi.logo(logoFile, store.id),
-          60_000,
-          "L'upload du logo prend trop de temps. RÃ©essayez.",
-        );
-        store = await withTimeout(
-          storesApi.update(store.id, { logo_url: uploadedLogo.url }),
-          60_000,
-          "La mise Ã  jour du logo a expirÃ©.",
-        );
+        setGenMessage("Boutique créée. Upload du logo...");
+        const uploadedLogo = await uploadLogoImage(uploadApi, logoFile, store.id, withTimeout);
+        store = await updateStoreLogo(storesApi, store.id, uploadedLogo.url, withTimeout);
         setResultStore(store);
       }
 
@@ -341,40 +472,7 @@ export default function CreateStorePage() {
       setGenMessage("Boutique créée. Enregistrement des produits...");
 
       if (data.products.length > 0) {
-        await withTimeout(
-          Promise.all(
-            data.products.map(async (product, index) => {
-              const { pending_image_file, images, id, ...productPayload } = product as any;
-              let uploadedImages = Array.isArray(images)
-                ? images.filter(
-                    (image: any) =>
-                      image?.url &&
-                      !isBlobUrl(image.url) &&
-                      !String(image.public_id ?? "").startsWith("local:")
-                  )
-                : [];
-
-              if (pending_image_file) {
-                const uploadedImage = await uploadApi.image(pending_image_file, store.id);
-                uploadedImages = [{
-                  url: uploadedImage.url,
-                  public_id: uploadedImage.public_id,
-                  width: uploadedImage.width,
-                  height: uploadedImage.height,
-                }];
-              }
-
-              return productsApi.create({
-                ...productPayload,
-                store_id: store.id,
-                position: index,
-                images: uploadedImages,
-              });
-            })
-          ),
-          90_000,
-          "L'enregistrement des produits est trop long. Réessayez.",
-        );
+        await registerProducts(productsApi, data.products, store.id, withTimeout);
       }
 
       setGenStep(3);
@@ -390,51 +488,7 @@ export default function CreateStorePage() {
       setIsGenerating(false);
       setGenStep(0);
 
-      const status = err?.response?.status;
-      const detail = err?.response?.data?.detail;
-
-      if (typeof detail === "string" && detail.includes("Job introuvable")) {
-        clearPendingDeploy();
-      }
-
-      if (err?.message && (
-        err.message.includes("Échec du déploiement") ||
-        err.message.includes("Timeout global") ||
-        err.message.includes("Configuration GitHub") ||
-        err.message.includes("Configuration Vercel")
-      )) {
-        clearPendingDeploy();
-      }
-
-      if (err?.code === "ECONNABORTED") {
-        toast.error("La requête a expiré. Vérifiez que l'API FastAPI et Supabase répondent correctement.");
-        return;
-      }
-
-      if (status === 504) {
-        toast.error("Le serveur a dépassé son délai d'attente en base de données. Vérifiez Supabase.");
-        return;
-      }
-
-      if (status === 422) {
-        const code = typeof detail === "object" ? detail?.code : undefined;
-        const existingStoreId = typeof detail === "object" ? detail?.existing_store_id : undefined;
-        const msg = typeof detail === "object" ? detail?.message : detail;
-        if (code === "STORE_QUOTA_EXCEEDED" && existingStoreId) {
-          toast.error(msg ?? "Plan gratuit : 1 boutique maximum.", { duration: 5000 });
-          setTimeout(() => router.push(`/dashboard/store/${existingStoreId}`), 900);
-          return;
-        }
-        toast.error(msg ?? "Plan gratuit : 1 boutique maximum. Passez au plan Pro.", {
-          duration: 6000,
-        });
-        return;
-      }
-
-      const fallback = typeof detail === "string"
-        ? detail
-        : err?.message ?? "Erreur lors de la création";
-      toast.error(fallback);
+      handleGenerationError(err);
     }
   };
 

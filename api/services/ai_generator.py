@@ -1,16 +1,11 @@
 """
 AIStoreGenerator — Moteur de génération IA de boutiques e-commerce.
 
-Utilise l'API Anthropic (Claude) pour générer :
+Utilise Google Gemini 2.5 Pro pour générer :
 • Un fichier HTML complet autonome (CSS + JS inline)
 • Des métadonnées SEO optimisées
 • Des descriptions de produits améliorées
 • Un slogan accrocheur
-
-Fonctionnalités :
-- Retry automatique (3 tentatives, backoff exponentiel)
-- Fallback sur template statique si l'API échoue
-- Logging dans Supabase (tokens, durée, succès/échec)
 """
 
 import os
@@ -22,7 +17,8 @@ import html as html_module
 from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timezone
 
-from anthropic import AsyncAnthropic
+from google import genai
+from google.genai import types as genai_types
 from tenacity import (
     AsyncRetrying,
     stop_after_attempt,
@@ -31,10 +27,6 @@ from tenacity import (
 )
 
 logger = logging.getLogger("storegen.ai")
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Theme design tokens — fed into the system prompt for coherent styling
-# ─────────────────────────────────────────────────────────────────────────────
 
 THEME_DESIGN_TOKENS: Dict[str, Dict[str, str]] = {
     "modern": {
@@ -97,11 +89,7 @@ EFFECTS_INSTRUCTIONS: Dict[str, str] = {
 
 class AIStoreGenerator:
     """
-    Générateur de boutiques e-commerce via l'API Claude (Anthropic).
-
-    Usage:
-        generator = AIStoreGenerator()
-        result = await generator.generate_store(store_data)
+    Générateur de boutiques e-commerce via Google Gemini 2.5 Pro.
     """
 
     def __init__(
@@ -109,18 +97,14 @@ class AIStoreGenerator:
         api_key: Optional[str] = None,
         supabase_client: Optional[Any] = None,
     ):
-        self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
-            logger.warning("ANTHROPIC_API_KEY manquant — les fonctionnalités IA échoueront.")
-        self.client = AsyncAnthropic(api_key=self.api_key) if self.api_key else None
-        self.model = "claude-sonnet-4-20250514"
+            logger.warning("GEMINI_API_KEY manquant — les fonctionnalités IA échoueront.")
+        self.client = genai.Client(api_key=self.api_key) if self.api_key else None
+        self.model = "gemini-2.5-pro"
         self.supabase = supabase_client
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Private: Claude API call with retry + logging
-    # ─────────────────────────────────────────────────────────────────────────
-
-    async def _call_claude(
+    async def _call_gemini(
         self,
         prompt: str,
         system_prompt: str,
@@ -130,77 +114,74 @@ class AIStoreGenerator:
         store_id: Optional[str] = None,
     ) -> Tuple[str, dict]:
         """
-        Appelle l'API Claude avec retry automatique (AsyncRetrying — event-loop safe).
+        Appelle l'API Gemini avec retry automatique.
         Retourne (texte, metadata_usage).
         """
         if not self.client:
-            raise RuntimeError("Client Anthropic non initialisé (API key manquante)")
+            raise RuntimeError("Client Gemini non initialisé (API key manquante)")
 
-        last_error: Optional[Exception] = None
+        start = time.time()
+        combined_prompt = f"{system_prompt}\n\n---\n\n{prompt}"
 
-        async for attempt in AsyncRetrying(
-            stop=stop_after_attempt(3),
-            wait=wait_exponential(multiplier=1, min=2, max=10),
-            retry=retry_if_exception_type(Exception),
-            reraise=True,
-        ):
-            with attempt:
-                start = time.time()
-                try:
-                    message = await self.client.messages.create(
+        try:
+            async for attempt in AsyncRetrying(
+                stop=stop_after_attempt(3),
+                wait=wait_exponential(multiplier=1, min=2, max=10),
+                retry=retry_if_exception_type(Exception),
+                reraise=True,
+            ):
+                with attempt:
+                    response = await self.client.aio.models.generate_content(
                         model=self.model,
-                        max_tokens=max_tokens,
-                        system=system_prompt,
-                        messages=[{"role": "user", "content": prompt}],
+                        contents=combined_prompt,
+                        config=genai_types.GenerateContentConfig(
+                            max_output_tokens=max_tokens,
+                            temperature=0.7,
+                        ),
                     )
                     duration = time.time() - start
+
+                    text = response.text or ""
+                    usage_meta = getattr(response, "usage_metadata", None)
+                    input_tokens = getattr(usage_meta, "prompt_token_count", 0) or 0
+                    output_tokens = getattr(usage_meta, "candidates_token_count", 0) or 0
+
                     usage = {
-                        "input_tokens": message.usage.input_tokens,
-                        "output_tokens": message.usage.output_tokens,
+                        "input_tokens": input_tokens,
+                        "output_tokens": output_tokens,
                         "duration_seconds": round(duration, 2),
                     }
-                    text = message.content[0].text
+
                     logger.info(
-                        f"✅ Claude [{method_name}] — {duration:.2f}s, "
-                        f"in={usage['input_tokens']} out={usage['output_tokens']} tokens"
+                        f"✅ Gemini [{method_name}] — {duration:.2f}s, "
+                        f"in={input_tokens} out={output_tokens} tokens"
                     )
-                    # Log to Supabase (fire-and-forget)
+
                     asyncio.create_task(
                         self._log_to_supabase(
                             method=method_name,
                             store_id=store_id,
                             success=True,
-                            tokens_in=usage["input_tokens"],
-                            tokens_out=usage["output_tokens"],
+                            tokens_in=input_tokens,
+                            tokens_out=output_tokens,
                             duration=duration,
                         )
                     )
                     return text, usage
 
-                except Exception as e:
-                    last_error = e
-                    duration = time.time() - start
-                    logger.warning(
-                        f"⚠️ Claude [{method_name}] tentative échouée après {duration:.2f}s: {e}"
-                    )
-                    raise  # laisse AsyncRetrying décider de retenter
-
-        # Ce point n'est atteint qu'après épuisement des tentatives (reraise=True)
-        duration = time.time() - start if 'start' in dir() else 0.0
-        asyncio.create_task(
-            self._log_to_supabase(
-                method=method_name,
-                store_id=store_id,
-                success=False,
-                duration=duration,
-                error=str(last_error),
+        except Exception as e:
+            duration = time.time() - start
+            logger.warning(f"⚠️ Gemini [{method_name}] échec définitif après {duration:.2f}s: {e}")
+            asyncio.create_task(
+                self._log_to_supabase(
+                    method=method_name,
+                    store_id=store_id,
+                    success=False,
+                    duration=duration,
+                    error=str(e),
+                )
             )
-        )
-        raise last_error  # type: ignore[misc]
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # Private: Supabase logging (fire-and-forget)
-    # ─────────────────────────────────────────────────────────────────────────
+            raise
 
     async def _log_to_supabase(
         self,
@@ -213,7 +194,6 @@ class AIStoreGenerator:
         duration: float = 0.0,
         error: Optional[str] = None,
     ) -> None:
-        """Log la requête IA dans la table ai_generation_logs de Supabase."""
         if not self.supabase:
             return
         try:
@@ -233,45 +213,17 @@ class AIStoreGenerator:
         except Exception as e:
             logger.warning(f"Supabase logging échoué (non bloquant): {e}")
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Private: Strip markdown code fences from Claude output
-    # ─────────────────────────────────────────────────────────────────────────
-
     @staticmethod
     def _strip_code_fences(text: str) -> str:
-        """Supprime les balises ```html ... ``` si Claude enveloppe sa réponse."""
         stripped = text.strip()
-        # Handle ```html ... ``` or ``` ... ```
         if stripped.startswith("```"):
-            # Remove opening fence (with optional language tag)
             first_newline = stripped.index("\n") if "\n" in stripped else len(stripped)
             stripped = stripped[first_newline + 1:]
         if stripped.endswith("```"):
             stripped = stripped[:-3]
         return stripped.strip()
 
-    # ═════════════════════════════════════════════════════════════════════════
-    # PUBLIC: generate_store — Génération HTML complète
-    # ═════════════════════════════════════════════════════════════════════════
-
     async def generate_store(self, store_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Génère un fichier HTML complet et autonome pour une boutique e-commerce.
-
-        Args:
-            store_data: {
-                store: {name, description, category, primary_color, theme,
-                        animation_style, logo_url, whatsapp_phone},
-                products: [{name, description, price, original_price, images,
-                            category, is_featured}],
-                style_preferences: {font, effects: ['parallax', 'particles', 'counter']},
-                seo: {title, description, ...}  (optionnel, enrichi en amont),
-                slogan: str (optionnel)
-            }
-
-        Returns:
-            {success: bool, html: str, generated_at: str, usage: dict}
-        """
         store = store_data.get("store", {})
         products = store_data.get("products", [])
         style = store_data.get("style_preferences", {})
@@ -284,13 +236,11 @@ class AIStoreGenerator:
         theme_tokens = THEME_DESIGN_TOKENS.get(theme_key, THEME_DESIGN_TOKENS["modern"])
         anim_desc = ANIMATION_STYLES.get(anim_key, ANIMATION_STYLES["soft"])
 
-        # Build effects instructions
         requested_effects = style.get("effects", [])
         effects_block = "\n".join(
             f"- {EFFECTS_INSTRUCTIONS[e]}" for e in requested_effects if e in EFFECTS_INSTRUCTIONS
         )
 
-        # Serialize products for prompt (compact, relevant fields only)
         products_for_prompt = []
         for p in products:
             products_for_prompt.append({
@@ -303,7 +253,6 @@ class AIStoreGenerator:
                 "is_featured": p.get("is_featured", False),
             })
 
-        # ─── System prompt ────────────────────────────────────────────────
         system_prompt = f"""Tu es un développeur full-stack senior, expert en e-commerce, HTML5, CSS3, JavaScript vanilla, et design UI/UX premium.
 
 MISSION : Générer un fichier HTML UNIQUE, 100% autonome (self-contained), pour une boutique e-commerce algérienne.
@@ -337,7 +286,6 @@ CONTRAINTES STRICTES :
 6. Accessibilité : aria-labels sur boutons, alt sur images, contraste suffisant.
 7. Le code JS doit être robuste : pas d'erreurs console, gestion des cas limites (panier vide, etc.)."""
 
-        # ─── User prompt ──────────────────────────────────────────────────
         prompt = f"""Génère le fichier HTML complet pour cette boutique :
 
 ═══ INFORMATIONS BOUTIQUE ═══
@@ -410,7 +358,7 @@ Keywords : {seo.get('keywords', store.get('category', ''))}
 Génère le code HTML complet maintenant."""
 
         try:
-            raw_html, usage = await self._call_claude(
+            raw_html, usage = await self._call_gemini(
                 prompt,
                 system_prompt,
                 max_tokens=16384,
@@ -435,17 +383,7 @@ Génère le code HTML complet maintenant."""
                 "generated_at": datetime.now(timezone.utc).isoformat(),
             }
 
-    # ═════════════════════════════════════════════════════════════════════════
-    # PUBLIC: generate_seo — Métadonnées SEO
-    # ═════════════════════════════════════════════════════════════════════════
-
     async def generate_seo(self, store_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Génère des métadonnées SEO optimisées.
-
-        Returns:
-            {title, description, og_title, og_description, keywords}
-        """
         store = store_data.get("store", {})
         products = store_data.get("products", [])
         store_id = store.get("id")
@@ -474,11 +412,10 @@ Génère ce JSON exact :
 }}"""
 
         try:
-            text, _ = await self._call_claude(
+            text, _ = await self._call_gemini(
                 prompt, system, max_tokens=500,
                 method_name="generate_seo", store_id=store_id,
             )
-            # Extract JSON from response (handle potential wrapping)
             clean = text.strip()
             if clean.startswith("```"):
                 clean = self._strip_code_fences(clean)
@@ -486,7 +423,6 @@ Génère ce JSON exact :
         except json.JSONDecodeError:
             logger.warning("SEO JSON invalide, extraction par heuristique")
             try:
-                # Try to find JSON in the response
                 start = text.index("{")
                 end = text.rindex("}") + 1
                 return json.loads(text[start:end])
@@ -508,17 +444,9 @@ Génère ce JSON exact :
                 "keywords": store.get("category", ""),
             }
 
-    # ═════════════════════════════════════════════════════════════════════════
-    # PUBLIC: generate_product_descriptions — Descriptions améliorées
-    # ═════════════════════════════════════════════════════════════════════════
-
     async def generate_product_descriptions(
         self, products: List[Dict], store_id: Optional[str] = None
     ) -> List[Dict]:
-        """
-        Améliore les descriptions de produits en parallèle.
-        Les échecs individuels retournent le produit inchangé.
-        """
         system = """Tu es un copywriter e-commerce expert. Tu écris des descriptions de produits
 courtes, vendeuses et professionnelles en français.
 Réponds UNIQUEMENT avec le texte de la description, rien d'autre.
@@ -535,7 +463,7 @@ Description actuelle : {product.get('description', 'Aucune')}
 Écris une description vendeuse de max 200 caractères."""
 
             try:
-                new_desc, _ = await self._call_claude(
+                new_desc, _ = await self._call_gemini(
                     prompt, system, max_tokens=300,
                     method_name="generate_product_description",
                     store_id=store_id,
@@ -549,18 +477,12 @@ Description actuelle : {product.get('description', 'Aucune')}
             return_exceptions=True,
         )
 
-        # If gather returned exceptions, use original products
         return [
             r if isinstance(r, dict) else products[i]
             for i, r in enumerate(results)
         ]
 
-    # ═════════════════════════════════════════════════════════════════════════
-    # PUBLIC: generate_slogan — Slogan accrocheur
-    # ═════════════════════════════════════════════════════════════════════════
-
     async def generate_slogan(self, store_data: Dict[str, Any]) -> str:
-        """Génère un slogan accrocheur (max 10 mots)."""
         store = store_data.get("store", {})
 
         system = """Tu es un expert en branding et marketing.
@@ -577,46 +499,34 @@ Thème visuel : {store.get('theme', 'modern')}
 Le slogan doit refléter l'identité de la boutique et donner envie d'acheter."""
 
         try:
-            text, _ = await self._call_claude(
+            text, _ = await self._call_gemini(
                 prompt, system, max_tokens=100,
                 method_name="generate_slogan",
                 store_id=store.get("id"),
             )
-            # Clean: remove quotes if present
             clean = text.strip().strip('"').strip("'").strip("«").strip("»")
             return clean
         except Exception:
             return "Qualité & élégance à portée de clic"
 
-    # ═════════════════════════════════════════════════════════════════════════
-    # FALLBACK: Template HTML statique fonctionnel
-    # ═════════════════════════════════════════════════════════════════════════
-
     def _get_fallback_template(
         self, store: Dict[str, Any], products: List[Dict], style: Dict[str, Any] = None, seo: Dict[str, Any] = None, slogan: str = ""
     ) -> str:
-        """
-        Template HTML statique complet avec panier fonctionnel et WhatsApp.
-        Utilisé en fallback quand l'API Claude est indisponible.
-        """
         name = html_module.escape(store.get("name", "Ma Boutique"))
         desc = html_module.escape(store.get("description", "Bienvenue"))
         color = store.get("primary_color", "#534AB7")
         phone = store.get("whatsapp_phone", "")
         slug = store.get("slug", "boutique")
-        year = datetime.now().year
-        
+
         style_prefs = style or {}
         seo_data = seo or {}
-        
-        # Determine theme tokens
+
         theme_key = store.get("theme", "modern")
         theme_tokens = THEME_DESIGN_TOKENS.get(theme_key, THEME_DESIGN_TOKENS["modern"])
         bg_color = theme_tokens["bg"]
         card_color = theme_tokens["card_bg"]
         text_color = theme_tokens["text"]
-        
-        # Optional hero logic
+
         hero_gradient = f"linear-gradient(135deg, {color}, #1e293b)"
 
         products_json_items = []
@@ -640,14 +550,12 @@ Le slogan doit refléter l'identité de la boutique et donner envie d'acheter.""
 
         products_json = json.dumps(products_json_items, ensure_ascii=False)
 
-        # Build dynamic HTML from the generated template file
         template_path = os.path.join(os.path.dirname(__file__), "..", "..", "store-template", "template.html")
-        
+
         try:
             with open(template_path, "r", encoding="utf-8") as f:
                 html_content = f.read()
-                
-            # Perform substitutions
+
             html_content = html_content.replace("{{store_name}}", name)
             html_content = html_content.replace("{{primary_color}}", color)
             html_content = html_content.replace("{{font}}", style_prefs.get('font', 'Inter'))
@@ -665,10 +573,9 @@ Le slogan doit refléter l'identité de la boutique et donner envie d'acheter.""
             html_content = html_content.replace("{{footer_text}}", text_color)
             html_content = html_content.replace("{{og_image}}", products_json_items[0]["image"] if products_json_items else "")
             html_content = html_content.replace("{{store_slug}}", slug)
-            
+
             return html_content
-            
+
         except Exception as e:
             logger.error(f"Failed to load store template: {e}")
-            # Ultra basic fallback if the file is missing
             return f"""<!DOCTYPE html><html lang="fr"><head><title>{name}</title></head><body><h1>{name}</h1><p>{desc}</p></body></html>"""

@@ -35,6 +35,37 @@
     color: white;
     font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
   }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-white/80 transition hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium;
+  }
+
+  .badge-success {
+    @apply bg-emerald-500/15 text-emerald-300;
+  }
+
+  .badge-warning {
+    @apply bg-amber-500/15 text-amber-300;
+  }
 }
 
 @layer utilities {

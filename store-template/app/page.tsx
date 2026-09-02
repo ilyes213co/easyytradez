@@ -66,5 +66,3 @@ export default async function StorePage({
 
   return <StoreShell store={data.store} products={data.products} />;
 }
-
-export const dynamic = "force-dynamic";

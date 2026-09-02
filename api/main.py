@@ -8,8 +8,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("storegen")
+
+
+def setup_logging() -> None:
+    """Configure logging once at application startup."""
+    if not logging.getLogger("storegen").handlers:
+        logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
 def get_allowed_origins() -> list[str]:

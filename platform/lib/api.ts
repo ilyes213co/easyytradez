@@ -43,7 +43,7 @@ const errorLogger = (error: any) => {
   const url = error.config?.url || "unknown URL";
   const data = error.response?.data;
   if (status === 422 && url.includes("/stores/")) {
-    console.warn(`API Validation ${status} on ${url}:`, data);
+    console.warn(`API Validation ${status} on ${url}:`, data ?? error.message);
     return Promise.reject(error);
   }
   

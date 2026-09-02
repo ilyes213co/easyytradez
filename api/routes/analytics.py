@@ -123,12 +123,12 @@ async def get_analytics(
     # ── 5. Aggregate KPIs ─────────────────────────────────────────────────────
     views             = sum(1 for e in events if e["event_type"] == "view")
     wa_clicks         = sum(1 for e in events if e["event_type"] == "whatsapp_click")
-    conversion_rate   = round((wa_clicks / views * 100), 1) if views > 0 else 0.0
+    conversion_rate   = round(wa_clicks / views * 100, 1) if views > 0 else 0.0
     confirmed_orders  = sum(1 for o in orders if o["status"] == "confirmed")
 
     prev_views        = sum(1 for e in prev_events if e["event_type"] == "view")
     prev_wa           = sum(1 for e in prev_events if e["event_type"] == "whatsapp_click")
-    prev_conversion   = round((prev_wa / prev_views * 100), 1) if prev_views > 0 else 0.0
+    prev_conversion   = round(prev_wa / prev_views * 100, 1) if prev_views > 0 else 0.0
     prev_confirmed    = 0  # quick — add prev orders query if needed
 
     # ── 6. Daily views ────────────────────────────────────────────────────────
@@ -297,9 +297,12 @@ def _parse_items(raw) -> list[dict]:
         return []
     if isinstance(raw, list):
         return [{"name": i.get("name", "?"), "qty": i.get("quantity", i.get("qty", 1))} for i in raw]
-    try:
-        import json
-        parsed = json.loads(raw)
-        return _parse_items(parsed)
-    except Exception:
-        return []
+    if isinstance(raw, str):
+        try:
+            import json
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                return [{"name": i.get("name", "?"), "qty": i.get("quantity", i.get("qty", 1))} for i in parsed]
+        except Exception:
+            pass
+    return []

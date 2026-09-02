@@ -68,7 +68,7 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }>
 const DEFAULT_STATUS_STYLE = { bg: "bg-white/10", text: "text-white/70", label: "Inconnu" } as const;
 
 function pct(current: number, prev: number): { value: number; up: boolean } {
-  if (prev === 0) return { value: 0, up: true };
+  if (prev === 0) return { value: current > 0 ? 100 : 0, up: current > 0 };
   const v = Math.round(((current - prev) / prev) * 100);
   return { value: Math.abs(v), up: v >= 0 };
 }
@@ -222,7 +222,11 @@ export default function AnalyticsPage() {
 
   const { kpi, daily_views, top_products, traffic_sources, recent_orders } = data;
 
-  const maxProductViews = Math.max(...top_products.map(p => p.views), 1);
+  const TOP_PRODUCT_COLORS = ["#6366f1", "#8b5cf6", "#06b6d4", "#f59e0b"];
+
+const maxProductViews = Math.max(...top_products.map(p => p.views), 1);
+
+const productColor = (index: number) => TOP_PRODUCT_COLORS[index % TOP_PRODUCT_COLORS.length];
 
   return (
     <div className="space-y-6">
@@ -376,39 +380,39 @@ export default function AnalyticsPage() {
         <h2 className="text-sm font-semibold text-white mb-1">Top produits vus</h2>
         <p className="text-white/30 text-xs mb-5">Les 8 produits les plus consultés</p>
         <div className="space-y-3">
-          {top_products.map((product, i) => {
-            const barWidth = Math.round((product.views / maxProductViews) * 100);
-            return (
-              <div key={product.product_id} className="flex items-center gap-3 group cursor-pointer">
-                {/* Rank */}
-                <span className={`text-xs font-bold w-5 text-right flex-shrink-0 ${
-                  i === 0 ? "text-amber-400" : i === 1 ? "text-slate-300" : i === 2 ? "text-orange-500" : "text-white/20"
-                }`}>
-                  {i + 1}
-                </span>
-                {/* Name */}
-                <span className="text-sm text-white/70 w-40 flex-shrink-0 truncate group-hover:text-white transition-colors">
-                  {product.name}
-                </span>
-                {/* Bar */}
-                <div className="flex-1 bg-white/[0.04] rounded-full h-2 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{
-                      width: `${barWidth}%`,
-                      background: i === 0
-                        ? "linear-gradient(90deg,#f59e0b,#fbbf24)"
-                        : "linear-gradient(90deg,#6366f1,#8b5cf6)",
-                    }}
-                  />
+{top_products.map((product, i) => {
+              const barWidth = Math.round((product.views / maxProductViews) * 100);
+              return (
+                <div key={product.product_id} className="flex items-center gap-3 group cursor-pointer">
+                  {/* Rank */}
+                  <span className={`text-xs font-bold w-5 text-right flex-shrink-0 ${i === 0 ? "text-amber-400" : i === 1 ? "text-slate-300" : i === 2 ? "text-orange-500" : "text-white/20"}`}>
+                    {i + 1}
+                  </span>
+                  {/* Name */}
+                  <span className="text-sm text-white/70 w-40 flex-shrink-0 truncate group-hover:text-white transition-colors">
+                    {product.name}
+                  </span>
+                  {/* Bar */}
+                  <div className="flex-1 bg-white/[0.04] rounded-full h-2 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${barWidth}%`,
+                        background: i === 0
+                          ? "linear-gradient(90deg,#f59e0b,#fbbf24)"
+                          : i === 1
+                          ? "linear-gradient(90deg,#6366f1,#8b5cf6)"
+                          : "linear-gradient(90deg,#6366f1,#8b5cf6)",
+                      }}
+                    />
+                  </div>
+                  {/* Count */}
+                  <span className="text-xs font-semibold text-white/50 w-12 text-right tabular-nums">
+                    {fmt(product.views)}
+                  </span>
                 </div>
-                {/* Count */}
-                <span className="text-xs font-semibold text-white/50 w-12 text-right tabular-nums">
-                  {fmt(product.views)}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
       </div>
 

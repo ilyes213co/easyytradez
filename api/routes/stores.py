@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from dependencies import get_current_user, get_supabase
+from dependencies import get_current_user, get_supabase, check_store_owner
 from models.schemas import StoreCreate, StoreUpdate, StoreResponse
 import re
 import logging
@@ -137,17 +137,8 @@ async def update_store(
     user=Depends(get_current_user),
     supabase=Depends(get_supabase),
 ):
-    # Vérifier ownership
-    existing = (
-        supabase.table("stores")
-        .select("id")
-        .eq("id", store_id)
-        .eq("owner_id", user.id)
-        .single()
-        .execute()
-    )
-    if not existing.data:
-        raise HTTPException(status_code=404, detail="Boutique introuvable")
+    # Vérifier ownership via shared guard
+    await check_store_owner(store_id, user.id)
 
     update_data = {
         key: value
@@ -172,16 +163,8 @@ async def delete_store(
     user=Depends(get_current_user),
     supabase=Depends(get_supabase),
 ):
-    existing = (
-        supabase.table("stores")
-        .select("id")
-        .eq("id", store_id)
-        .eq("owner_id", user.id)
-        .single()
-        .execute()
-    )
-    if not existing.data:
-        raise HTTPException(status_code=404, detail="Boutique introuvable")
+    # Vérifier ownership via shared guard
+    await check_store_owner(store_id, user.id)
 
     supabase.table("stores").delete().eq("id", store_id).execute()
     return {"message": "Boutique supprimée"}

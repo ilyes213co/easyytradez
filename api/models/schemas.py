@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Optional, Literal, Any
 from datetime import datetime
 import re
@@ -15,8 +15,10 @@ class ProductImage(BaseModel):
 # ─── Store ────────────────────────────────────────────────────────────────────
 
 class StoreCreate(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     name: str = Field(..., min_length=2, max_length=60)
-    slug: str = Field(..., min_length=2, max_length=60, pattern=r"^[a-z0-9\-]+$")
+    slug: Optional[str] = Field(None, min_length=2, max_length=60, pattern=r"^[a-z0-9\-]+$")
     category: Optional[str] = None
     description: Optional[str] = Field(None, max_length=300)
     primary_color: str = Field(default="#534AB7", pattern=r"^#[0-9A-Fa-f]{6}$")
@@ -27,11 +29,18 @@ class StoreCreate(BaseModel):
     animation_style: Literal["none", "soft", "dynamic", "spectacular"] = "soft"
     special_effects: list[str] = Field(default_factory=list)
 
+    @field_validator("slug", "logo_url", "description", "category", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, v):
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
     @field_validator("whatsapp_phone")
     @classmethod
     def validate_phone(cls, v: Optional[str]) -> Optional[str]:
-        if v is None:
-            return v
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
         cleaned = re.sub(r"\D", "", v)
         if len(cleaned) < 9:
             raise ValueError("Numéro de téléphone invalide")
@@ -53,27 +62,44 @@ class StoreUpdate(BaseModel):
     seo_metadata: Optional[dict] = None
 
 class StoreResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     id: str
     owner_id: str
     name: str
     slug: str
-    category: Optional[str]
-    description: Optional[str]
-    primary_color: str
-    font_family: str
-    logo_url: Optional[str]
-    whatsapp_phone: Optional[str]
-    theme: str
-    animation_style: str
-    special_effects: list[str]
-    status: str
-    subdomain: Optional[str]
-    published_url: Optional[str]
+    category: Optional[str] = None
+    description: Optional[str] = None
+    primary_color: str = "#6366f1"
+    font_family: str = "modern"
+    logo_url: Optional[str] = None
+    whatsapp_phone: Optional[str] = None
+    theme: str = "modern"
+    animation_style: str = "soft"
+    special_effects: list[str] = Field(default_factory=list)
+    status: str = "draft"
+    subdomain: Optional[str] = None
+    published_url: Optional[str] = None
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
     seo_metadata: dict = Field(default_factory=dict)
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("special_effects", mode="before")
+    @classmethod
+    def default_effects(cls, v):
+        return v if isinstance(v, list) else []
+
+    @field_validator("seo_metadata", mode="before")
+    @classmethod
+    def default_seo_metadata(cls, v):
+        return v if isinstance(v, dict) else {}
+
+    @field_validator("font_family", mode="before")
+    @classmethod
+    def default_font_family(cls, v):
+        return v or "modern"
 
 # ─── Product ──────────────────────────────────────────────────────────────────
 

@@ -28,7 +28,7 @@ function Spinner({ size = 16 }: { size?: number }) {
 }
 
 const inputClass =
-  "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-white placeholder-white/20 outline-none transition-all focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/10";
+  "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-white placeholder-white/20 outline-none transition-all focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/10 disabled:opacity-40 disabled:cursor-not-allowed";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -82,7 +82,7 @@ function getZoneOrFallback(zone: DeliveryZone | undefined, code: string): Delive
   return zone ?? { wilaya_code: code, fee: 600, enabled: true, free_above: null };
 }
 
-  // ── Apply global default to all enabled zones ─────────────────────────
+  // ── Apply global default to enabled zones only ─────────────────────────
   const applyDefault = () => {
     const fee = parseInt(defaultFee) || 0;
     const freeAbove = globalFreeAbove ? parseInt(globalFreeAbove) : null;
@@ -90,7 +90,10 @@ function getZoneOrFallback(zone: DeliveryZone | undefined, code: string): Delive
       const next: ZoneMap = { ...prev };
       WILAYAS.forEach((w) => {
         const cur = getZoneOrFallback(next[w.code], w.code);
-        next[w.code] = { ...cur, fee, free_above: freeAbove };
+        // Only apply default to enabled zones
+        if (cur.enabled) {
+          next[w.code] = { ...cur, fee, free_above: freeAbove };
+        }
       });
       return next;
     });
@@ -110,9 +113,10 @@ function getZoneOrFallback(zone: DeliveryZone | undefined, code: string): Delive
   const updateFee = (code: string, val: string) => {
     setZones((prev) => {
       const cur = getZoneOrFallback(prev[code], code);
+      const fee = parseInt(val);
       return {
         ...prev,
-        [code]: { ...cur, fee: parseInt(val) || 0 },
+        [code]: { ...cur, fee: isNaN(fee) ? (cur.fee ?? 600) : fee },
       };
     });
   };
@@ -120,9 +124,10 @@ function getZoneOrFallback(zone: DeliveryZone | undefined, code: string): Delive
   const updateFreeAbove = (code: string, val: string) => {
     setZones((prev) => {
       const cur = getZoneOrFallback(prev[code], code);
+      const freeAbove = isNaN(parseInt(val)) ? null : parseInt(val);
       return {
         ...prev,
-        [code]: { ...cur, free_above: val ? parseInt(val) : null },
+        [code]: { ...cur, free_above: freeAbove },
       };
     });
   };

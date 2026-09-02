@@ -81,15 +81,20 @@ async def get_sitemap(store_id: str, request: Request, supabase=Depends(get_supa
     
     full_xml = "\n".join(xml_content).encode("utf-8")
     
-    # Compression gzip si acceptée
-    if "gzip" in request.headers.get("Accept-Encoding", ""):
+    # Compression gzip ou brotli si acceptée
+    encoding = request.headers.get("Accept-Encoding", "")
+    if "gzip" in encoding or "br" in encoding:
         out = io.BytesIO()
-        with gzip.GzipFile(fileobj=out, mode="w") as f:
+        encoding_to_use = "br" in encoding and "gzip" not in encoding
+        with gzip.GzipFile(fileobj=out, mode="w" if encoding_to_use else "wb") as f:
             f.write(full_xml)
+        media_type = "application/xml"
+        if encoding_to_use:
+            media_type = "application/x-brotli"
         return Response(
             content=out.getvalue(),
-            media_type="application/xml",
-            headers={"Content-Encoding": "gzip"}
+            media_type=media_type,
+            headers={"Content-Encoding": "br" if encoding_to_use else "gzip"}
         )
 
     return Response(content=full_xml, media_type="application/xml")

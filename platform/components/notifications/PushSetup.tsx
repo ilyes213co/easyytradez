@@ -48,7 +48,7 @@ export function PushSetup({ storeId }: { storeId: string }) {
       const sub = await reg.pushManager.getSubscription();
       setState(sub ? "subscribed" : "unsubscribed");
     });
-  }, []);
+  }, [getPushPermission]);
 
   // ── Subscribe ────────────────────────────────────────────────────────────
   const handleSubscribe = useCallback(async () => {
@@ -84,7 +84,7 @@ export function PushSetup({ storeId }: { storeId: string }) {
     }
 
     setState("subscribed");
-  }, [user, storeId]);
+  }, [user, storeId, getPushPermission]);
 
   // ── Unsubscribe ──────────────────────────────────────────────────────────
   const handleUnsubscribe = useCallback(async () => {
@@ -109,7 +109,7 @@ export function PushSetup({ storeId }: { storeId: string }) {
     }
 
     setState("unsubscribed");
-  }, []);
+  }, [getPushPermission]);
 
   // ── Render ───────────────────────────────────────────────────────────────
 

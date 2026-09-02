@@ -56,12 +56,12 @@ export default function StorePage() {
 
   if (isStoreError || !store) {
     return (
-      <div className="rounded-2xl border border-red-100 bg-red-50 p-6 text-center">
-        <h1 className="text-lg font-semibold text-red-900">Boutique introuvable</h1>
-        <p className="mt-2 text-sm text-red-700">
+      <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-center">
+        <h1 className="text-lg font-semibold text-red-200">Boutique introuvable</h1>
+        <p className="mt-2 text-sm text-red-300/80">
           Cette boutique ne peut pas être chargée avec votre session actuelle.
         </p>
-        <Link href="/dashboard/store" className="mt-4 inline-flex text-sm font-medium text-red-800 hover:underline">
+        <Link href="/dashboard/store" className="mt-4 inline-flex text-sm font-medium text-red-200 hover:underline">
           Retour à mes boutiques
         </Link>
       </div>
@@ -83,7 +83,7 @@ export default function StorePage() {
             {store.name[0]?.toUpperCase()}
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">{store.name}</h1>
+            <h1 className="text-xl font-semibold text-white">{store.name}</h1>
             <div className="mt-0.5 flex items-center gap-2">
               <span className={`badge ${store.status === "published" ? "badge-success" : "badge-warning"}`}>
                 {store.status === "published" ? "En ligne" : "Brouillon"}
@@ -118,18 +118,18 @@ export default function StorePage() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "Vues (7j)", value: views, icon: BarChart2, color: "text-blue-500 bg-blue-50" },
-          { label: "Clics WA (7j)", value: waClicks, icon: Globe, color: "text-green-500 bg-green-50" },
-          { label: "Produits", value: products.length, icon: Package, color: "text-amber-500 bg-amber-50" },
-          { label: "Thème", value: store.theme, icon: Palette, color: "text-purple-500 bg-purple-50" },
+          { label: "Vues (7j)", value: views, icon: BarChart2, color: "text-blue-300 bg-blue-500/15" },
+          { label: "Clics WA (7j)", value: waClicks, icon: Globe, color: "text-green-300 bg-green-500/15" },
+          { label: "Produits", value: products.length, icon: Package, color: "text-amber-300 bg-amber-500/15" },
+          { label: "Thème", value: store.theme, icon: Palette, color: "text-purple-300 bg-purple-500/15" },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="card flex items-center gap-3 p-4">
             <div className={`rounded-lg p-2 ${color}`}>
               <Icon className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-xs text-gray-400">{label}</p>
-              <p className="text-base font-semibold capitalize text-gray-900">{value}</p>
+              <p className="text-xs text-white/40">{label}</p>
+              <p className="text-base font-semibold capitalize text-white">{value}</p>
             </div>
           </div>
         ))}
@@ -141,50 +141,50 @@ export default function StorePage() {
           icon={Package}
           title="Gérer les produits"
           desc={`${products.length} produits — ajouter, modifier, réordonner`}
-          color="bg-amber-50 text-amber-600"
+          color="bg-amber-500/15 text-amber-300"
         />
         <ActionCard
           href={`/dashboard/store/${store.id}/design`}
           icon={Palette}
           title="Design & thème"
           desc="Couleurs, animations, mise en page"
-          color="bg-purple-50 text-purple-600"
+          color="bg-purple-500/15 text-purple-300"
         />
         <ActionCard
           href={`/dashboard/store/${store.id}/preview`}
           icon={Smartphone}
           title="Aperçu"
           desc="Voir votre boutique avant publication"
-          color="bg-blue-50 text-blue-600"
+          color="bg-blue-500/15 text-blue-300"
         />
         <ActionCard
           href={`/dashboard/analytics?store=${store.id}`}
           icon={BarChart2}
           title="Statistiques"
           desc="Vues, conversions, commandes"
-          color="bg-green-50 text-green-600"
+          color="bg-green-500/15 text-green-300"
         />
         <ActionCard
           href={`/dashboard/store/${store.id}/regenerate`}
           icon={RefreshCw}
           title="Régénérer avec l'IA"
           desc="Créer une nouvelle version de la boutique"
-          color="bg-primary-50 text-primary-600"
+          color="bg-indigo-500/15 text-indigo-300"
         />
         <ActionCard
           href={`/dashboard/store/${store.id}/settings`}
           icon={Settings}
           title="Paramètres boutique"
           desc="Domaine, WhatsApp, SEO, intégrations"
-          color="bg-gray-100 text-gray-600"
+          color="bg-white/10 text-white/70"
         />
       </div>
 
       {previewProducts.length > 0 && (
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-gray-900">Produits récents</h2>
-            <Link href={`/dashboard/products?store=${store.id}`} className="text-xs text-primary-600 hover:underline">
+            <h2 className="text-base font-semibold text-white">Produits récents</h2>
+            <Link href={`/dashboard/products?store=${store.id}`} className="text-xs text-indigo-300 hover:underline">
               Voir tout →
             </Link>
           </div>
@@ -194,18 +194,18 @@ export default function StorePage() {
                 ? (product.images[0] as { url?: string }).url ?? null
                 : null;
               return (
-                <div key={product.id} className="card group cursor-pointer p-3 transition hover:border-gray-200">
-                  <div className="mb-2 aspect-square overflow-hidden rounded-lg bg-gray-100">
+                <div key={product.id} className="card group cursor-pointer p-3 transition hover:border-white/20">
+                  <div className="mb-2 aspect-square overflow-hidden rounded-lg bg-white/5">
                     {image ? (
                       <img src={image} alt={product.name} className="h-full w-full object-cover transition group-hover:scale-105" />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-gray-300">
+                      <div className="flex h-full items-center justify-center text-white/20">
                         <Package className="h-8 w-8" />
                       </div>
                     )}
                   </div>
-                  <p className="truncate text-xs font-medium text-gray-800">{product.name}</p>
-                  <p className="text-xs text-gray-400">{product.price.toLocaleString("fr-DZ")} DZD</p>
+                  <p className="truncate text-xs font-medium text-white/90">{product.name}</p>
+                  <p className="text-xs text-white/40">{product.price.toLocaleString("fr-DZ")} DZD</p>
                 </div>
               );
             })}
@@ -230,13 +230,13 @@ function ActionCard({
   color: string;
 }) {
   return (
-    <Link href={href} className="card group flex items-start gap-3 transition-all hover:border-gray-200 hover:shadow-sm">
+    <Link href={href} className="card group flex items-start gap-3 p-4 transition-all hover:border-white/15 hover:bg-white/[0.05]">
       <div className={`rounded-xl p-2.5 ${color} transition group-hover:scale-105`}>
         <Icon className="h-5 w-5" />
       </div>
       <div>
-        <h3 className="text-sm font-medium text-gray-900">{title}</h3>
-        <p className="mt-0.5 text-xs text-gray-400">{desc}</p>
+        <h3 className="text-sm font-medium text-white">{title}</h3>
+        <p className="mt-0.5 text-xs text-white/40">{desc}</p>
       </div>
     </Link>
   );

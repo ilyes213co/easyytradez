@@ -265,6 +265,11 @@ export default function ProductsPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => clearTimeout(timer);
+  }, []);
+
   // Fetch current store
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -349,7 +354,13 @@ export default function ProductsPage() {
   // Toggle featured (optimistic)
   const handleToggleFeatured = async (id: string, val: boolean) => {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, is_featured: val } : p));
-    await updateMutation.mutateAsync({ id, is_featured: val } as any);
+    try {
+      await updateMutation.mutateAsync({ id, is_featured: val } as any);
+    } catch (error) {
+      // Revert optimistic update on error
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, is_featured: !val } : p));
+      toast.error("Failed to update product featured status");
+    }
   };
 
   // Drag and drop

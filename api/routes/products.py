@@ -40,12 +40,6 @@ class ProductCreate(BaseModel):
     is_featured:    bool            = False
     status:         ProductStatus   = ProductStatus.ACTIVE
 
-    @validator("original_price")
-    def original_must_be_higher(cls, v, values):
-        if v is not None and "price" in values and v <= values["price"]:
-            raise ValueError("original_price doit être supérieur à price")
-        return v
-
 
 class ProductUpdate(BaseModel):
     name:           Optional[str]           = None
@@ -177,7 +171,11 @@ async def reorder_products(
     if not payload.product_ids:
         raise HTTPException(status_code=400, detail="product_ids ne peut pas être vide")
     if len(payload.product_ids) != len(set(payload.product_ids)):
-        raise HTTPException(status_code=400, detail="product_ids contient des doublons")
+        seen: set[str] = set()
+        for pid in payload.product_ids:
+            if pid in seen:
+                raise HTTPException(status_code=400, detail="product_ids contient des doublons")
+            seen.add(pid)
 
     supabase = get_supabase()
 
@@ -268,9 +266,11 @@ async def delete_product(
         try:
             public_id = img.get("public_id")
             if public_id:
-                cloudinary.uploader.destroy(public_id)
-        except Exception:
-            pass # Non-blocking error for cloudinary deletion
+                result = cloudinary.uploader.destroy(public_id)
+                if result.get("result") != "ok":
+                    logger.warning(f"Cloudinary delete failed for {public_id}: {result.get('result')}")
+        except Exception as e:
+            logger.error(f"Error deleting image from Cloudinary {img.get('public_id')}: {e}")
 
     return None
 

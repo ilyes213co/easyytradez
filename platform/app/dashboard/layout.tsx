@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/store", label: "Ma boutique", icon: "🏪" },
   { href: "/dashboard/products", label: "Produits", icon: "📦" },
   { href: "/dashboard/orders", label: "Commandes", icon: "🛒" },
-  { href: "/dashboard/stats", label: "Statistiques", icon: "📈" },
+  { href: "/dashboard/analytics", label: "Statistiques", icon: "📈" },
   { href: "/dashboard/delivery", label: "Livraison", icon: "🚚" },
   { href: "/dashboard/settings", label: "Paramètres", icon: "⚙️" },
 ];

@@ -19,7 +19,8 @@ function timeAgo(iso: string): string {
   if (m < 60) return `Il y a ${m} min`;
   const h = Math.floor(m / 60);
   if (h < 24) return `Il y a ${h}h`;
-  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  const date = new Date(iso);
+  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
 
 function formatAmount(n: number) {
@@ -210,12 +211,15 @@ export default function OrdersPage() {
 
   // ── Stats ─────────────────────────────────────────────────────────────────
   const today = new Date().toDateString();
-  const stats = {
-    total:    orders.length,
-    pending:  orders.filter((o) => o.status === "pending").length,
-    revenue:  orders.filter((o) => o.payment_status === "paid").reduce((s, o) => s + o.total, 0),
-    today:    orders.filter((o) => new Date(o.created_at).toDateString() === today).length,
-  };
+  const stats = useMemo(() => {
+    const today = new Date().toDateString();
+    return {
+      total:    orders.length,
+      pending:  orders.filter((o) => o.status === "pending").length,
+      revenue:  orders.filter((o) => o.payment_status === "paid").reduce((s, o) => s + o.total, 0),
+      today:    orders.filter((o) => new Date(o.created_at).toDateString() === today).length,
+    };
+  }, [orders]);
 
   // ── Open drawer ───────────────────────────────────────────────────────────
   const openOrder = (o: Order) => {
