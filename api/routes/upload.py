@@ -23,6 +23,14 @@ cloudinary.config(
     secure     = True,
 )
 
+# The CLOUDINARY_UPLOAD_PRESET env var (in .env.local) is auto-loaded by the SDK
+# and would be sent with every upload, causing "Upload preset not found" errors
+# if the preset doesn't exist on the account. We don't use presets, so clear it.
+try:
+    cloudinary.config().upload_preset = None
+except Exception:
+    pass
+
 # ─── Constants ────────────────────────────────────────────────────────────────
 
 MAX_FILE_SIZE  = 10 * 1024 * 1024   # 10 MB
@@ -122,8 +130,10 @@ async def upload_image(
     # ── Upload to Cloudinary ──────────────────────────────────────────────────
     folder = f"marchand/{store_id}/products"
     try:
+        file_obj = io.BytesIO(compressed)
+        file_obj.name = "upload.webp"
         result = cloudinary.uploader.upload(
-            compressed,
+            file_obj,
             folder=folder,
             resource_type="image",
             transformation=[
@@ -207,8 +217,10 @@ async def upload_logo(
         raise HTTPException(status_code=422, detail=str(e))
 
     try:
+        file_obj = io.BytesIO(compressed)
+        file_obj.name = "logo.webp"
         result = cloudinary.uploader.upload(
-            compressed,
+            file_obj,
             public_id     = f"marchand/{store_id}/logo",
             resource_type = "image",
             format        = "webp",

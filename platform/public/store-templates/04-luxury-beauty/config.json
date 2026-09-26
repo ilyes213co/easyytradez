@@ -1,0 +1,16 @@
+{
+  "id": "luxury-beauty",
+  "name": "Luxe & Parfums",
+  "type": "store",
+  "badge": "Prestige & Cosmétiques",
+  "description": "Typographie raffinée et reflets dorés pour parfumerie, soins et bijoux haut de gamme.",
+  "category": "Cosmétiques & Parfums",
+  "themeColor": "#d97706",
+  "font": "Playfair Display",
+  "features": [
+    "Design doré chic",
+    "Mise en avant ingrédients",
+    "Notes étoiles",
+    "Panier discret"
+  ]
+}

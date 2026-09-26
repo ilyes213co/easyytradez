@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import type { Product, Store } from "@/lib/supabase";
 
@@ -55,9 +56,9 @@ function Label({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ─── Success state ────────────────────────────────────────────────────────────
+// ─── Success Overlay ──────────────────────────────────────────────────────────
 
-function SuccessView({
+function SuccessOverlay({
   orderId,
   waLink,
   storeName,
@@ -68,46 +69,96 @@ function SuccessView({
   storeName: string;
   storeSlug: string;
 }) {
+  const router = useRouter();
+  const [countdown, setCountdown] = useState(4);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    // Open WhatsApp right away if available
+    if (waLink) {
+      setTimeout(() => window.open(waLink, "_blank"), 300);
+    }
+
+    intervalRef.current = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(intervalRef.current!);
+          router.push(`/${storeSlug}`);
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [router, storeSlug, waLink]);
+
   return (
-    <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-6 text-center space-y-4">
-      <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-2xl mx-auto">
-        ✅
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm">
+      <div className="flex flex-col items-center gap-6 px-8 text-center max-w-sm">
+        {/* Animated checkmark */}
+        <div className="relative">
+          <div className="w-24 h-24 rounded-full bg-emerald-50 border-4 border-emerald-200 flex items-center justify-center">
+            <svg className="w-12 h-12 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path className="animate-[dash_0.6s_ease-in-out_0.2s_both]" d="M20 6L9 17l-5-5" />
+            </svg>
+          </div>
+          {/* Ripple ring */}
+          <div className="absolute inset-0 rounded-full border-4 border-emerald-300/40 animate-ping" />
+        </div>
+
+        {/* Text */}
+        <div className="space-y-2">
+          <h2 className="text-2xl font-extrabold text-stone-900" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            Commande confirmée ! 🎉
+          </h2>
+          <p className="text-stone-500 text-sm leading-relaxed">
+            Merci pour votre commande chez <span className="font-semibold text-stone-700">{storeName}</span>.
+            Vous serez contacté prochainement.
+          </p>
+          <p className="text-xs font-mono bg-stone-100 rounded-lg px-3 py-1.5 text-stone-600 inline-block">
+            Réf : #{orderId.slice(-6).toUpperCase()}
+          </p>
+        </div>
+
+        {/* WhatsApp CTA */}
+        {waLink && (
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2.5 w-full rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] py-3.5 text-sm font-bold text-white transition-all shadow-lg shadow-emerald-200/60"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            Confirmer via WhatsApp
+          </a>
+        )}
+
+        {/* Auto-redirect countdown */}
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-xs text-stone-400">
+            Retour à la boutique dans{" "}
+            <span className="font-bold text-stone-600">{countdown}s</span>…
+          </p>
+          {/* Progress bar */}
+          <div className="w-40 h-1 bg-stone-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-emerald-400 rounded-full transition-all duration-1000"
+              style={{ width: `${(countdown / 4) * 100}%` }}
+            />
+          </div>
+          <button
+            onClick={() => router.push(`/${storeSlug}`)}
+            className="text-xs text-stone-400 hover:text-stone-700 underline transition-colors"
+          >
+            Retourner à la boutique maintenant
+          </button>
+        </div>
       </div>
-      <div>
-        <h3 className="font-bold text-stone-800 text-base" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-          Commande enregistrée !
-        </h3>
-        <p className="text-sm text-stone-500 mt-1">
-          Référence :{" "}
-          <span className="font-mono font-semibold text-stone-700">
-            #{orderId.slice(-6).toUpperCase()}
-          </span>
-        </p>
-      </div>
-
-      {/* WhatsApp CTA */}
-      <a
-        href={waLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2.5 w-full rounded-xl bg-[#25D366] hover:bg-[#20bd5a] py-3 text-sm font-bold text-white transition-all shadow-md shadow-emerald-200"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-        </svg>
-        Confirmer via WhatsApp
-      </a>
-
-      <p className="text-xs text-stone-400">
-        Un message pré-rempli sera envoyé à {storeName} pour confirmer votre commande.
-      </p>
-
-      <a
-        href={`/${storeSlug}`}
-        className="block text-xs text-stone-400 hover:text-stone-600 underline transition-colors"
-      >
-        ← Continuer mes achats
-      </a>
     </div>
   );
 }
@@ -132,8 +183,37 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
   const [selectedWilaya, setSelectedWilaya] = useState("");
   const [deliveryFee, setDeliveryFee]       = useState(0);
 
+  // Phase 2: Upsell state
+  const [upsellProduct, setUpsellProduct]   = useState<{ id: string; name: string; price: number; image?: string } | null>(null);
+  const [upsellSelected, setUpsellSelected] = useState(false);
+
+  // Load upsell product candidate from store
+  useEffect(() => {
+    supabase
+      .from("products")
+      .select("id, name, price, images")
+      .eq("store_id", store.id)
+      .neq("id", product.id)
+      .eq("status", "active")
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0 && data[0]) {
+          const p = data[0];
+          setUpsellProduct({
+            id: p.id,
+            name: p.name,
+            price: Number(p.price) || 0,
+            image: Array.isArray(p.images) && p.images.length > 0
+              ? (typeof p.images[0] === "string" ? p.images[0] : (p.images[0] as any)?.url)
+              : undefined,
+          });
+        }
+      });
+  }, [store.id, product.id, supabase]);
+
+  const upsellExtra = (upsellSelected && upsellProduct) ? upsellProduct.price : 0;
   const qty      = Math.max(1, parseInt(form.quantity) || 1);
-  const subtotal = product.price * qty;
+  const subtotal = (product.price * qty) + upsellExtra;
   const total    = subtotal + deliveryFee;
 
   // Load delivery zones for this store
@@ -183,37 +263,88 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
       ? `Wilaya ${selectedWilaya}${form.address.trim() ? " — " + form.address.trim() : ""}`
       : form.address.trim() || null;
 
-    const { data: order, error } = await supabase
-      .from("orders")
-      .insert({
-        store_id:         store.id,
-        customer_name:    form.name.trim(),
-        customer_phone:   form.phone.trim(),
-        customer_address: fullAddress,
-        notes:            form.notes.trim() || null,
-        items: [
-          {
-            product_id: product.id,
-            name:       product.name,
-            price:      product.price,
-            quantity:   qty,
-            image:      product.images[0] ?? null,
-          },
-        ],
-        subtotal: subtotal,
-        total:    total,
-        total_amount: total,
-        shipping_address: fullAddress,
-        status:         "pending",
-        payment_status: "pending",
-      } as any)
-      .select()
-      .single();
+    const firstImg = product.images?.[0];
+    const imgUrl =
+      typeof firstImg === "string"
+        ? firstImg
+        : (firstImg as { url?: string } | undefined)?.url ?? null;
+
+    let createdOrder: { id: string } | null = null;
+
+    try {
+      const apiRes = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          store_id: store.id,
+          customer_name: form.name.trim(),
+          customer_phone: form.phone.trim(),
+          customer_address: fullAddress,
+          wilaya: selectedWilaya,
+          notes: form.notes.trim() || null,
+          items: [
+            {
+              product_id: product.id,
+              name: product.name,
+              price: product.price,
+              quantity: qty,
+              image: imgUrl,
+            },
+            ...(upsellSelected && upsellProduct ? [{
+              product_id: upsellProduct.id,
+              name: upsellProduct.name,
+              price: upsellProduct.price,
+              quantity: 1,
+              image: upsellProduct.image || null,
+            }] : []),
+          ],
+          total_amount: total,
+        }),
+      });
+
+      if (apiRes.ok) {
+        const json = await apiRes.json();
+        if (json.success && json.order) {
+          createdOrder = json.order;
+        }
+      }
+    } catch (e) {
+      console.warn("API orders error, trying fallback:", e);
+    }
+
+    if (!createdOrder) {
+      const { data: order, error } = await supabase
+        .from("orders")
+        .insert({
+          store_id: store.id,
+          customer_name: form.name.trim(),
+          customer_phone: form.phone.trim(),
+          customer_address: fullAddress,
+          notes: form.notes.trim() || null,
+          items: [
+            {
+              product_id: product.id,
+              name: product.name,
+              price: product.price,
+              quantity: qty,
+              image: imgUrl,
+            },
+          ],
+          total_amount: total,
+          status: "pending",
+          payment_status: "pending",
+        } as any)
+        .select()
+        .single();
+
+      if (!error && order) {
+        createdOrder = order as unknown as { id: string };
+      }
+    }
 
     setLoading(false);
 
-    const createdOrder = order as unknown as { id: string } | null;
-    if (error || !createdOrder) {
+    if (!createdOrder) {
       setServerError("Erreur lors de l'envoi. Veuillez réessayer.");
       return;
     }
@@ -245,11 +376,6 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
     setOrderId(createdOrder.id);
     setWaLink(wa);
     setStep("success");
-
-    // Auto-open WhatsApp if number available
-    if (wa) {
-      setTimeout(() => window.open(wa, "_blank"), 400);
-    }
   };
 
   if (disabled) {
@@ -263,7 +389,7 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
 
   if (step === "success") {
     return (
-      <SuccessView
+      <SuccessOverlay
         orderId={orderId}
         waLink={waLink}
         storeName={store.name}
@@ -363,7 +489,10 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
       {/* Phone */}
       <div>
         <Label>Numéro de téléphone / WhatsApp</Label>
-        <input type="tel" value={form.phone} onChange={set("phone")}
+        <input 
+          type="tel" 
+          value={form.phone} 
+          onChange={set("phone")}
           placeholder="+213 6 00 00 00 00"
           className={errors.phone ? inputErrorClass : inputClass}
         />
@@ -388,6 +517,33 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
           className={inputClass + " resize-none"}
         />
       </div>
+
+      {/* Upsell / Offre groupée */}
+      {upsellProduct && (
+        <div className={`p-3.5 rounded-2xl border transition-all ${upsellSelected ? "border-indigo-500 bg-indigo-50/70 shadow-sm" : "border-stone-200 bg-stone-50"}`}>
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={upsellSelected}
+              onChange={(e) => setUpsellSelected(e.target.checked)}
+              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-stone-300"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold text-stone-800 truncate">
+                  🎁 Offre spéciale : {upsellProduct.name}
+                </span>
+                <span className="text-xs font-black text-indigo-600 shrink-0">
+                  +{upsellProduct.price.toLocaleString("fr-DZ")} DZD
+                </span>
+              </div>
+              <p className="text-[11px] text-stone-500 mt-0.5">
+                Cochez pour ajouter cet article complémentaire à votre commande !
+              </p>
+            </div>
+          </label>
+        </div>
+      )}
 
       {/* Server error */}
       {serverError && (

@@ -1,0 +1,16 @@
+{
+  "id": "flash-promo",
+  "name": "Ventes Flash & Soldes",
+  "type": "landing",
+  "badge": "Offre Spéciale & Urgence",
+  "description": "Compte à rebours, stock limité en direct et réduction agressive avec commande immédiate.",
+  "category": "Promos & Déstockage",
+  "themeColor": "#ea580c",
+  "font": "Alexandria",
+  "features": [
+    "Compte à rebours live",
+    "Compteur stock restant",
+    "Pack 1+1 offert",
+    "Formulaire express"
+  ]
+}

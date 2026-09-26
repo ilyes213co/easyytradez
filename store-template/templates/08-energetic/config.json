@@ -1,0 +1,18 @@
+{
+  "id": "energetic",
+  "name": "Pulse (Énergie & Mouvement)",
+  "type": "store",
+  "badge": "Sport & Performance",
+  "description": "Bleu électrique, néon dynamique et typographie sportive percutante.",
+  "category": "Sport & Fitness",
+  "themeColor": "#2f4dff",
+  "font": "Archivo",
+  "features": [
+    "Style athlétique affirmé",
+    "Contrastes vifs & dynamiques",
+    "Aperçu produits express",
+    "Paiement à la livraison"
+  ],
+  "folder": "08-energetic",
+  "previewSvg": "/store-templates/08-energetic/preview.svg"
+}

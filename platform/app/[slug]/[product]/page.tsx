@@ -24,9 +24,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const s = store as any;
   if (!s) return { title: "Produit introuvable" };
 
-  const { data: product } = await supabase
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productSlug);
+  let productQuery = supabase
     .from("products").select("name, description, images, price")
-    .eq("store_id", s.id).eq("slug", productSlug).single();
+    .eq("store_id", s.id);
+  if (isUuid) {
+    productQuery = productQuery.eq("id", productSlug);
+  } else {
+    productQuery = productQuery.eq("slug", productSlug);
+  }
+  const { data: product } = await productQuery.maybeSingle();
 
   const p = product as any;
   if (!p) return { title: "Produit introuvable" };
@@ -54,18 +61,28 @@ export default async function ProductPage({ params }: PageProps) {
 
   // Load store
   const { data: storeRaw } = await supabase
-    .from("stores").select("*").eq("slug", slug).eq("status", "active").single();
+    .from("stores")
+    .select("*")
+    .eq("slug", slug)
+    .in("status", ["published", "active"])
+    .single();
 
   const store = storeRaw as unknown as Store | null;
   if (!store) notFound();
 
   // Load product
-  const { data: productRaw } = await supabase
+  let productLookup = supabase
     .from("products").select("*")
     .eq("store_id", store.id)
-    .eq("slug", productSlug)
-    .eq("status", "active")
-    .single();
+    .eq("status", "active");
+
+  const isProductUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productSlug);
+  if (isProductUuid) {
+    productLookup = productLookup.eq("id", productSlug);
+  } else {
+    productLookup = productLookup.eq("slug", productSlug);
+  }
+  const { data: productRaw } = await productLookup.maybeSingle();
 
   const rawP = productRaw as any;
   if (!rawP) notFound();

@@ -145,6 +145,18 @@ async def _run_generation(
         )
         products = products_result.data or []
 
+        try:
+            delivery_result = (
+                supabase.table("delivery_zones")
+                .select("*")
+                .eq("store_id", store_id)
+                .execute()
+            )
+            store["delivery_zones"] = delivery_result.data or []
+        except Exception as e:
+            logger.warning(f"Could not load delivery zones for store {store_id}: {e}")
+            store["delivery_zones"] = []
+
         store_data = {
             "store": store,
             "products": products,

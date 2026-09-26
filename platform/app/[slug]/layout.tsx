@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
     .from("stores")
     .select("name, description, logo_url, cover_url")
     .eq("slug", slug)
-    .eq("status", "active")
+    .in("status", ["published", "active"])
     .single();
 
   if (!store) return { title: "Boutique introuvable" };

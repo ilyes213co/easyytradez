@@ -1,0 +1,1192 @@
+{
+  "Sport & Musculation": {
+    "name": "Sport & Musculation",
+    "default_emoji": "💪",
+    "kicker": "Performance & Force — Gamme Pro 2026",
+    "hero_title": "Dépassez vos limites à chaque entraînement.",
+    "hero_subtitle": "Équipements de musculation, haltères et tenues de sport testés par des athlètes. Livraison rapide dans les 58 wilayas.",
+    "section_title": "Nos Équipements & Accessoires",
+    "categories": [
+      "Haltères & Poids",
+      "Bandes & Élastiques",
+      "Tenues & Sportswear",
+      "Ceintures & Gants"
+    ],
+    "demo_products": [
+      {
+        "name": "Haltères Réglables Pro 20kg",
+        "price": 14500,
+        "category": "Haltères & Poids",
+        "emoji": "🏋️",
+        "desc": "Acier trempé haute résistance avec poignée antidérapante."
+      },
+      {
+        "name": "Ceinture de Force Cuir Véritable",
+        "price": 5800,
+        "category": "Ceintures & Gants",
+        "emoji": "🥊",
+        "desc": "Maintien lombaire optimal pour squat et soulevé de terre."
+      },
+      {
+        "name": "Kit 5 Bandes Élastiques de Résistance",
+        "price": 3400,
+        "category": "Bandes & Élastiques",
+        "emoji": "⚡",
+        "desc": "De 5kg à 30kg de tension avec poignées et sangle cheville."
+      },
+      {
+        "name": "T-Shirt Compression Performance",
+        "price": 2900,
+        "category": "Tenues & Sportswear",
+        "emoji": "👕",
+        "desc": "Tissu respirant anti-transpiration séchage rapide."
+      },
+      {
+        "name": "Gants de Musculation Respirants",
+        "price": 2200,
+        "category": "Ceintures & Gants",
+        "emoji": "🧤",
+        "desc": "Rembourrage paume silicone et fermeture poignet velcro."
+      },
+      {
+        "name": "Short d'Entraînement 2-en-1 avec Cuissard",
+        "price": 3600,
+        "category": "Tenues & Sportswear",
+        "emoji": "🩳",
+        "desc": "Poche zippée pour smartphone intégrée."
+      },
+      {
+        "name": "Corde à Sauter Rapide à Roulements",
+        "price": 1900,
+        "category": "Bandes & Élastiques",
+        "emoji": "🔥",
+        "desc": "Câble acier réglable pour double-unders et cardio."
+      },
+      {
+        "name": "Gourde Shaker Pro 750ml Étanche",
+        "price": 1500,
+        "category": "Haltères & Poids",
+        "emoji": "🥤",
+        "desc": "Sans BPA avec boule de mélange inox anti-grumeaux."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Réglez en espèces à la réception de votre colis."
+      },
+      {
+        "title": "Livraison 58 wilayas",
+        "desc": "Expédition sécurisée sous 24h à 48h partout en Algérie."
+      },
+      {
+        "title": "Qualité testée & garantie",
+        "desc": "Matériel vérifié et testé pour un entraînement intensif."
+      }
+    ],
+    "footer_about": "Votre boutique spécialisée en équipements de sport et musculation en Algérie. Performance garantie."
+  },
+  "Compléments Alimentaires": {
+    "name": "Compléments Alimentaires",
+    "default_emoji": "💊",
+    "kicker": "Nutrition & Énergie — 100% Authentique",
+    "hero_title": "La nutrition d'élite pour vos objectifs physiques.",
+    "hero_subtitle": "Protéines, vitamines et compléments certifiés d'origine. Résultats visibles et livraison assurée dans les 58 wilayas.",
+    "section_title": "Nos Compléments Certifiés",
+    "categories": [
+      "Protéines & Whey",
+      "Créatine & Énergie",
+      "Vitamines & Santé",
+      "Acides Aminés BCAA"
+    ],
+    "demo_products": [
+      {
+        "name": "Whey Isolate Pure 2kg",
+        "price": 12500,
+        "category": "Protéines & Whey",
+        "emoji": "💪",
+        "desc": "27g de protéines par dose, zéro sucre et absorption ultra-rapide."
+      },
+      {
+        "name": "Créatine Monohydrate Micronisée 300g",
+        "price": 4200,
+        "category": "Créatine & Énergie",
+        "emoji": "⚡",
+        "desc": "Gain de force et de puissance musculaire garanti."
+      },
+      {
+        "name": "BCAA 2:1:1 Récupération 400g",
+        "price": 4800,
+        "category": "Acides Aminés BCAA",
+        "emoji": "🥤",
+        "desc": "Récupération musculaire accélérée et hydratation."
+      },
+      {
+        "name": "Oméga 3 Forte — 120 Gélules",
+        "price": 3200,
+        "category": "Vitamines & Santé",
+        "emoji": "🐟",
+        "desc": "Haute concentration en EPA/DHA pour le cœur et les articulations."
+      },
+      {
+        "name": "Pre-Workout Énergie Explosive 30 doses",
+        "price": 5400,
+        "category": "Créatine & Énergie",
+        "emoji": "🔥",
+        "desc": "Congestion musculaire intense et concentration maximale."
+      },
+      {
+        "name": "Multivitamines & Minéraux Sport — 60 caps",
+        "price": 2900,
+        "category": "Vitamines & Santé",
+        "emoji": "💊",
+        "desc": "Formule complète pour booster l'immunité et l'énergie."
+      },
+      {
+        "name": "Mass Gainer Prise de Masse 3kg",
+        "price": 9800,
+        "category": "Protéines & Whey",
+        "emoji": "🥣",
+        "desc": "Riche en glucides complexes et protéines pour prise de volume."
+      },
+      {
+        "name": "Zinc & Magnésium Sommeil Profond",
+        "price": 2600,
+        "category": "Vitamines & Santé",
+        "emoji": "🌙",
+        "desc": "Améliore la récupération nocturne et la relaxation musculaire."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "100% Produits Authentiques",
+        "desc": "Produits scellés, numérotés et contrôlés d'origine."
+      },
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Vérifiez votre colis avant de régler le livreur."
+      },
+      {
+        "title": "Conseils nutrition personnalisés",
+        "desc": "Notre équipe vous guide selon vos objectifs de forme."
+      }
+    ],
+    "footer_about": "Nutrition sportive et bien-être en Algérie. Marques de confiance et pureté garantie."
+  },
+  "Mode & Vêtements": {
+    "name": "Mode & Vêtements",
+    "default_emoji": "👕",
+    "kicker": "Nouvelle Collection 2026 — Édition Limitée",
+    "hero_title": "Le style qui vous distingue, au quotidien.",
+    "hero_subtitle": "Vêtements tendance, coupes soignées et finitions haut de gamme. Commandez dès maintenant avec livraison 58 wilayas.",
+    "section_title": "Nos Pièces Tendances",
+    "categories": [
+      "Hauts & T-Shirts",
+      "Pantalons & Jeans",
+      "Vestes & Manteaux",
+      "Ensembles & Survêtements"
+    ],
+    "demo_products": [
+      {
+        "name": "T-Shirt Oversize Coton Lourd 240g",
+        "price": 3400,
+        "category": "Hauts & T-Shirts",
+        "emoji": "👕",
+        "desc": "Coupe décontractée premium, col renforcé indéformable."
+      },
+      {
+        "name": "Pantalon Cargo Tendance Multi-Poches",
+        "price": 5200,
+        "category": "Pantalons & Jeans",
+        "emoji": "👖",
+        "desc": "Toile résistante et coupe ajustée moderne."
+      },
+      {
+        "name": "Veste Bomber Urbaine Doublée",
+        "price": 8900,
+        "category": "Vestes & Manteaux",
+        "emoji": "🧥",
+        "desc": "Finition coupe-vent avec poches intérieures zippées."
+      },
+      {
+        "name": "Sweat à Capuche Molleton Épais",
+        "price": 5600,
+        "category": "Hauts & T-Shirts",
+        "emoji": "🧶",
+        "desc": "Confort extrême en molleton gratté 380g."
+      },
+      {
+        "name": "Ensemble Survêtement Confort Chic",
+        "price": 7900,
+        "category": "Ensembles & Survêtements",
+        "emoji": "👔",
+        "desc": "Ensemble deux pièces coupe moderne pour sortie et détente."
+      },
+      {
+        "name": "Jean Slim Brut Denim Premium",
+        "price": 4800,
+        "category": "Pantalons & Jeans",
+        "emoji": "👖",
+        "desc": "Denim élastique confortable qui garde sa forme."
+      },
+      {
+        "name": "Chemise Lin & Coton Col Mao",
+        "price": 4500,
+        "category": "Hauts & T-Shirts",
+        "emoji": "👔",
+        "desc": "Légère et respirante pour les journées ensoleillées."
+      },
+      {
+        "name": "Casquette Coton Vintage Brodé",
+        "price": 1900,
+        "category": "Hauts & T-Shirts",
+        "emoji": "🧢",
+        "desc": "Lanière réglable en laiton et broderie nette."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Essayez et vérifiez votre article avant de payer."
+      },
+      {
+        "title": "Échange de taille facile",
+        "desc": "La taille ne convient pas ? Échange sous 48h sans tracas."
+      },
+      {
+        "title": "Livraison 58 wilayas",
+        "desc": "Expédition express directement chez vous ou en point relais."
+      }
+    ],
+    "footer_about": "Boutique de prêt-à-porter moderne et branché en Algérie. L'élégance à prix accessible."
+  },
+  "Chaussures & Baskets": {
+    "name": "Chaussures & Baskets",
+    "default_emoji": "👟",
+    "kicker": "Drops Exclusifs — Séries Numérotées",
+    "hero_title": "Chaque pas compte. Faites la différence.",
+    "hero_subtitle": "Sneakers urbaines, baskets de running et chaussures confortables. Disponibles dès aujourd'hui dans toutes les wilayas.",
+    "section_title": "Nouveaux Arrivages Sneakers",
+    "categories": [
+      "Sneakers Urbaines",
+      "Baskets Running",
+      "Mocassins & Ville",
+      "Sandales & Claquettes"
+    ],
+    "demo_products": [
+      {
+        "name": "Sneaker Rétro Cuir & Daim",
+        "price": 7800,
+        "category": "Sneakers Urbaines",
+        "emoji": "👟",
+        "desc": "Semelle amortissante avec finitions soignées en daim."
+      },
+      {
+        "name": "Baskets Running Amorti Dynamique",
+        "price": 6900,
+        "category": "Baskets Running",
+        "emoji": "🏃",
+        "desc": "Semelle en mousse ultra-légère pour un confort longue durée."
+      },
+      {
+        "name": "Mocassins Cuir Véritable Cousus Main",
+        "price": 9500,
+        "category": "Mocassins & Ville",
+        "emoji": "👞",
+        "desc": "Cuir pleine fleur souple avec semelle antidérapante."
+      },
+      {
+        "name": "Sneakers Minimalistes Blanches",
+        "price": 5900,
+        "category": "Sneakers Urbaines",
+        "emoji": "👟",
+        "desc": "Design épuré passe-partout avec semelle cousue 360°."
+      },
+      {
+        "name": "Claquettes Confort Ergonomiques",
+        "price": 2500,
+        "category": "Sandales & Claquettes",
+        "emoji": "🩴",
+        "desc": "Mousse haute densité pour maison ou extérieur."
+      },
+      {
+        "name": "Boots Hiver Cuir Imperméable",
+        "price": 11200,
+        "category": "Mocassins & Ville",
+        "emoji": "🥾",
+        "desc": "Protection étanche et intérieur doux thermorégulateur."
+      },
+      {
+        "name": "Sneakers Montantes Streetwear",
+        "price": 8400,
+        "category": "Sneakers Urbaines",
+        "emoji": "👟",
+        "desc": "Maintien cheville optimal et look urbain affirmé."
+      },
+      {
+        "name": "Chaussettes Techniques Sport (Pack de 3)",
+        "price": 1400,
+        "category": "Baskets Running",
+        "emoji": "🧦",
+        "desc": "Coton peigné avec renforts talon et pointe."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Réglez votre paire uniquement au moment de la livraison."
+      },
+      {
+        "title": "Pointure garantie",
+        "desc": "Vérifiez la pointure à la réception de votre colis."
+      },
+      {
+        "title": "58 wilayas couvertes",
+        "desc": "Livraison à domicile rapide par transporteurs agréés."
+      }
+    ],
+    "footer_about": "Spécialiste de la basket et de la chaussure en Algérie. Tendance, confort et authenticité."
+  },
+  "Cosmétiques & Beauté": {
+    "name": "Cosmétiques & Beauté",
+    "default_emoji": "💄",
+    "kicker": "Soins & Éclat — Ingrédients Sélectionnés",
+    "hero_title": "Révélez votre éclat naturel au quotidien.",
+    "hero_subtitle": "Soins du visage, rituels capillaires et maquillage de qualité supérieure. Livraison discrète dans les 58 wilayas.",
+    "section_title": "Nos Soins Phares",
+    "categories": [
+      "Soins Visage",
+      "Soins Cheveux",
+      "Maquillage",
+      "Corps & Bain"
+    ],
+    "demo_products": [
+      {
+        "name": "Sérum Éclat Vitamine C 30ml",
+        "price": 3600,
+        "category": "Soins Visage",
+        "emoji": "✨",
+        "desc": "Illumine le teint, estompe les taches et unifie la peau."
+      },
+      {
+        "name": "Crème Hydratante Acide Hyaluronique",
+        "price": 2900,
+        "category": "Soins Visage",
+        "emoji": "🧴",
+        "desc": "Hydratation profonde 24h sans effet gras."
+      },
+      {
+        "name": "Huile de Romarin Pure Repousse Cheveux",
+        "price": 2400,
+        "category": "Soins Cheveux",
+        "emoji": "🌿",
+        "desc": "Fortifie la racine et stimule la pousse des cheveux."
+      },
+      {
+        "name": "Masque Capillaire Nutrition Kératine",
+        "price": 3200,
+        "category": "Soins Cheveux",
+        "emoji": "💆",
+        "desc": "Répare les pointes abîmées et redonne de la brillance."
+      },
+      {
+        "name": "Rouge à Lèvres Mat Longue Tenue",
+        "price": 1800,
+        "category": "Maquillage",
+        "emoji": "💄",
+        "desc": "Couleur intense sans transfert, tenue jusqu'à 12h."
+      },
+      {
+        "name": "Eau Micellaire Démaquillante Douce 400ml",
+        "price": 1900,
+        "category": "Soins Visage",
+        "emoji": "💧",
+        "desc": "Nettoie en profondeur sans irriter les peaux sensibles."
+      },
+      {
+        "name": "Gommage Corporel au Sucre & Café",
+        "price": 2600,
+        "category": "Corps & Bain",
+        "emoji": "☕",
+        "desc": "Élimine les cellules mortes pour une peau douce comme de la soie."
+      },
+      {
+        "name": "Écran Solaire Invisible SPF50+ 50ml",
+        "price": 3100,
+        "category": "Soins Visage",
+        "emoji": "☀️",
+        "desc": "Haute protection UV sans traces blanches ni film gras."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Produits Testés & Sains",
+        "desc": "Formules sélectionnées respectueuses de votre peau."
+      },
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Commandez l'esprit tranquille et payez à la réception."
+      },
+      {
+        "title": "Livraison rapide 58 wilayas",
+        "desc": "Colis emballés avec soin et protection maximale."
+      }
+    ],
+    "footer_about": "Votre destination beauté et bien-être en Algérie. Soins authentiques et formules bienfaisantes."
+  },
+  "Électronique & High-Tech": {
+    "name": "Électronique & High-Tech",
+    "default_emoji": "📱",
+    "kicker": "Innovation & Performance — Garantie 100%",
+    "hero_title": "La technologie qui simplifie votre vie.",
+    "hero_subtitle": "Accessoires pour smartphones, audio sans fil et objets connectés innovants. Testés avant expédition vers les 58 wilayas.",
+    "section_title": "Nos Nouveautés High-Tech",
+    "categories": [
+      "Audio & Écouteurs",
+      "Montres Connectées",
+      "Chargeurs & Câbles",
+      "Accessoires Téléphone"
+    ],
+    "demo_products": [
+      {
+        "name": "Écouteurs Sans Fil Réduction de Bruit",
+        "price": 5800,
+        "category": "Audio & Écouteurs",
+        "emoji": "🎧",
+        "desc": "Son immersif haute fidélité avec 30h d'autonomie totale."
+      },
+      {
+        "name": "Montre Connectée Sport & Santé AMOLED",
+        "price": 7900,
+        "category": "Montres Connectées",
+        "emoji": "⌚",
+        "desc": "Suivi cardiaque, 100+ modes sportifs et appels Bluetooth."
+      },
+      {
+        "name": "Batterie Externe Ultra-Fine 20 000mAh",
+        "price": 4200,
+        "category": "Chargeurs & Câbles",
+        "emoji": "🔋",
+        "desc": "Charge rapide 22.5W avec affichage LED du pourcentage."
+      },
+      {
+        "name": "Support Téléphone Voiture Charge MagSafe",
+        "price": 2900,
+        "category": "Accessoires Téléphone",
+        "emoji": "🚗",
+        "desc": "Fixation magnétique puissante sur grille d'aération."
+      },
+      {
+        "name": "Chargeur Rapide GaN 65W Multi-Ports",
+        "price": 3800,
+        "category": "Chargeurs & Câbles",
+        "emoji": "⚡",
+        "desc": "Recharge smartphone, tablette et PC portable simultanément."
+      },
+      {
+        "name": "Enceinte Bluetooth Étanche Bass Boost",
+        "price": 6200,
+        "category": "Audio & Écouteurs",
+        "emoji": "🔊",
+        "desc": "Son stéréo 360° résistant à l'eau IPX7 avec autonomie 16h."
+      },
+      {
+        "name": "Trépied Selfie avec Télécommande Bluetooth",
+        "price": 2200,
+        "category": "Accessoires Téléphone",
+        "emoji": "📸",
+        "desc": "Stabilisation légère pour vidéos TikTok et photos de groupe."
+      },
+      {
+        "name": "Câble USB-C Tressé Indestructible 2m",
+        "price": 1200,
+        "category": "Chargeurs & Câbles",
+        "emoji": "🔌",
+        "desc": "Renforcé kevlar, supporte jusqu'à 100W de charge rapide."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Testez l'article avant d'effectuer le paiement."
+      },
+      {
+        "title": "Garantie de fonctionnement",
+        "desc": "Tous nos articles sont neufs et testés avant l'envoi."
+      },
+      {
+        "title": "Expédition express 58 wilayas",
+        "desc": "Livraison rapide sous 24 à 48 heures."
+      }
+    ],
+    "footer_about": "Boutique d'accessoires high-tech et gadgets innovants en Algérie. Fiabilité et prix imbattables."
+  },
+  "Maison & Décoration": {
+    "name": "Maison & Décoration",
+    "default_emoji": "🏡",
+    "kicker": "Intérieurs Chaleureux — Confort & Style",
+    "hero_title": "Transformez votre intérieur en un havre de paix.",
+    "hero_subtitle": "Décoration contemporaine, luminaires design et linge de maison douillet. Embellissez votre foyer partout en Algérie.",
+    "section_title": "Décoration & Luminaires",
+    "categories": [
+      "Luminaires & Lampes",
+      "Linge de Maison",
+      "Vases & Rangement",
+      "Tapis & Miroirs"
+    ],
+    "demo_products": [
+      {
+        "name": "Lampe de Table Sans Fil Tactile Dorée",
+        "price": 4600,
+        "category": "Luminaires & Lampes",
+        "emoji": "💡",
+        "desc": "Lumière chaude réglable avec 3 niveaux d'intensité."
+      },
+      {
+        "name": "Parure de Lit Coton Satiné 4 Pièces",
+        "price": 9200,
+        "category": "Linge de Maison",
+        "emoji": "🛏️",
+        "desc": "Douceur exceptionnelle et tissu thermorégulateur."
+      },
+      {
+        "name": "Vase Céramique Design Géométrique",
+        "price": 3400,
+        "category": "Vases & Rangement",
+        "emoji": "🏺",
+        "desc": "Finition mate épurée pour fleurs séchées ou fraîches."
+      },
+      {
+        "name": "Miroir Mural Ovale Bord Métal Doré",
+        "price": 6800,
+        "category": "Tapis & Miroirs",
+        "emoji": "🪞",
+        "desc": "Verre haute définition agrandissant l'espace de vie."
+      },
+      {
+        "name": "Coussin Déco Velours Côtelé 45x45cm",
+        "price": 1800,
+        "category": "Linge de Maison",
+        "emoji": "🛋️",
+        "desc": "Toucher ultra-doux avec fermeture éclair invisible."
+      },
+      {
+        "name": "Organisateur de Tiroir Modulable en Bambou",
+        "price": 2900,
+        "category": "Vases & Rangement",
+        "emoji": "📦",
+        "desc": "Bambou naturel résistant à l'humidité pour cuisine ou dressing."
+      },
+      {
+        "name": "Tapis Salon Berbère Doux 120x170cm",
+        "price": 8500,
+        "category": "Tapis & Miroirs",
+        "emoji": "🧶",
+        "desc": "Motifs géométriques élégants et envers antidérapant."
+      },
+      {
+        "name": "Diffuseur d'Huiles Essentielles à Ultrasons",
+        "price": 3900,
+        "category": "Luminaires & Lampes",
+        "emoji": "🕯️",
+        "desc": "Brume fine avec éclairage d'ambiance LED 7 couleurs."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Vérifiez l'état parfait de vos objets avant de régler."
+      },
+      {
+        "title": "Emballage antichoc garanti",
+        "desc": "Protection bulles renforcée pour tous les objets fragiles."
+      },
+      {
+        "title": "Livraison dans toute l'Algérie",
+        "desc": "Les 58 wilayas livrées en toute sérénité."
+      }
+    ],
+    "footer_about": "Tout pour décorer et équiper votre maison avec goût en Algérie. Élégance et durabilité."
+  },
+  "Cuisine & Électroménager": {
+    "name": "Cuisine & Électroménager",
+    "default_emoji": "🍳",
+    "kicker": "Plaisir de Cuisiner — Équipements Malins",
+    "hero_title": "Cuisinez comme un chef, chaque jour.",
+    "hero_subtitle": "Appareils malins, ustensiles professionnels et accessoires pratiques pour régaler toute la famille. Livraison 58 wilayas.",
+    "section_title": "Nos Incontournables Cuisine",
+    "categories": [
+      "Petits Électroménagers",
+      "Poêles & Casseroles",
+      "Ustensiles & Découpe",
+      "Conservation & Boîtes"
+    ],
+    "demo_products": [
+      {
+        "name": "Friteuse Sans Huile Air Fryer 6L",
+        "price": 14900,
+        "category": "Petits Électroménagers",
+        "emoji": "🍟",
+        "desc": "Cuisson croustillante et saine avec 85% d'huile en moins."
+      },
+      {
+        "name": "Hachoir Électrique Multifonction Inox 2L",
+        "price": 4200,
+        "category": "Petits Électroménagers",
+        "emoji": "🔪",
+        "desc": "4 lames inox pour viande, légumes et herbes en 5 secondes."
+      },
+      {
+        "name": "Set de 3 Poêles Granit Antiadhésives",
+        "price": 7900,
+        "category": "Poêles & Casseroles",
+        "emoji": "🍳",
+        "desc": "Revêtement sans PFOA compatible tous feux dont induction."
+      },
+      {
+        "name": "Mélangeur Plongeant 4-en-1 1000W",
+        "price": 5400,
+        "category": "Petits Électroménagers",
+        "emoji": "🥣",
+        "desc": "Pied inox, fouet, mini-hachoir et bol doseur inclus."
+      },
+      {
+        "name": "Set 6 Couteaux Cuisine Lame Céramique",
+        "price": 3200,
+        "category": "Ustensiles & Découpe",
+        "emoji": "🗡️",
+        "desc": "Tranchant rasoir avec bloc de rangement ventilé."
+      },
+      {
+        "name": "Boîtes de Rangement Hermétiques (Pack de 6)",
+        "price": 2900,
+        "category": "Conservation & Boîtes",
+        "emoji": "🍱",
+        "desc": "Empilables avec clips silicone pour garder les aliments frais."
+      },
+      {
+        "name": "Balance de Cuisine Électronique Précision 1g",
+        "price": 1600,
+        "category": "Ustensiles & Découpe",
+        "emoji": "⚖️",
+        "desc": "Écran LCD rétroéclairé avec fonction tare automatique."
+      },
+      {
+        "name": "Presse-Agrumes Électrique Automatique",
+        "price": 3800,
+        "category": "Petits Électroménagers",
+        "emoji": "🍊",
+        "desc": "Extraction maximale du jus en un clic sans effort."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Payez après avoir déballé et vérifié votre appareil."
+      },
+      {
+        "title": "Garantie constructeur",
+        "desc": "Service après-vente et pièces garantis."
+      },
+      {
+        "title": "Livraison rapide 58 wilayas",
+        "desc": "Expédition express par transporteur spécialisé."
+      }
+    ],
+    "footer_about": "Appareils culinaires et ustensiles de cuisine de qualité en Algérie. Cuisiner devient un jeu d'enfant."
+  },
+  "Parfumerie & Senteurs": {
+    "name": "Parfumerie & Senteurs",
+    "default_emoji": "🧴",
+    "kicker": "Haute Parfumerie — Sillage Inoubliable",
+    "hero_title": "Une signature olfactive qui ne s'oublie pas.",
+    "hero_subtitle": "Eaux de parfum raffinées, muscs orientaux précieux et encens bakhour. Découvrez nos créations livrées dans les 58 wilayas.",
+    "section_title": "Nos Parfums d'Exception",
+    "categories": [
+      "Eaux de Parfum",
+      "Muscs & Huiles",
+      "Bakhour & Encens",
+      "Coffrets Cadeaux"
+    ],
+    "demo_products": [
+      {
+        "name": "Eau de Parfum Oud Royal 100ml",
+        "price": 6800,
+        "category": "Eaux de Parfum",
+        "emoji": "🪵",
+        "desc": "Notes boisées d'oud précieux, ambre chaud et vanille de Madagascar."
+      },
+      {
+        "name": "Extrait de Parfum Vanille Sensuelle 50ml",
+        "price": 5400,
+        "category": "Eaux de Parfum",
+        "emoji": "🌸",
+        "desc": "Sillage gourmand et envoûtant avec tenue supérieure à 24h."
+      },
+      {
+        "name": "Musc Blanc Pur d'Orient 12ml",
+        "price": 1800,
+        "category": "Muscs & Huiles",
+        "emoji": "🤍",
+        "desc": "Huile de musc soyeuse sans alcool, fraîche et subtile."
+      },
+      {
+        "name": "Bakhour Traditionnel d'Oman 100g",
+        "price": 2800,
+        "category": "Bakhour & Encens",
+        "emoji": "💨",
+        "desc": "Copeaux de bois aromatiques imprégnés d'huiles royales."
+      },
+      {
+        "name": "Brume d'Ambiance & Textile Ambre 250ml",
+        "price": 2200,
+        "category": "Bakhour & Encens",
+        "emoji": "✨",
+        "desc": "Parfume durablement salon, draps et rideaux."
+      },
+      {
+        "name": "Coffret Découverte 5 Miniatures Luxe",
+        "price": 7900,
+        "category": "Coffrets Cadeaux",
+        "emoji": "🎁",
+        "desc": "5 fragrances exclusives en flacons vaporisateurs 15ml."
+      },
+      {
+        "name": "Eau de Parfum Cuir & Tabac Chaud 100ml",
+        "price": 6400,
+        "category": "Eaux de Parfum",
+        "emoji": "🍂",
+        "desc": "Caractère affirmé avec des accords épicés et cuirés."
+      },
+      {
+        "name": "Diffuseur à Tiges Rotin Bois de Cèdre 200ml",
+        "price": 3200,
+        "category": "Bakhour & Encens",
+        "emoji": "🌿",
+        "desc": "Diffusion continue douce pendant plus de 3 mois."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Recevez votre flacon scellé et payez à domicile."
+      },
+      {
+        "title": "Tenue garantie 24h",
+        "desc": "Concentrations élevées en huiles pour un sillage durable."
+      },
+      {
+        "title": "58 wilayas livrées",
+        "desc": "Emballage soigné prêt à offrir ou à s'offrir."
+      }
+    ],
+    "footer_about": "Maison de parfum et senteurs d'exception en Algérie. L'art de marquer les esprits par le sillage."
+  },
+  "Santé & Bien-être": {
+    "name": "Santé & Bien-être",
+    "default_emoji": "🌿",
+    "kicker": "Confort & Vitalité — Prenez Soin de Vous",
+    "hero_title": "Votre bien-être quotidien mérite le meilleur.",
+    "hero_subtitle": "Accessoires orthopédiques, massage thérapeutique et solutions de relaxation pour toute la famille. Livraison 58 wilayas.",
+    "section_title": "Nos Solutions Bien-Être",
+    "categories": [
+      "Massages & Relaxation",
+      "Maintien & Orthopédie",
+      "Sommeil & Repos",
+      "Vitalité & Détox"
+    ],
+    "demo_products": [
+      {
+        "name": "Pistolet de Massage Musculaire 6 Têtes",
+        "price": 7400,
+        "category": "Massages & Relaxation",
+        "emoji": "🔫",
+        "desc": "30 vitesses de percussion pour soulager nœuds et tensions."
+      },
+      {
+        "name": "Coussin Ergonomique Mémoire de Forme",
+        "price": 3800,
+        "category": "Sommeil & Repos",
+        "emoji": "😴",
+        "desc": "Alignement cervical parfait pour un réveil sans douleur."
+      },
+      {
+        "name": "Correcteur de Posture Dos & Épaules",
+        "price": 2600,
+        "category": "Maintien & Orthopédie",
+        "emoji": "🧍",
+        "desc": "Redresse la colonne en douceur et soulage le dos courbé."
+      },
+      {
+        "name": "Tapis d'Acupression Réflexologie",
+        "price": 3200,
+        "category": "Massages & Relaxation",
+        "emoji": "🧘",
+        "desc": "Stimule la circulation sanguine et libère les endorphines."
+      },
+      {
+        "name": "Ceinture Lombaire Chauffante USB",
+        "price": 4500,
+        "category": "Maintien & Orthopédie",
+        "emoji": "🔥",
+        "desc": "Chaleur apaisante et maintien renforcé pour le bas du dos."
+      },
+      {
+        "name": "Appareil Massage Pieds Shiatsu",
+        "price": 8900,
+        "category": "Massages & Relaxation",
+        "emoji": "🦶",
+        "desc": "Rouleaux rotatifs avec option chaleur pour pieds fatigués."
+      },
+      {
+        "name": "Genouillère de Compression Articulaire (La paire)",
+        "price": 2900,
+        "category": "Maintien & Orthopédie",
+        "emoji": "🦵",
+        "desc": "Soutien rotulien silicone et bandes de serrage élastiques."
+      },
+      {
+        "name": "Masque Oculaire Chauffant pour Sommeil",
+        "price": 2200,
+        "category": "Sommeil & Repos",
+        "emoji": "🌙",
+        "desc": "Détend les yeux fatigués et facilite l'endormissement."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Payez après vérification lors de la réception."
+      },
+      {
+        "title": "Matériaux certifiés confort",
+        "desc": "Testé ergonomiquement pour un usage quotidien."
+      },
+      {
+        "title": "Livraison express 58 wilayas",
+        "desc": "Reçu chez vous en toute discrétion et rapidité."
+      }
+    ],
+    "footer_about": "Votre boutique santé, ergonomie et relaxation en Algérie. Retrouvez votre confort naturel."
+  },
+  "Bébé & Enfants": {
+    "name": "Bébé & Enfants",
+    "default_emoji": "👶",
+    "kicker": "Douceur & Sécurité — Pour Vos Petits Trésors",
+    "hero_title": "Tout pour grandir avec amour et sourire.",
+    "hero_subtitle": "Vêtements doux, jouets d'éveil sécurisés et accessoires de puériculture indispensables. Livraison partout en Algérie.",
+    "section_title": "Nos Coups de Cœur Enfants",
+    "categories": [
+      "Vêtements Bébé",
+      "Éveil & Jouets",
+      "Poussettes & Sorties",
+      "Bain & Soins Bébé"
+    ],
+    "demo_products": [
+      {
+        "name": "Gigoteuse Coton Bio 4 Saisons",
+        "price": 3800,
+        "category": "Vêtements Bébé",
+        "emoji": "🌙",
+        "desc": "Fermeture zippée sécurisée, hypoallergénique et respirante."
+      },
+      {
+        "name": "Tapis d'Éveil Musical Bébé avec Arches",
+        "price": 6200,
+        "category": "Éveil & Jouets",
+        "emoji": "🧸",
+        "desc": "Stimule la motricité et les sens dès la naissance."
+      },
+      {
+        "name": "Sac à Langer Multifonction avec Lit Pliant",
+        "price": 4900,
+        "category": "Poussettes & Sorties",
+        "emoji": "🎒",
+        "desc": "Se déplie en berceau d'appoint pour les sorties."
+      },
+      {
+        "name": "Set Repas Silicone Sans BPA Ventouse",
+        "price": 2800,
+        "category": "Bain & Soins Bébé",
+        "emoji": "🥣",
+        "desc": "Assiette ventouse, bol, bavoir et cuillère ergonomique."
+      },
+      {
+        "name": "Veilleuse Étoiles Musicale et Rechargeable",
+        "price": 3200,
+        "category": "Éveil & Jouets",
+        "emoji": "⭐",
+        "desc": "Projette un ciel étoilé apaisant pour endormir bébé."
+      },
+      {
+        "name": "Porte-Bébé Ergonomique Physiologique",
+        "price": 5800,
+        "category": "Poussettes & Sorties",
+        "emoji": "🤱",
+        "desc": "Maintien parfait des hanches et du dos du nouveau-né."
+      },
+      {
+        "name": "Pack 5 Bodys Coton Doux Manches Longues",
+        "price": 3400,
+        "category": "Vêtements Bébé",
+        "emoji": "👶",
+        "desc": "Boutons pression faciles et coton peigné sans frottement."
+      },
+      {
+        "name": "Baignoire Pliable Bébé avec Thermomètre",
+        "price": 4600,
+        "category": "Bain & Soins Bébé",
+        "emoji": "🛁",
+        "desc": "Gain de place maximal avec coussin réducteur nouveau-né."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Matériaux 100% Sûrs",
+        "desc": "Zéro substance nocive, certifié pour les peaux sensibles."
+      },
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Paiement en main propre au livreur à votre porte."
+      },
+      {
+        "title": "Livraison dans les 58 wilayas",
+        "desc": "Vos colis bébé livrés rapidement avec soin."
+      }
+    ],
+    "footer_about": "Boutique de puériculture et jouets d'éveil en Algérie. La tranquillité des parents au meilleur prix."
+  },
+  "Artisanat & Terroir DZ": {
+    "name": "Artisanat & Terroir DZ",
+    "default_emoji": "🫒",
+    "kicker": "Terroir & Héritage — Fait Main en Algérie",
+    "hero_title": "La noblesse de nos traditions à votre portée.",
+    "hero_subtitle": "Huile d'olive de Kabylie, miel sauvage de l'Atlas, poteries et bijoux faits main. Du producteur directement chez vous dans les 58 wilayas.",
+    "section_title": "Trésors du Terroir Algérien",
+    "categories": [
+      "Huiles & Miel",
+      "Poterie & Déco",
+      "Tissages & Tapis",
+      "Bijoux Traditionnels"
+    ],
+    "demo_products": [
+      {
+        "name": "Huile d'Olive Extra Vierge Kabylie 1L",
+        "price": 2200,
+        "category": "Huiles & Miel",
+        "emoji": "🫒",
+        "desc": "Première pression à froid, acidité inférieure à 0.3%, récolte 2026."
+      },
+      {
+        "name": "Miel Pur de Jujubier (Sidr) 500g",
+        "price": 4500,
+        "category": "Huiles & Miel",
+        "emoji": "🍯",
+        "desc": "Miel rare de montagne récolté artisanalement sans aucun ajout."
+      },
+      {
+        "name": "Plat en Terre Cuite Émaillée Fait Main",
+        "price": 3400,
+        "category": "Poterie & Déco",
+        "emoji": "🏺",
+        "desc": "Poterie traditionnelle kabyle façonnée et peinte à la main."
+      },
+      {
+        "name": "Bracelet Berbère Argent Massif 925",
+        "price": 9800,
+        "category": "Bijoux Traditionnels",
+        "emoji": "💍",
+        "desc": "Gravures ancestrales aux émaux bleus et jaunes traditionnels."
+      },
+      {
+        "name": "Tapis Berbère Laine Pure Tissé Main",
+        "price": 18500,
+        "category": "Tissages & Tapis",
+        "emoji": "🧶",
+        "desc": "Pièce unique tissée au métier traditionnel dans le Djurdjura."
+      },
+      {
+        "name": "Savon Traditionnel à l'Huile d'Olive & Laurier",
+        "price": 600,
+        "category": "Huiles & Miel",
+        "emoji": "🧼",
+        "desc": "Saponification artisanale douce pour le visage et le corps."
+      },
+      {
+        "name": "Plein Sac d'Épices Authentiques Ras El Hanout",
+        "price": 1600,
+        "category": "Huiles & Miel",
+        "emoji": "🌶️",
+        "desc": "Mélange traditionnel de 24 épices moulues à la commande."
+      },
+      {
+        "name": "Tajine de Cuisson en Terre Cuite Naturelle",
+        "price": 3200,
+        "category": "Poterie & Déco",
+        "emoji": "🍲",
+        "desc": "Cuisson douce et saveurs préservées comme au village."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Direct Producteurs Locaux",
+        "desc": "Soutien direct aux artisans et coopératives d'Algérie."
+      },
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Inspectez vos produits artisanaux avant le paiement."
+      },
+      {
+        "title": "Livraison sécurisée 58 wilayas",
+        "desc": "Protection soignée des bouteilles et objets en poterie."
+      }
+    ],
+    "footer_about": "Valorisation du patrimoine artisanal et gastronomique d'Algérie. Qualité pure et authenticité."
+  },
+  "Auto & Moto": {
+    "name": "Auto & Moto",
+    "default_emoji": "🚗",
+    "kicker": "Accessoires & Entretien — Équipez Votre Véhicule",
+    "hero_title": "Prenez la route avec confort et sérénité.",
+    "hero_subtitle": "Accessoires d'habitacle, éclairage LED et outillage mécanique de précision. Tout pour votre véhicule, livré dans les 58 wilayas.",
+    "section_title": "Nos Équipements Auto & Moto",
+    "categories": [
+      "Accessoires Habitacle",
+      "Éclairage LED",
+      "Nettoyage & Rénovation",
+      "Outillage & Sécurité"
+    ],
+    "demo_products": [
+      {
+        "name": "Aspirateur de Voiture Puissant Sans Fil",
+        "price": 4600,
+        "category": "Nettoyage & Rénovation",
+        "emoji": "🧹",
+        "desc": "Aspiration cyclonique 9000Pa avec embouts étroits inclus."
+      },
+      {
+        "name": "Kit Ampoules Phares LED Ultra-Blanches H7",
+        "price": 3900,
+        "category": "Éclairage LED",
+        "emoji": "💡",
+        "desc": "Visibilité nocturne +300% avec faisceau net sans éblouissement."
+      },
+      {
+        "name": "Compresseur d'Air Numérique Portable 12V",
+        "price": 5800,
+        "category": "Outillage & Sécurité",
+        "emoji": "🛞",
+        "desc": "Gonflage automatique avec arrêt à la pression programmée."
+      },
+      {
+        "name": "Dashcam Caméra Embarquée Full HD Avant/Arrière",
+        "price": 7500,
+        "category": "Outillage & Sécurité",
+        "emoji": "📹",
+        "desc": "Enregistrement en boucle, vision nocturne et capteur de choc G-sensor."
+      },
+      {
+        "name": "Organisateur de Coffre Pliable Renforcé",
+        "price": 2900,
+        "category": "Accessoires Habitacle",
+        "emoji": "📦",
+        "desc": "Multi-compartiments avec bandes velcro anti-glisse."
+      },
+      {
+        "name": "Kit Rénovateur d'Optiques de Phares Pro",
+        "price": 2200,
+        "category": "Nettoyage & Rénovation",
+        "emoji": "✨",
+        "desc": "Redonne la transparence d'origine aux phares jaunis."
+      },
+      {
+        "name": "Support Smartphone Universel Tableau de Bord",
+        "price": 1800,
+        "category": "Accessoires Habitacle",
+        "emoji": "📱",
+        "desc": "Rotation 360° et maintien par gravité à une main."
+      },
+      {
+        "name": "Coussins Confort Mousse Nuque (La paire)",
+        "price": 2400,
+        "category": "Accessoires Habitacle",
+        "emoji": "🛋️",
+        "desc": "Soulage les cervicales pendant les longs trajets."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Réglez votre commande au moment de la livraison."
+      },
+      {
+        "title": "Compatibilité vérifiée",
+        "desc": "Accessoires universels conçus pour s'adapter à votre véhicule."
+      },
+      {
+        "title": "Livraison rapide 58 wilayas",
+        "desc": "Expédié sous 24h par transporteur express."
+      }
+    ],
+    "footer_about": "Boutique d'accessoires automobiles et motos en Algérie. Votre partenaire pour la route."
+  },
+  "Autre / Général": {
+    "name": "Autre / Général",
+    "default_emoji": "🛍️",
+    "kicker": "Sélection Exclusive — Les Meilleurs Prix",
+    "hero_title": "La qualité au meilleur prix, livré chez vous.",
+    "hero_subtitle": "Découvrez notre sélection d'articles choisis avec soin. Profitez du paiement à la livraison dans les 58 wilayas.",
+    "section_title": "Nos Produits Vedettes",
+    "categories": [
+      "Nouveautés",
+      "Meilleures Ventes",
+      "Offres Spéciales",
+      "Tous les Articles"
+    ],
+    "demo_products": [
+      {
+        "name": "Article Vedette Premium",
+        "price": 3900,
+        "category": "Nouveautés",
+        "emoji": "⭐",
+        "desc": "Produit de qualité supérieure garanti avec finitions soignées."
+      },
+      {
+        "name": "Pack Duo Économique",
+        "price": 6500,
+        "category": "Offres Spéciales",
+        "emoji": "🎁",
+        "desc": "Offre promotionnelle exclusive pour une durée limitée."
+      },
+      {
+        "name": "Essentiel Quotidien Pro",
+        "price": 2800,
+        "category": "Meilleures Ventes",
+        "emoji": "📦",
+        "desc": "Conçu pour un usage durable et une satisfaction totale."
+      },
+      {
+        "name": "Accessoire Pratique Multifonction",
+        "price": 1900,
+        "category": "Tous les Articles",
+        "emoji": "✨",
+        "desc": "Pratique et facile d'utilisation au quotidien."
+      }
+    ],
+    "trust_badges": [
+      {
+        "title": "Paiement à la livraison",
+        "desc": "Payez en toute sécurité à la réception de votre commande."
+      },
+      {
+        "title": "Livraison 58 wilayas",
+        "desc": "Expédition rapide et soignée dans toute l'Algérie."
+      },
+      {
+        "title": "Service client 7j/7",
+        "desc": "Une question ? Notre équipe est toujours disponible pour vous."
+      }
+    ],
+    "footer_about": "Votre boutique en ligne de confiance en Algérie. Produits de qualité et service attentionné."
+  }
+}

@@ -9,6 +9,7 @@ Utilise Google Gemini 2.5 Pro pour générer :
 """
 
 import os
+import re
 import json
 import asyncio
 import logging
@@ -17,8 +18,12 @@ import html as html_module
 from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timezone
 
-from google import genai
-from google.genai import types as genai_types
+try:
+    from google import genai
+    from google.genai import types as genai_types
+except (ImportError, AttributeError):
+    genai = None
+    genai_types = None
 from tenacity import (
     AsyncRetrying,
     stop_after_attempt,
@@ -100,8 +105,8 @@ class AIStoreGenerator:
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
             logger.warning("GEMINI_API_KEY manquant — les fonctionnalités IA échoueront.")
-        self.client = genai.Client(api_key=self.api_key) if self.api_key else None
-        self.model = "gemini-2.5-pro"
+        self.client = genai.Client(api_key=self.api_key) if (self.api_key and genai is not None) else None
+        self.model = "gemini-2.5-flash"
         self.supabase = supabase_client
 
     async def _call_gemini(
@@ -512,16 +517,56 @@ Le slogan doit refléter l'identité de la boutique et donner envie d'acheter.""
     def _get_fallback_template(
         self, store: Dict[str, Any], products: List[Dict], style: Dict[str, Any] = None, seo: Dict[str, Any] = None, slogan: str = ""
     ) -> str:
-        name = html_module.escape(store.get("name", "Ma Boutique"))
-        desc = html_module.escape(store.get("description", "Bienvenue"))
-        color = store.get("primary_color", "#534AB7")
-        phone = store.get("whatsapp_phone", "")
-        slug = store.get("slug", "boutique")
+        # ── None-safe extraction ──────────────────────────────────────────────────
+        # Supabase returns NULL columns as Python `None`, and `dict.get(key, default)`
+        # only returns `default` when the key is MISSING — not when the value is
+        # explicitly `None`. The previous version of this function crashed with
+        # `'NoneType' object has no attribute 'replace'` whenever a field like
+        # `description`, `name`, or `primary_color` was NULL. The helper below
+        # treats `None` and "" as missing and falls back to the provided default.
+        def _s(value: Any, default: str) -> str:
+            return default if value in (None, "") else str(value)
+
+        def _js_safe_json(value: Any) -> str:
+            """json.dumps safe to embed inside an inline <script>.
+
+            Python's json.dumps does NOT escape `<`, `>`, `&` or U+2028/U+2029,
+            so a product name/description containing `</script>` would terminate
+            the script tag early and either break the deployed storefront or
+            inject arbitrary JavaScript into it (stored-XSS). Escaping to the
+            \\uXXXX forms keeps the JSON valid and makes the payload inert.
+            """
+            return (
+                json.dumps(value, ensure_ascii=False)
+                .replace("<", "\\u003c")
+                .replace(">", "\\u003e")
+                .replace("&", "\\u0026")
+                .replace("\u2028", "\\u2028")
+                .replace("\u2029", "\\u2029")
+            )
+
+        def _price_int(value: Any) -> int:
+            """Robust numeric coercion for display. Prices arrive from Supabase as
+            int, float, Decimal or a formatted string; a hostile value must never
+            bubble an exception up (that would degrade the whole deploy to a bare
+            HTML page)."""
+            try:
+                return int(float(value))
+            except (TypeError, ValueError):
+                return 0
+
+        name    = html_module.escape(_s(store.get("name"), "Ma Boutique"))
+        desc    = html_module.escape(_s(store.get("description"), "Bienvenue dans notre boutique."))
+        color   = _s(store.get("primary_color"), "#534AB7")
+        phone   = _s(store.get("whatsapp_phone"), "")
+        slug    = _s(store.get("slug"), "boutique")
+        anim    = _s(store.get("animation_style"), "soft")
 
         style_prefs = style or {}
         seo_data = seo or {}
+        slogan_text = _s(slogan, "")
 
-        theme_key = store.get("theme", "modern")
+        theme_key = _s(store.get("theme"), "modern")
         theme_tokens = THEME_DESIGN_TOKENS.get(theme_key, THEME_DESIGN_TOKENS["modern"])
         bg_color = theme_tokens["bg"]
         card_color = theme_tokens["card_bg"]
@@ -529,53 +574,303 @@ Le slogan doit refléter l'identité de la boutique et donner envie d'acheter.""
 
         hero_gradient = f"linear-gradient(135deg, {color}, #1e293b)"
 
+        # ── None-safe product list ────────────────────────────────────────────────
         products_json_items = []
-        for i, p in enumerate(products):
-            p_price = p.get("price", 0)
-            images = p.get("images", [])
+        for i, p in enumerate(products or []):
+            p_price = p.get("price") or 0
+            images = p.get("images") or []
             p_img = ""
-            if images:
-                p_img = images[0].get("url", images[0]) if isinstance(images[0], dict) else images[0]
+            if images and images[0] is not None:
+                first = images[0]
+                p_img = first.get("url", first) if isinstance(first, dict) else first
+            p_img = _s(p_img, "")
+
+            # Stock: accept both `stock_quantity` (canonical, from Supabase) and
+            # the legacy `stock` key the template used before the refactor.
+            # Missing/NULL stock is treated as in-stock with qty 1 — never block
+            # the buy button over a missing field.
+            stock_qty = p.get("stock_quantity", p.get("stock", 1))
+            try:
+                stock_qty = max(0, int(stock_qty or 0))
+            except (TypeError, ValueError):
+                stock_qty = 1
+            if stock_qty == 0:
+                stock_qty = 1  # never ship a product the client can't buy
 
             products_json_items.append({
-                "id": str(p.get("id", i)),
-                "name": p.get("name", f"Produit {i+1}"),
+                "id": str(p.get("id") if p.get("id") is not None else i),
+                "name": _s(p.get("name"), f"Produit {i+1}"),
                 "price": p_price,
                 "image": p_img,
-                "description": p.get("description", ""),
+                "images": [img["url"] if isinstance(img, dict) and "url" in img
+                           else img for img in (p.get("images") or []) if img],
+                "description": _s(p.get("description"), ""),
                 "original_price": p.get("original_price"),
-                "category": p.get("category", ""),
-                "is_featured": p.get("is_featured", False),
+                "category": _s(p.get("category"), ""),
+                "is_featured": bool(p.get("is_featured", False)),
+                "stock_quantity": stock_qty,
+                "sku": _s(p.get("sku"), ""),
+                "variants": p.get("variants") if isinstance(p.get("variants"), list) else [],
             })
 
-        products_json = json.dumps(products_json_items, ensure_ascii=False)
+        products_json = _js_safe_json(products_json_items)
 
-        template_path = os.path.join(os.path.dirname(__file__), "..", "..", "store-template", "template.html")
+        # Inject a single, well-formed store metadata blob so the storefront
+        # runtime (storefront.js) has one source of truth instead of half a
+        # dozen scattered {{ }} substitutions. Raw (unescaped) values: any
+        # place that renders STORE_DATA to HTML escapes on output, and putting
+        # HTML entities here would leak "&amp;" into cart toasts / WhatsApp
+        # messages for stores whose name contains an ampersand.
+        store_data = {
+            "id":                 _s(store.get("id"), ""),
+            "name":               _s(store.get("name"), "Ma Boutique"),
+            "slug":               slug,
+            "whatsapp_phone":     phone,
+            "description":        _s(store.get("description"), "Bienvenue dans notre boutique."),
+            "primary_color":      color,
+            "theme":              theme_key,
+            "animation_style":    anim,
+            "api_url":            _s(store.get("api_url"), "http://127.0.0.1:8000"),
+            "currency":           _s(store.get("currency"), "DZD"),
+            "slogan":             _s(slogan_text or store.get("slogan"), ""),
+            "delivery_zones":     store.get("delivery_zones") or [],
+            "custom_domain":      _s(store.get("custom_domain"), ""),
+            "facebook_pixel_id":  _s(store.get("facebook_pixel_id"), ""),
+            "tiktok_pixel_id":    _s(store.get("tiktok_pixel_id"), ""),
+            "payment_settings":   store.get("payment_settings") or {
+                "cod_enabled": True,
+                "baridimob_enabled": False,
+                "baridimob_rip": "",
+                "baridimob_name": "",
+                "stripe_enabled": False,
+            },
+        }
+        store_data_json = _js_safe_json(store_data)
+
+        templates_base = os.path.join(os.path.dirname(__file__), "..", "..", "store-template", "templates")
+        folder_mapping = {
+            "pantry-basics": "01-pantry-basics",
+            "pantry": "01-pantry-basics",
+            "fashion-modern": "01-pantry-basics",
+            "Moderne": "01-pantry-basics",
+            "modern": "01-pantry-basics",
+
+            "habitat-occasions": "02-habitat-occasions",
+            "habitat": "02-habitat-occasions",
+            "single-product-cod": "02-habitat-occasions",
+            "Direct COD": "02-habitat-occasions",
+
+            "botanica-organic": "03-botanica-organic",
+            "botanica": "03-botanica-organic",
+            "artisanal-dz": "03-botanica-organic",
+            "Bio & Nature": "03-botanica-organic",
+            "nature": "03-botanica-organic",
+
+            "circuit-performance": "04-circuit-performance",
+            "circuit": "04-circuit-performance",
+            "tech-dark": "04-circuit-performance",
+            "Tech DZ": "04-circuit-performance",
+            "tech": "04-circuit-performance",
+
+            "atelier-editorial": "05-atelier-editorial",
+            "atelier": "05-atelier-editorial",
+            "luxury-beauty": "05-atelier-editorial",
+            "Luxe DZ": "05-atelier-editorial",
+            "luxury": "05-atelier-editorial",
+
+            "neo-brutalist": "06-neo-brutalist",
+            "tuareg-indigo": "07-tuareg-indigo",
+            "energetic": "08-energetic",
+            "natural": "09-natural",
+            "luxe-noir": "10-luxe-noir",
+        }
+        chosen_folder = folder_mapping.get(theme_key, folder_mapping.get(store.get("template_id"), ""))
+        custom_tpl = os.path.join(templates_base, chosen_folder, "template.html") if chosen_folder else ""
+        if custom_tpl and os.path.isfile(custom_tpl):
+            template_path = custom_tpl
+        else:
+            template_path = os.path.join(os.path.dirname(__file__), "..", "..", "store-template", "template.html")
 
         try:
             with open(template_path, "r", encoding="utf-8") as f:
                 html_content = f.read()
 
+            seo_description = html_module.escape(_s(seo_data.get("description"), desc))
+            store_slogan = html_module.escape(slogan_text or desc)
+
+            # ── Multi-Niche Adaptation Engine ────────────────────────────────
+            niche_file = os.path.join(os.path.dirname(__file__), "..", "..", "store-template", "niche-content.json")
+            niche_data = {}
+            if os.path.isfile(niche_file):
+                try:
+                    with open(niche_file, "r", encoding="utf-8") as nf:
+                        niche_data = json.load(nf)
+                except Exception as ne:
+                    logger.warning(f"Could not load niche-content.json: {ne}")
+
+            raw_cat = _s(store.get("category"), "Autre / Général")
+            niche = niche_data.get(raw_cat)
+            if not niche:
+                for k, v in niche_data.items():
+                    if k.lower() in raw_cat.lower() or raw_cat.lower() in k.lower():
+                        niche = v
+                        break
+            if not niche:
+                niche = niche_data.get("Autre / Général", {})
+
+            hero_kicker = html_module.escape(_s(niche.get("kicker"), "Collection 2026"))
+            hero_title = html_module.escape(_s(niche.get("hero_title"), name))
+            hero_subtitle = html_module.escape(_s(niche.get("hero_subtitle"), desc))
+            section_title = html_module.escape(_s(niche.get("section_title"), "Nos Produits"))
+            footer_about = html_module.escape(_s(niche.get("footer_about"), desc))
+            niche_emoji = niche.get("default_emoji", "🛍️")
+
+            niche_cats = niche.get("categories", ["Nouveautés", "Meilleures Ventes", "Promotions", "Tendances"])
+            categories_links_html = "".join(
+                f'<li><a href="#products-section">{html_module.escape(c)}</a></li>' for c in niche_cats
+            )
+            categories_chips_html = '<button class="chip on">Tous</button>' + "".join(
+                f'<button class="chip">{html_module.escape(c)}</button>' for c in niche_cats
+            )
+            categories_grid_html = "".join(
+                f'<a class="st-cat" href="#products-section">'
+                f'<span class="st-cat__art"><div style="font-size:32px;display:grid;place-items:center;height:100%;">{niche_emoji}</div></span>'
+                f'<span class="st-cat__label">{html_module.escape(c)}</span>'
+                f'</a>'
+                for c in niche_cats[:4]
+            )
+
+            trust_badges_list = niche.get("trust_badges", [
+                {"title": "Paiement à la livraison", "desc": "Réglez à la réception sans acompte."},
+                {"title": "Livraison 58 wilayas", "desc": "Expédition express partout en Algérie."},
+                {"title": "Qualité garantie", "desc": "Satisfaction garantie ou retour sous 7 jours."}
+            ])
+            trust_badges_html = "".join(
+                f'<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex:none;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>'
+                f'<span><b>{html_module.escape(b.get("title", ""))}</b> {html_module.escape(b.get("desc", ""))}</span></li>'
+                for b in trust_badges_list
+            )
+
+            # Generate product cards
+            if products_json_items:
+                cards_source = products_json_items
+            else:
+                cards_source = niche.get("demo_products", [
+                    {"name": "Article Démo", "price": 3200, "category": "Article", "emoji": niche_emoji}
+                ])
+
+            products_cards_html_list = []
+            for p_item in cards_source:
+                p_name = html_module.escape(p_item.get("name", "Produit"))
+                p_price = _price_int(p_item.get("price", 0))
+                p_cat = html_module.escape(p_item.get("category", "Article"))
+                p_img = p_item.get("image", "")
+                p_emo = p_item.get("emoji", niche_emoji)
+                name_js_safe = p_name.replace("'", "\\'")
+
+                art_content = (
+                    f'<img src="{p_img}" style="width:100%;height:100%;object-fit:cover;" alt="{p_name}" />'
+                    if p_img else
+                    f'<div style="font-size:42px;display:grid;place-items:center;width:100%;height:100%;">{p_emo}</div>'
+                )
+
+                card_markup = (
+                    f'<div class="st-card" style="cursor:pointer;" onclick="openProductPage(\'{name_js_safe}\')">'
+                    f'<span class="st-card__art">'
+                    f'<span class="st-card__cat">{p_cat}</span>'
+                    f'{art_content}'
+                    f'</span>'
+                    f'<span class="st-card__name">{p_name}</span>'
+                    f'<div style="display:flex;justify-content:space-between;align-items:center;">'
+                    f'<span class="st-card__price">{p_price} DA</span>'
+                    f'<button class="pd-btn pd-btn--buy" style="padding:6px 12px;font-size:12px;min-height:auto;" onclick="event.stopPropagation();addToCart(\'{name_js_safe}\', {p_price})">+ Commander</button>'
+                    f'</div>'
+                    f'</div>'
+                )
+                products_cards_html_list.append(card_markup)
+
+            products_cards_html = "".join(products_cards_html_list)
+
             html_content = html_content.replace("{{store_name}}", name)
+            html_content = html_content.replace("{{store_data_json}}", store_data_json)
+            html_content = html_content.replace("{{hero_kicker}}", hero_kicker)
+            html_content = html_content.replace("{{hero_title}}", hero_title)
+            html_content = html_content.replace("{{hero_subtitle}}", hero_subtitle)
+            html_content = html_content.replace("{{section_title}}", section_title)
+            html_content = html_content.replace("{{categories_links_html}}", categories_links_html)
+            html_content = html_content.replace("{{categories_chips_html}}", categories_chips_html)
+            html_content = html_content.replace("{{categories_grid_html}}", categories_grid_html)
+            html_content = html_content.replace("{{trust_badges_html}}", trust_badges_html)
+            html_content = html_content.replace("{{products_cards_html}}", products_cards_html)
+            html_content = html_content.replace("{{footer_about}}", footer_about)
             html_content = html_content.replace("{{primary_color}}", color)
-            html_content = html_content.replace("{{font}}", style_prefs.get('font', 'Inter'))
+            html_content = html_content.replace("{{font}}", _s(style_prefs.get("font"), "Inter"))
             html_content = html_content.replace("{{whatsapp_phone}}", phone)
-            html_content = html_content.replace("{{seo_description}}", html_module.escape(seo_data.get('description', desc)))
-            html_content = html_content.replace("{{store_slogan}}", html_module.escape(slogan or desc))
+            html_content = html_content.replace("{{seo_description}}", seo_description)
+            html_content = html_content.replace("{{store_slogan}}", store_slogan)
             html_content = html_content.replace("{{about_text}}", desc)
             html_content = html_content.replace("{{products_json}}", products_json)
-            html_content = html_content.replace("{{animation_style}}", store.get("animation_style", "soft"))
+            html_content = html_content.replace("{{animation_style}}", anim)
             html_content = html_content.replace("{{bg_color}}", bg_color)
             html_content = html_content.replace("{{card_color}}", card_color)
             html_content = html_content.replace("{{text_color}}", text_color)
             html_content = html_content.replace("{{hero_gradient}}", hero_gradient)
             html_content = html_content.replace("{{footer_bg}}", card_color)
             html_content = html_content.replace("{{footer_text}}", text_color)
-            html_content = html_content.replace("{{og_image}}", products_json_items[0]["image"] if products_json_items else "")
+            html_content = html_content.replace(
+                "{{og_image}}",
+                products_json_items[0]["image"] if products_json_items else "",
+            )
             html_content = html_content.replace("{{store_slug}}", slug)
+
+            # ── Inline-analytics tracker tokens (template.html) ─────────────
+            # These were historically never replaced and shipped as literal
+            # "{{store_id}}" / "{{api_url}}" strings — the page kept working but
+            # analytics were silently dead. Fill them from the same store row.
+            html_content = html_content.replace("{{store_id}}", _s(store.get("id"), ""))
+            html_content = html_content.replace(
+                "{{api_url}}", _s(store.get("api_url"), "http://127.0.0.1:8000"),
+            )
+
+            # ── Secondary tokens the template uses but that were historically
+            #    missed by this pipeline, leaving raw {{…}} visible on the
+            #    live site (logo_html, hero_emoji, product_count, year…). ──
+            hero_product = products_json_items[0] if products_json_items else None
+            logo_initial = html_module.escape((name[:1] or "M").upper())
+            html_content = html_content.replace(
+                "{{logo_html}}",
+                f'<span class="logo-badge" aria-hidden="true">{logo_initial}</span>',
+            )
+            html_content = html_content.replace("{{hero_emoji}}", "🛍️")
+            html_content = html_content.replace(
+                "{{hero_product_name}}",
+                html_module.escape(hero_product["name"]) if hero_product else store_slogan,
+            )
+            html_content = html_content.replace(
+                "{{hero_product_price}}",
+                str(_price_int(hero_product["price"])) if hero_product else "",
+            )
+            html_content = html_content.replace(
+                "{{product_count}}", str(len(products_json_items)),
+            )
+            html_content = html_content.replace("{{year}}", str(datetime.now().year))
+
+            # Final safety net: never ship raw {{tokens}} to production.
+            # Everything already replaced above stays untouched; any unknown
+            # or obsolete token is simply dropped instead of leaking.
+            html_content = re.sub(r"\{\{\s*[a-zA-Z0-9_]+\s*\}\}", "", html_content)
 
             return html_content
 
+        except FileNotFoundError as e:
+            logger.error(f"Store template not found at {template_path}: {e}")
+            return (
+                f"<!DOCTYPE html><html lang=\"fr\"><head><title>{name}</title></head>"
+                f"<body><h1>{name}</h1><p>{desc}</p></body></html>"
+            )
         except Exception as e:
             logger.error(f"Failed to load store template: {e}")
-            return f"""<!DOCTYPE html><html lang="fr"><head><title>{name}</title></head><body><h1>{name}</h1><p>{desc}</p></body></html>"""
+            return (
+                f"<!DOCTYPE html><html lang=\"fr\"><head><title>{name}</title></head>"
+                f"<body><h1>{name}</h1><p>{desc}</p></body></html>"
+            )

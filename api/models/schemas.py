@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from typing import Optional, Literal, Any
 from datetime import datetime
 import re
@@ -25,11 +25,15 @@ class StoreCreate(BaseModel):
     font_family: str = "modern"
     logo_url: Optional[str] = None
     whatsapp_phone: Optional[str] = None
-    theme: Literal["modern", "luxury", "minimal", "colorful", "tech", "nature"] = "modern"
-    animation_style: Literal["none", "soft", "dynamic", "spectacular"] = "soft"
+    theme: str = "modern"
+    animation_style: str = "soft"
     special_effects: list[str] = Field(default_factory=list)
+    custom_domain: Optional[str] = None
+    facebook_pixel_id: Optional[str] = None
+    tiktok_pixel_id: Optional[str] = None
+    payment_settings: Optional[dict] = None
 
-    @field_validator("slug", "logo_url", "description", "category", mode="before")
+    @field_validator("slug", "logo_url", "description", "category", "custom_domain", "facebook_pixel_id", "tiktok_pixel_id", mode="before")
     @classmethod
     def empty_str_to_none(cls, v):
         if isinstance(v, str) and not v.strip():
@@ -50,16 +54,24 @@ class StoreUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=60)
     category: Optional[str] = None
     description: Optional[str] = None
+    slogan: Optional[str] = None
+    currency: Optional[str] = None
+    city: Optional[str] = None
+    country: Optional[str] = None
     primary_color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
     font_family: Optional[str] = None
     logo_url: Optional[str] = None
     whatsapp_phone: Optional[str] = None
-    theme: Optional[Literal["modern", "luxury", "minimal", "colorful", "tech", "nature"]] = None
-    animation_style: Optional[Literal["none", "soft", "dynamic", "spectacular"]] = None
+    theme: Optional[str] = None
+    animation_style: Optional[str] = None
     special_effects: Optional[list[str]] = None
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
     seo_metadata: Optional[dict] = None
+    custom_domain: Optional[str] = None
+    facebook_pixel_id: Optional[str] = None
+    tiktok_pixel_id: Optional[str] = None
+    payment_settings: Optional[dict] = None
 
 class StoreResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -70,6 +82,10 @@ class StoreResponse(BaseModel):
     slug: str
     category: Optional[str] = None
     description: Optional[str] = None
+    slogan: Optional[str] = None
+    currency: str = "DZD"
+    city: Optional[str] = None
+    country: str = "DZ"
     primary_color: str = "#6366f1"
     font_family: str = "modern"
     logo_url: Optional[str] = None
@@ -83,8 +99,17 @@ class StoreResponse(BaseModel):
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
     seo_metadata: dict = Field(default_factory=dict)
+    custom_domain: Optional[str] = None
+    facebook_pixel_id: Optional[str] = None
+    tiktok_pixel_id: Optional[str] = None
+    payment_settings: dict = Field(default_factory=dict)
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("payment_settings", mode="before")
+    @classmethod
+    def default_payment_settings(cls, v):
+        return v if isinstance(v, dict) else {}
 
     @field_validator("special_effects", mode="before")
     @classmethod
@@ -114,6 +139,9 @@ class ProductCreate(BaseModel):
     images: list[ProductImage] = Field(default_factory=list)
     is_featured: bool = False
     position: int = 0
+    sku: Optional[str] = None
+    variants: list[dict] = Field(default_factory=list)
+    upsells: list[dict] = Field(default_factory=list)
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = Field(None, max_length=120)
@@ -125,14 +153,25 @@ class ProductUpdate(BaseModel):
     images: Optional[list[ProductImage]] = None
     is_featured: Optional[bool] = None
     position: Optional[int] = None
+    sku: Optional[str] = None
+    variants: Optional[list[dict]] = None
+    upsells: Optional[list[dict]] = None
 
 class ReorderItem(BaseModel):
     id: str
     position: int
 
 class ReorderRequest(BaseModel):
-    store_id: str
-    items: list[ReorderItem]
+    product_ids: list[str] = Field(default_factory=list)
+    store_id: Optional[str] = None
+    items: Optional[list[ReorderItem]] = None
+
+    @model_validator(mode="after")
+    def populate_product_ids(self):
+        if not self.product_ids and self.items:
+            sorted_items = sorted(self.items, key=lambda x: x.position)
+            self.product_ids = [item.id for item in sorted_items]
+        return self
 
 # ─── AI Generation ────────────────────────────────────────────────────────────
 
@@ -177,3 +216,18 @@ class AnalyticsSummary(BaseModel):
     product_views: int
     conversion_rate: float
     period_days: int
+
+# ─── Team Members (Phase 2) ──────────────────────────────────────────────────
+
+class TeamMemberCreate(BaseModel):
+    store_id: str
+    user_email: str
+    role: Literal["admin", "manager", "viewer"] = "manager"
+
+class TeamMemberResponse(BaseModel):
+    id: str
+    store_id: str
+    user_email: str
+    role: str
+    status: str
+    created_at: datetime

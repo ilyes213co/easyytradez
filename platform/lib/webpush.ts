@@ -59,7 +59,7 @@ export async function subscribeToPush(
 export async function unsubscribeFromPush(): Promise<boolean> {
   if (!("serviceWorker" in navigator)) return false;
   try {
-    const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+    const reg = await navigator.serviceWorker.getRegistration();
     if (!reg) return false;
     const sub = await reg.pushManager.getSubscription();
     if (!sub) return true;

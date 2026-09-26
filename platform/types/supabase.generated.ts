@@ -473,6 +473,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      store_members: {
+        Row: {
+          id: string;
+          store_id: string;
+          user_email: string;
+          role: "admin" | "manager" | "viewer";
+          status: "active" | "invited";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          user_email: string;
+          role?: "admin" | "manager" | "viewer";
+          status?: "active" | "invited";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          store_id?: string;
+          user_email?: string;
+          role?: "admin" | "manager" | "viewer";
+          status?: "active" | "invited";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

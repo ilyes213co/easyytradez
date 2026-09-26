@@ -7,8 +7,13 @@ export async function GET(request: Request) {
   const next = url.searchParams.get("next") ?? "/dashboard";
 
   if (code) {
-    const supabase = await createServerSupabaseClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    try {
+      const supabase = await createServerSupabaseClient();
+      await supabase.auth.exchangeCodeForSession(code);
+    } catch (err) {
+      console.error("[StoreGen Auth] Failed to exchange code for session:", err);
+      return NextResponse.redirect(new URL(`/login?error=auth_callback_failed`, url.origin));
+    }
   }
 
   return NextResponse.redirect(new URL(next, url.origin));

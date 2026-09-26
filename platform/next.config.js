@@ -1,8 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    optimizePackageImports: ["lucide-react", "@tanstack/react-query"],
+  },
   onDemandEntries: {
     maxInactiveAge: 60 * 60 * 1000,
-    pagesBufferLength: 10,
+    pagesBufferLength: 20,
   },
   images: {
     remotePatterns: [

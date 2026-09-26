@@ -64,11 +64,22 @@ async def create_store(
         "category": payload.category,
         "font_family": payload.font_family or "modern",
         "logo_url": payload.logo_url,
+        "custom_domain": payload.custom_domain,
+        "facebook_pixel_id": payload.facebook_pixel_id,
+        "tiktok_pixel_id": payload.tiktok_pixel_id,
+        "payment_settings": payload.payment_settings or {
+            "cod_enabled": True,
+            "baridimob_enabled": False,
+            "baridimob_rip": "",
+            "baridimob_name": "",
+            "stripe_enabled": False,
+        },
     }
 
     try:
+        from db_resilience import safe_insert
         result = await run_query(
-            lambda: supabase.table("stores").insert(store_data).execute(),
+            lambda: safe_insert("stores", store_data, supabase),
             timeout_seconds=30,
         )
 
@@ -90,29 +101,6 @@ async def create_store(
     except Exception as e:
         error_str = str(e)
         logger.error(f"Unexpected error creating store: {error_str}")
-        if any(kw in error_str.lower() for kw in ["gratuit", "limité", "1 boutique", "p0001", "plan_limit"]):
-            existing_store_id = None
-            try:
-                existing_store = (
-                    supabase.table("stores")
-                    .select("id")
-                    .eq("owner_id", user_id)
-                    .order("created_at")
-                    .limit(1)
-                    .execute()
-                )
-                if existing_store.data and len(existing_store.data) > 0:
-                    existing_store_id = existing_store.data[0].get("id")
-            except Exception:
-                existing_store_id = None
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": "STORE_QUOTA_EXCEEDED",
-                    "message": "Votre plan gratuit est limité à 1 boutique. Passez au plan Pro pour en créer davantage.",
-                    "existing_store_id": existing_store_id,
-                }
-            )
         raise HTTPException(status_code=500, detail=f"Erreur interne: {error_str}")
 
 
@@ -146,14 +134,12 @@ async def update_store(
         if value is not None
     }
 
-    result = (
-        supabase.table("stores")
-        .update(update_data)
-        .eq("id", store_id)
-        .execute()
-    )
-    if not result.data:
-        raise HTTPException(status_code=500, detail="Erreur lors de la mise à jour")
+    from db_resilience import safe_update
+    result = safe_update("stores", update_data, "id", store_id, supabase)
+    if not result or not result.data:
+        # If no fields changed or empty update
+        store_res = supabase.table("stores").select("*").eq("id", store_id).single().execute()
+        return store_res.data
     return result.data[0]
 
 

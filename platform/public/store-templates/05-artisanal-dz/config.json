@@ -1,0 +1,16 @@
+{
+  "id": "artisanal-dz",
+  "name": "Terroir & Artisanat DZ",
+  "type": "store",
+  "badge": "Authentique Terroir",
+  "description": "Chaleureux et rassurant pour huile d'olive, dattes, gâteaux et artisanat des wilayas.",
+  "category": "Artisanat & Maison DZ",
+  "themeColor": "#059669",
+  "font": "Cairo",
+  "features": [
+    "Label authenticité DZ",
+    "58 Wilayas",
+    "Paiement à la livraison",
+    "WhatsApp direct"
+  ]
+}

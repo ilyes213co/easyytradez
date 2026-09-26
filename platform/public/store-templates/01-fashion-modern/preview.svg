@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" width="100%" height="100%">
+  <defs>
+    <linearGradient id="grad-Mode & Streetwear" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2540ea"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <rect width="400" height="250" fill="#f8fafc" rx="12"/>
+  
+  <!-- Navbar -->
+  <rect x="0" y="0" width="400" height="34" fill="#ffffff" opacity="0.95"/>
+  <rect x="20" y="11" width="60" height="12" rx="4" fill="#2540ea"/>
+  <rect x="260" y="13" width="30" height="8" rx="2" fill="#64748b" opacity="0.6"/>
+  <rect x="300" y="13" width="30" height="8" rx="2" fill="#64748b" opacity="0.6"/>
+  <circle cx="365" cy="17" r="9" fill="#2540ea" opacity="0.2"/>
+  <circle cx="365" cy="17" r="4" fill="#2540ea"/>
+
+  <!-- Hero Banner -->
+  <rect x="15" y="44" width="370" height="85" rx="8" fill="url(#grad-Mode & Streetwear)" filter="url(#shadow)"/>
+  <text x="32" y="75" fill="#ffffff" font-family="sans-serif" font-size="14" font-weight="bold">Mode & Streetwear</text>
+  <text x="32" y="93" fill="#ffffff" opacity="0.8" font-family="sans-serif" font-size="10">Boutique multi-produits avec panier</text>
+  <rect x="32" y="104" width="85" height="17" rx="4" fill="#ffffff"/>
+  <text x="42" y="116" fill="#2540ea" font-family="sans-serif" font-size="8" font-weight="bold">COMMANDER →</text>
+  
+  <!-- Products Grid -->
+  <g transform="translate(15, 140)">
+    <!-- Card 1 -->
+    <rect x="0" y="0" width="85" height="95" rx="6" fill="#ffffff" filter="url(#shadow)"/>
+    <rect x="6" y="6" width="73" height="46" rx="4" fill="#2540ea" opacity="0.15"/>
+    <circle cx="42" cy="29" r="12" fill="#2540ea" opacity="0.3"/>
+    <rect x="8" y="58" width="55" height="6" rx="2" fill="#0f172a" opacity="0.8"/>
+    <rect x="8" y="68" width="35" height="6" rx="2" fill="#2540ea"/>
+    <rect x="8" y="78" width="69" height="12" rx="3" fill="#2540ea" opacity="0.85"/>
+
+    <!-- Card 2 -->
+    <rect x="95" y="0" width="85" height="95" rx="6" fill="#ffffff" filter="url(#shadow)"/>
+    <rect x="101" y="6" width="73" height="46" rx="4" fill="#2540ea" opacity="0.15"/>
+    <circle cx="137" cy="29" r="12" fill="#2540ea" opacity="0.3"/>
+    <rect x="103" y="58" width="55" height="6" rx="2" fill="#0f172a" opacity="0.8"/>
+    <rect x="103" y="68" width="35" height="6" rx="2" fill="#2540ea"/>
+    <rect x="103" y="78" width="69" height="12" rx="3" fill="#2540ea" opacity="0.85"/>
+
+    <!-- Card 3 -->
+    <rect x="190" y="0" width="85" height="95" rx="6" fill="#ffffff" filter="url(#shadow)"/>
+    <rect x="196" y="6" width="73" height="46" rx="4" fill="#2540ea" opacity="0.15"/>
+    <circle cx="232" cy="29" r="12" fill="#2540ea" opacity="0.3"/>
+    <rect x="198" y="58" width="55" height="6" rx="2" fill="#0f172a" opacity="0.8"/>
+    <rect x="198" y="68" width="35" height="6" rx="2" fill="#2540ea"/>
+    <rect x="198" y="78" width="69" height="12" rx="3" fill="#2540ea" opacity="0.85"/>
+
+    <!-- Card 4 -->
+    <rect x="285" y="0" width="85" height="95" rx="6" fill="#ffffff" filter="url(#shadow)"/>
+    <rect x="291" y="6" width="73" height="46" rx="4" fill="#2540ea" opacity="0.15"/>
+    <circle cx="327" cy="29" r="12" fill="#2540ea" opacity="0.3"/>
+    <rect x="293" y="58" width="55" height="6" rx="2" fill="#0f172a" opacity="0.8"/>
+    <rect x="293" y="68" width="35" height="6" rx="2" fill="#2540ea"/>
+    <rect x="293" y="78" width="69" height="12" rx="3" fill="#2540ea" opacity="0.85"/>
+  </g>
+</svg>

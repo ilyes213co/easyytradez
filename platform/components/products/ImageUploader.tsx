@@ -66,6 +66,9 @@ async function uploadToCloudinary(
   storeId: string,
   onProgress: (pct: number) => void,
 ): Promise<UploadedImage> {
+  if (!storeId) {
+    throw new Error("Aucune boutique sélectionnée. Rafraîchissez la page.");
+  }
   const supabase = createClient();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) {
@@ -117,6 +120,19 @@ export default function ImageUploader({
   const remaining   = maxFiles - totalSlots;
 
   const processFiles = useCallback(async (files: FileList | File[]) => {
+    if (!storeId) {
+      const arr = Array.from(files);
+      const entries: UploadingFile[] = arr.map(f => ({
+        id:       uid(),
+        name:     f.name,
+        preview:  URL.createObjectURL(f),
+        progress: 0,
+        error:    "Aucune boutique sélectionnée. Rafraîchissez la page.",
+        done:     false,
+      }));
+      setUploading(prev => [...prev, ...entries]);
+      return;
+    }
     const arr = Array.from(files).slice(0, remaining);
     if (!arr.length) return;
 
@@ -187,6 +203,14 @@ export default function ImageUploader({
   const removeUploading = (id: string) => {
     setUploading(prev => prev.filter(u => u.id !== id));
   };
+
+  if (!storeId) {
+    return (
+      <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-6 text-center">
+        <p className="text-sm text-white/40">Chargement de la boutique…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -311,4 +335,3 @@ export default function ImageUploader({
     </div>
   );
 }
-

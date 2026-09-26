@@ -84,7 +84,7 @@ export default function Footer() {
           </p>
           <p style={{ fontSize: "12px", color: theme.textMuted, margin: 0 }}>
             Boutique créée avec{" "}
-            <a href="https://storegen.dz" style={{ color: primary, textDecoration: "none", fontWeight: 500 }}>StoreGen</a>
+            <a href="https://easytrade.dz" style={{ color: primary, textDecoration: "none", fontWeight: 500 }}>EasyTrade</a>
           </p>
         </div>
       </div>

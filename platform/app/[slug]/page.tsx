@@ -127,7 +127,7 @@ function ProductCard({ product, slug }: { product: Product; slug: string }) {
     : 0;
 
   return (
-    <Link href={`/${slug}/${product.slug}`} className="group block">
+    <Link href={`/${slug}/${product.slug || product.id}`} className="group block">
       <div className="rounded-2xl bg-white border border-stone-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
         {/* Image */}
         <div className="aspect-square bg-stone-50 overflow-hidden relative">
@@ -200,7 +200,7 @@ export default async function StorePage({ params, searchParams }: PageProps) {
     .from("stores")
     .select("*")
     .eq("slug", slug)
-    .eq("status", "active")
+    .in("status", ["published", "active"])
     .single();
 
   const store = rawStore as unknown as Store | null;

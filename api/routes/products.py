@@ -6,12 +6,15 @@ Auth JWT Supabase vérifiée sur chaque endpoint
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, model_validator
+from typing import Any
 from enum import Enum
 
+import logging
 from dependencies import get_supabase, verify_token
 
 router = APIRouter()
+logger = logging.getLogger("storegen.products")
 
 # ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -29,16 +32,32 @@ class ImageItem(BaseModel):
 
 
 class ProductCreate(BaseModel):
-    store_id:       str
-    name:           str = Field(..., min_length=2, max_length=120)
-    description:    Optional[str] = None
-    price:          float = Field(..., gt=0)
-    original_price: Optional[float] = None
-    category:       Optional[str]   = None
-    stock_quantity: int             = Field(default=0, ge=0)
-    images:         List[ImageItem] = Field(default_factory=list)
-    is_featured:    bool            = False
-    status:         ProductStatus   = ProductStatus.ACTIVE
+    store_id:           str
+    name:               Optional[str]   = None
+    title:              Optional[str]   = None
+    description:        Optional[str]   = None
+    price:              float           = Field(..., gt=0)
+    original_price:     Optional[float] = None
+    category:           Optional[str]   = None
+    stock_quantity:     int             = Field(default=0, ge=0)
+    inventory_quantity: Optional[int]   = None
+    position:           Optional[int]   = None
+    images:             List[ImageItem] = Field(default_factory=list)
+    is_featured:        bool            = False
+    status:             ProductStatus   = ProductStatus.ACTIVE
+    sku:                Optional[str]   = None
+    variants:           List[dict]      = Field(default_factory=list)
+    upsells:            List[dict]      = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_aliases(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if not data.get("name") and data.get("title"):
+                data["name"] = data["title"]
+            if (data.get("stock_quantity") is None or data.get("stock_quantity") == 0) and data.get("inventory_quantity"):
+                data["stock_quantity"] = data.get("inventory_quantity")
+        return data
 
 
 class ProductUpdate(BaseModel):
@@ -51,6 +70,9 @@ class ProductUpdate(BaseModel):
     images:         Optional[List[ImageItem]] = None
     is_featured:    Optional[bool]          = None
     status:         Optional[ProductStatus] = None
+    sku:            Optional[str]           = None
+    variants:       Optional[List[dict]]    = None
+    upsells:        Optional[List[dict]]    = None
 
 
 class ReorderRequest(BaseModel):
@@ -118,13 +140,23 @@ async def list_products(
         .range(offset, offset + limit - 1)
     )
 
-    if status:   query = query.eq("status", status)
     if category: query = query.eq("category", category)
     if featured is not None: query = query.eq("is_featured", featured)
     if search:   query = query.ilike("name", f"%{search}%")
+    if status and status != "all":
+        try:
+            test_query = query.eq("status", status)
+            res = test_query.execute()
+        except Exception:
+            res = query.execute()
+    else:
+        res = query.execute()
 
-    res = query.execute()
-    return res.data or []
+    items = res.data or []
+    for item in items:
+        if "status" not in item or not item.get("status"):
+            item["status"] = "active"
+    return items
 
 
 # ─── POST /products ───────────────────────────────────────────────────────────
@@ -140,22 +172,53 @@ async def create_product(
     supabase = get_supabase()
 
     # Auto-position at end
-    count_res = (
-        supabase.table("products")
-        .select("id", count="exact")
-        .eq("store_id", payload.store_id)
-        .execute()
-    )
-    position = count_res.count or 0
+    try:
+        count_res = (
+            supabase.table("products")
+            .select("id", count="exact")
+            .eq("store_id", payload.store_id)
+            .execute()
+        )
+        position = count_res.count or 0
+    except Exception:
+        position = 0
 
     data = payload.dict()
+    if not data.get("name") and data.get("title"):
+        data["name"] = data["title"]
+    data.pop("title", None)
+    if "inventory_quantity" in data:
+        if not data.get("stock_quantity"):
+            data["stock_quantity"] = data["inventory_quantity"]
+        data.pop("inventory_quantity", None)
     data["images"]   = [img.dict() for img in payload.images]
     data["position"] = position
 
-    res = supabase.table("products").insert(data).execute()
+    try:
+        from db_resilience import safe_insert
+        res = safe_insert("products", data, supabase)
+    except Exception as e:
+        err_msg = str(e)
+        logger.warning(f"Error on product insert: {err_msg}")
+        if "status" in err_msg and "status" in data:
+            data.pop("status", None)
+            try:
+                from db_resilience import safe_insert
+                res = safe_insert("products", data, supabase)
+            except Exception as e2:
+                logger.error(f"Error on product insert without status: {e2}")
+                raise HTTPException(status_code=500, detail=f"Erreur Supabase: {str(e2)}")
+        else:
+            raise HTTPException(status_code=500, detail=f"Erreur Supabase: {err_msg}")
+
     if not res.data:
         raise HTTPException(status_code=500, detail="Erreur lors de la création")
-    return res.data[0]
+
+    product = res.data[0]
+    if "status" not in product or not product.get("status"):
+        status_val = payload.status.value if hasattr(payload.status, "value") else str(payload.status)
+        product["status"] = status_val or "active"
+    return product
 
 
 # ─── PATCH /products/:id ──────────────────────────────────────────────────────
@@ -189,7 +252,13 @@ async def reorder_products(
     if len(products) != len(payload.product_ids):
         raise HTTPException(status_code=404, detail="Un ou plusieurs produits sont introuvables")
 
-    owners = {row["stores"]["owner_id"] for row in products if row.get("stores")}
+    owners = set()
+    for row in products:
+        stores_data = row.get("stores")
+        if isinstance(stores_data, dict) and stores_data.get("owner_id"):
+            owners.add(stores_data["owner_id"])
+        elif isinstance(stores_data, list) and stores_data and stores_data[0].get("owner_id"):
+            owners.add(stores_data[0]["owner_id"])
     if owners != {user_id}:
         raise HTTPException(status_code=403, detail="Accès refusé")
 
@@ -231,15 +300,29 @@ async def update_product(
 
     data["updated_at"] = datetime.utcnow().isoformat()
 
-    res = (
-        supabase.table("products")
-        .update(data)
-        .eq("id", product_id)
-        .execute()
-    )
-    if not res.data:
+    try:
+        from db_resilience import safe_update
+        res = safe_update("products", data, "id", product_id, supabase)
+    except Exception as e:
+        err_msg = str(e)
+        if "status" in err_msg and "status" in data:
+            data.pop("status", None)
+            if not data or list(data.keys()) == ["updated_at"]:
+                status_val = payload.status.value if hasattr(payload.status, "value") else str(payload.status)
+                return {"id": product_id, "status": status_val or "active"}
+            from db_resilience import safe_update
+            res = safe_update("products", data, "id", product_id, supabase)
+        else:
+            raise HTTPException(status_code=500, detail=f"Erreur Supabase: {err_msg}")
+
+    if not res or not res.data:
         raise HTTPException(status_code=500, detail="Erreur mise à jour")
-    return res.data[0]
+
+    product = res.data[0]
+    if "status" not in product or not product.get("status"):
+        status_val = payload.status.value if hasattr(payload.status, "value") else str(payload.status)
+        product["status"] = status_val or "active"
+    return product
 
 
 # ─── DELETE /products/:id ─────────────────────────────────────────────────────

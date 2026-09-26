@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { storesApi } from "@/lib/api";
 import { WILAYAS } from "@/lib/wilayas";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -28,7 +29,7 @@ function Spinner({ size = 16 }: { size?: number }) {
 }
 
 const inputClass =
-  "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-white placeholder-white/20 outline-none transition-all focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/10 disabled:opacity-40 disabled:cursor-not-allowed";
+  "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-white placeholder-white/20 outline-none transition-all focus:border-blue-400 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -52,16 +53,25 @@ export default function DeliveryPage() {
   const load = useCallback(async () => {
     if (!user) return;
 
-    const { data: store } = await supabase
-      .from("stores").select("id").eq("owner_id", user.id).single();
+    let currentStoreId: string | null = null;
+    try {
+      const stores = await storesApi.getAll();
+      if (Array.isArray(stores) && stores.length > 0) {
+        currentStoreId = stores[0].id;
+      }
+    } catch {
+      const { data: store } = await supabase
+        .from("stores").select("id").eq("owner_id", user.id).maybeSingle();
+      if (store) currentStoreId = store.id;
+    }
 
-    if (!store) { setLoading(false); return; }
-    setStoreId(store.id);
+    if (!currentStoreId) { setLoading(false); return; }
+    setStoreId(currentStoreId);
 
     const { data: existing } = await supabase
       .from("delivery_zones")
       .select("*")
-      .eq("store_id", store.id);
+      .eq("store_id", currentStoreId);
 
     // Build zone map — fill with defaults for missing wilayas
     const map: ZoneMap = {};
@@ -194,7 +204,7 @@ function getZoneOrFallback(zone: DeliveryZone | undefined, code: string): Delive
         <button
           onClick={handleSave} disabled={saving}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
-            saved ? "bg-emerald-600 text-white" : "bg-indigo-600 hover:bg-indigo-500 text-white"
+            saved ? "bg-emerald-600 text-white" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-900/40 border border-white/20 text-white"
           } disabled:opacity-50`}
           style={{ boxShadow: "0 0 16px rgba(99,102,241,0.2)" }}
         >
@@ -213,7 +223,7 @@ function getZoneOrFallback(zone: DeliveryZone | undefined, code: string): Delive
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Wilayas actives",    value: `${enabledCount} / 58`,       icon: "📍", color: "text-white/80" },
-          { label: "Frais moyen",        value: `${avgFee.toLocaleString()} DZD`, icon: "💰", color: "text-indigo-400" },
+          { label: "Frais moyen",        value: `${avgFee.toLocaleString()} DZD`, icon: "💰", color: "text-blue-400" },
           { label: "Livraison gratuite", value: `${freeCount} wilayas`,       icon: "🎁", color: "text-emerald-400" },
         ].map((s) => (
           <div key={s.label} className="rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 py-3">
@@ -254,7 +264,7 @@ function getZoneOrFallback(zone: DeliveryZone | undefined, code: string): Delive
           </div>
           <button
             onClick={applyDefault}
-            className="rounded-xl border border-indigo-500/30 bg-indigo-500/15 hover:bg-indigo-500/25 px-4 py-2 text-xs font-semibold text-indigo-300 transition-all"
+            className="rounded-xl border border-blue-400/30 bg-blue-950/40 hover:bg-blue-900/40 px-4 py-2 text-xs font-semibold text-blue-200 transition-all"
           >
             Appliquer à toutes
           </button>
@@ -323,7 +333,7 @@ function getZoneOrFallback(zone: DeliveryZone | undefined, code: string): Delive
                     value={zone.fee}
                     onChange={(e) => updateFee(w.code, e.target.value)}
                     disabled={!zone.enabled}
-                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-white outline-none focus:border-indigo-500/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-white outline-none focus:border-blue-400 disabled:opacity-40 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -335,14 +345,14 @@ function getZoneOrFallback(zone: DeliveryZone | undefined, code: string): Delive
                     onChange={(e) => updateFreeAbove(w.code, e.target.value)}
                     disabled={!zone.enabled}
                     placeholder="—"
-                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-white placeholder-white/15 outline-none focus:border-indigo-500/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-white placeholder-white/15 outline-none focus:border-blue-400 disabled:opacity-40 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 {/* Toggle */}
                 <button
                   onClick={() => toggleZone(w.code)}
-                  className={`relative w-8 h-4 rounded-full transition-all ${zone.enabled ? "bg-indigo-500" : "bg-white/10"}`}
+                  className={`relative w-8 h-4 rounded-full transition-all ${zone.enabled ? "bg-blue-600" : "bg-white/10"}`}
                   aria-label={zone.enabled ? "Désactiver" : "Activer"}
                 >
                   <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${zone.enabled ? "left-4" : "left-0.5"}`} />
@@ -358,7 +368,7 @@ function getZoneOrFallback(zone: DeliveryZone | undefined, code: string): Delive
         <button
           onClick={handleSave} disabled={saving}
           className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all ${
-            saved ? "bg-emerald-600 text-white" : "bg-indigo-600 hover:bg-indigo-500 text-white"
+            saved ? "bg-emerald-600 text-white" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-900/40 border border-white/20 text-white"
           } disabled:opacity-50`}
           style={{ boxShadow: "0 0 20px rgba(99,102,241,0.2)" }}
         >

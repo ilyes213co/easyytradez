@@ -15,12 +15,53 @@ const ProductSchema = z.object({
   stock_quantity: z.number().int().min(0, "Stock invalide"),
   is_featured:    z.boolean(),
   status:         z.enum(["active", "draft", "archived"]),
+  sku:            z.string().max(60).optional().nullable(),
 }).refine(d => !d.original_price || d.original_price > d.price, {
   message: "Le prix barré doit être supérieur au prix de vente",
   path:    ["original_price"],
 });
 
 type ProductForm = z.infer<typeof ProductSchema>;
+
+export interface ProductVariantItem {
+  id: string;
+  name: string;
+  price?: number | null;
+  stock?: number;
+  sku?: string;
+}
+
+// ─── Product type system ─────────────────────────────────────────────────────────
+
+type ProductType = "clothing" | "shoes" | "other";
+
+const PRODUCT_TYPES: { value: ProductType; label: string; icon: string; desc: string }[] = [
+  { value: "clothing", label: "Vêtement", icon: "👕", desc: "Haut, bas, robe, veste…" },
+  { value: "shoes",    label: "Chaussure", icon: "👟", desc: "Pointures EU 36-46" },
+  { value: "other",    label: "Autre produit", icon: "📦", desc: "Accessoire, électronique…" },
+];
+
+const CLOTHING_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+const SHOE_SIZES = ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"];
+const COLOR_PALETTE = [
+  { label: "Noir",      hex: "#111111" },
+  { label: "Blanc",     hex: "#FFFFFF" },
+  { label: "Gris",      hex: "#9CA3AF" },
+  { label: "Beige",     hex: "#D9C5A0" },
+  { label: "Marron",    hex: "#92400E" },
+  { label: "Rouge",     hex: "#EF4444" },
+  { label: "Rose",      hex: "#F472B6" },
+  { label: "Bordeaux",  hex: "#881337" },
+  { label: "Orange",    hex: "#F97316" },
+  { label: "Jaune",     hex: "#FACC15" },
+  { label: "Vert",      hex: "#22C55E" },
+  { label: "Kaki",      hex: "#6B7280" },
+  { label: "Bleu",      hex: "#3B82F6" },
+  { label: "Marine",    hex: "#1E3A5F" },
+  { label: "Violet",    hex: "#A855F7" },
+  { label: "Camel",     hex: "#C8956C" },
+];
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,6 +78,8 @@ export interface Product {
   is_featured:    boolean;
   status:         "active" | "draft" | "archived";
   position?:      number;
+  sku?:           string | null;
+  variants?:      ProductVariantItem[];
 }
 
 interface Props {
@@ -88,6 +131,12 @@ export default function ProductModal({ open, onClose, onSave, product, storeId }
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof ProductForm, string>>>({});
 
+  // Product type
+  const [productType, setProductType] = useState<ProductType>("other");
+  const [selectedSizes, setSelectedSizes]   = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+
+
   // Form state
   const [form, setForm] = useState<ProductForm>({
     name:           "",
@@ -98,8 +147,10 @@ export default function ProductModal({ open, onClose, onSave, product, storeId }
     stock_quantity: 0,
     is_featured:    false,
     status:         "active",
+    sku:            "",
   });
   const [images, setImages] = useState<UploadedImage[]>([]);
+  const [variants, setVariants] = useState<ProductVariantItem[]>([]);
 
   // Sync with product prop
   useEffect(() => {
@@ -113,11 +164,17 @@ export default function ProductModal({ open, onClose, onSave, product, storeId }
         stock_quantity: product.stock_quantity,
         is_featured:    product.is_featured,
         status:         product.status,
+        sku:            product.sku ?? "",
       });
       setImages(product.images ?? []);
+      setVariants(product.variants ?? []);
     } else {
-      setForm({ name: "", description: "", price: 0, original_price: null, category: "", stock_quantity: 0, is_featured: false, status: "active" });
+      setForm({ name: "", description: "", price: 0, original_price: null, category: "", stock_quantity: 0, is_featured: false, status: "active", sku: "" });
       setImages([]);
+      setVariants([]);
+      setProductType("other");
+      setSelectedSizes([]);
+      setSelectedColors([]);
     }
     setErrors({});
   }, [product, open]);
@@ -147,7 +204,79 @@ export default function ProductModal({ open, onClose, onSave, product, storeId }
       }));
     };
 
+  const addVariant = () => {
+    const newId = `var_${Date.now()}`;
+    setVariants(prev => [
+      ...prev,
+      { id: newId, name: `Variante ${prev.length + 1}`, price: null, stock: 5, sku: "" },
+    ]);
+  };
+
+  const updateVariant = (id: string, field: keyof ProductVariantItem, value: any) => {
+    setVariants(prev =>
+      prev.map(v => (v.id === id ? { ...v, [field]: value } : v))
+    );
+  };
+
+  const removeVariant = (id: string) => {
+    setVariants(prev => prev.filter(v => v.id !== id));
+  };
+
   const handleSave = async () => {
+    // Build variants from type-aware attributes if needed
+    let finalVariants = variants;
+
+    if (productType === "clothing" && selectedSizes.length > 0) {
+      // Merge sizes + colors into variant names
+      if (selectedColors.length > 0) {
+        finalVariants = selectedSizes.flatMap((size) =>
+          selectedColors.map((color) => ({
+            id: `${size}_${color}_${Date.now()}`,
+            name: `${size} / ${color}`,
+            price: null,
+            stock: Math.max(1, Math.floor(form.stock_quantity / (selectedSizes.length * selectedColors.length))),
+            sku: "",
+          }))
+        );
+      } else {
+        finalVariants = selectedSizes.map((size) => ({
+          id: `${size}_${Date.now()}`,
+          name: size,
+          price: null,
+          stock: Math.max(1, Math.floor(form.stock_quantity / selectedSizes.length)),
+          sku: "",
+        }));
+      }
+    } else if (productType === "shoes" && selectedSizes.length > 0) {
+      if (selectedColors.length > 0) {
+        finalVariants = selectedSizes.flatMap((size) =>
+          selectedColors.map((color) => ({
+            id: `${size}_${color}_${Date.now()}`,
+            name: `${size} / ${color}`,
+            price: null,
+            stock: Math.max(1, Math.floor(form.stock_quantity / (selectedSizes.length * selectedColors.length))),
+            sku: "",
+          }))
+        );
+      } else {
+        finalVariants = selectedSizes.map((size) => ({
+          id: `size_${size}_${Date.now()}`,
+          name: `Pointure ${size}`,
+          price: null,
+          stock: Math.max(1, Math.floor(form.stock_quantity / selectedSizes.length)),
+          sku: "",
+        }));
+      }
+    } else if (productType === "other" && selectedColors.length > 0 && variants.length === 0) {
+      finalVariants = selectedColors.map((color) => ({
+        id: `color_${color}_${Date.now()}`,
+        name: color,
+        price: null,
+        stock: Math.max(1, Math.floor(form.stock_quantity / selectedColors.length)),
+        sku: "",
+      }));
+    }
+
     // Validate
     const result = ProductSchema.safeParse(form);
     if (!result.success) {
@@ -164,6 +293,8 @@ export default function ProductModal({ open, onClose, onSave, product, storeId }
     try {
       await onSave({
         ...result.data,
+        sku: form.sku?.trim() || null,
+        variants: finalVariants,
         images,
         store_id: storeId,
       });
@@ -303,7 +434,7 @@ export default function ProductModal({ open, onClose, onSave, product, storeId }
               </select>
             </Field>
 
-            <Field label="Stock" error={errors.stock_quantity}>
+            <Field label="Stock global" error={errors.stock_quantity}>
               <div className="flex items-center gap-0">
                 <button
                   type="button"
@@ -328,6 +459,225 @@ export default function ProductModal({ open, onClose, onSave, product, storeId }
               )}
             </Field>
           </div>
+
+          {/* Code SKU / Référence */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Code SKU / Référence">
+              <input
+                className={inputCls}
+                placeholder="Ex: TSH-001"
+                value={form.sku || ""}
+                onChange={set("sku")}
+                maxLength={60}
+              />
+            </Field>
+
+            <div className="flex flex-col justify-end">
+              <p className="text-[11px] text-white/40 pb-2">
+                Le SKU vous aide à identifier rapidement vos articles lors de la préparation des commandes.
+              </p>
+            </div>
+          </div>
+
+          <div className="h-px bg-white/[0.06]" />
+
+          {/* ─── TYPE DE PRODUIT ─── */}
+          <div className="space-y-3">
+            <label className={labelCls}>Type de produit</label>
+            <div className="grid grid-cols-3 gap-2">
+              {PRODUCT_TYPES.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => {
+                    setProductType(t.value);
+                    setSelectedSizes([]);
+                  }}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-center transition-all ${
+                    productType === t.value
+                      ? "border-indigo-500/60 bg-indigo-500/10 text-indigo-300"
+                      : "border-white/10 bg-white/[0.02] text-white/50 hover:border-white/20 hover:text-white/80"
+                  }`}
+                >
+                  <span className="text-xl">{t.icon}</span>
+                  <span className="text-xs font-semibold">{t.label}</span>
+                  <span className="text-[10px] text-white/30 leading-tight">{t.desc}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Sizes for clothing */}
+            {productType === "clothing" && (
+              <div>
+                <p className="text-[11px] text-white/40 mb-2">Tailles disponibles (cliquez pour sélectionner)</p>
+                <div className="flex flex-wrap gap-2">
+                  {CLOTHING_SIZES.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() =>
+                        setSelectedSizes((prev) =>
+                          prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+                        )
+                      }
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${
+                        selectedSizes.includes(size)
+                          ? "border-indigo-500 bg-indigo-500/20 text-indigo-300"
+                          : "border-white/10 bg-white/[0.03] text-white/50 hover:border-white/20"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sizes for shoes */}
+            {productType === "shoes" && (
+              <div>
+                <p className="text-[11px] text-white/40 mb-2">Pointures disponibles (EU)</p>
+                <div className="flex flex-wrap gap-2">
+                  {SHOE_SIZES.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() =>
+                        setSelectedSizes((prev) =>
+                          prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+                        )
+                      }
+                      className={`w-10 h-10 rounded-lg border text-xs font-bold transition-all ${
+                        selectedSizes.includes(size)
+                          ? "border-indigo-500 bg-indigo-500/20 text-indigo-300"
+                          : "border-white/10 bg-white/[0.03] text-white/50 hover:border-white/20"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Colors (available for all types) */}
+            <div>
+              <p className="text-[11px] text-white/40 mb-2">Couleurs disponibles (optionnel)</p>
+              <div className="flex flex-wrap gap-2">
+                {COLOR_PALETTE.map((c) => (
+                  <button
+                    key={c.hex}
+                    type="button"
+                    title={c.label}
+                    onClick={() =>
+                      setSelectedColors((prev) =>
+                        prev.includes(c.label) ? prev.filter((x) => x !== c.label) : [...prev, c.label]
+                      )
+                    }
+                    className={`w-8 h-8 rounded-full border-2 transition-all ${
+                      selectedColors.includes(c.label)
+                        ? "border-indigo-400 scale-110 shadow-lg shadow-indigo-500/30"
+                        : "border-white/10 hover:border-white/30 hover:scale-105"
+                    }`}
+                    style={{ backgroundColor: c.hex }}
+                  />
+                ))}
+              </div>
+              {selectedColors.length > 0 && (
+                <p className="text-[11px] text-indigo-400 mt-1.5">
+                  {selectedColors.join(", ")}
+                </p>
+              )}
+            </div>
+
+            {/* Summary of what will be created */}
+            {(selectedSizes.length > 0 || selectedColors.length > 0) && (
+              <div className="rounded-xl bg-indigo-500/5 border border-indigo-500/20 px-4 py-3">
+                <p className="text-xs text-indigo-300 font-medium">
+                  ✨ {selectedSizes.length > 0 && selectedColors.length > 0
+                    ? `${selectedSizes.length * selectedColors.length} variantes seront créées (${selectedSizes.length} tailles × ${selectedColors.length} couleurs)`
+                    : selectedSizes.length > 0
+                    ? `${selectedSizes.length} variante${selectedSizes.length > 1 ? "s" : ""} de taille seront créées`
+                    : `${selectedColors.length} variante${selectedColors.length > 1 ? "s" : ""} de couleur seront créées`
+                  }
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="h-px bg-white/[0.06]" />
+
+          {/* Manual variants (for "other" type) */}
+          {productType === "other" && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className={labelCls}>Variantes manuelles <span className="text-white/25 normal-case tracking-normal">({variants.length})</span></label>
+                  <p className="text-[11px] text-white/40">Ajoutez des tailles, matières ou formats disponibles.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={addVariant}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs font-medium transition-all"
+                >
+                  ＋ Ajouter
+                </button>
+              </div>
+              {variants.length > 0 && (
+                <div className="space-y-2.5">
+                  {variants.map((v) => (
+                    <div key={v.id} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] flex flex-col sm:flex-row gap-2.5 sm:items-center">
+                      <div className="flex-1">
+                        <input
+                          className={inputCls + " py-1.5 text-xs"}
+                          placeholder="Nom (ex: M / Noir)"
+                          value={v.name}
+                          onChange={(e) => updateVariant(v.id, "name", e.target.value)}
+                        />
+                      </div>
+                      <div className="w-full sm:w-28">
+                        <input
+                          type="number"
+                          className={inputCls + " py-1.5 text-xs"}
+                          placeholder="Prix DZD"
+                          value={v.price ?? ""}
+                          onChange={(e) => updateVariant(v.id, "price", e.target.value === "" ? null : Number(e.target.value))}
+                        />
+                      </div>
+                      <div className="w-full sm:w-24">
+                        <input
+                          type="number"
+                          min="0"
+                          className={inputCls + " py-1.5 text-xs"}
+                          placeholder="Stock"
+                          value={v.stock ?? 0}
+                          onChange={(e) => updateVariant(v.id, "stock", Math.max(0, Number(e.target.value) || 0))}
+                        />
+                      </div>
+                      <div className="w-full sm:w-28">
+                        <input
+                          className={inputCls + " py-1.5 text-xs"}
+                          placeholder="SKU"
+                          value={v.sku ?? ""}
+                          onChange={(e) => updateVariant(v.id, "sku", e.target.value)}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeVariant(v.id)}
+                        className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0 self-end sm:self-center"
+                        title="Supprimer la variante"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="h-px bg-white/[0.06]" />
 
           {/* En vedette */}
           <div className="flex items-center justify-between bg-white/[0.03] border border-white/[0.06] rounded-2xl px-4 py-3">

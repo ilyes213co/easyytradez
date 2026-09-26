@@ -9,7 +9,7 @@ interface Product {
   name: string;
   price: number;
   original_price?: number;
-  images: string[];
+  images: any[];
   category?: string;
   is_featured?: boolean;
   stock_quantity?: number;
@@ -36,7 +36,15 @@ interface PageProps {
   };
 }
 
-export const metadata: Metadata = { title: "Aperçu boutique" };
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const supabase = getSupabase();
+  const { data: store } = await supabase
+    .from("stores")
+    .select("name")
+    .eq("id", params.store_id)
+    .single();
+  return { title: store ? `Aperçu — ${store.name}` : "Aperçu boutique" };
+}
 
 // ─── Supabase server client ───────────────────────────────────────────────────
 
@@ -99,28 +107,24 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
     activeEffects
   );
 
+  // NOTE: We MUST NOT return <html> or <body> here. The Next.js App
+  // Router wraps every page in `app/layout.tsx`, which already provides
+  // <html> and <body>. Rendering them again causes the "html cannot be
+  // a child of body" hydration crash. The root layout's viewport meta
+  // is sufficient; page-specific styles go in a <style> tag inside the
+  // rendered <div> below.
   return (
-    <html lang="fr">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Aperçu — {store.name}</title>
-        <style>{`
-          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { height: 100%; overflow-x: hidden; }
-          @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
-          @keyframes slideIn { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:none; } }
-          @keyframes zoomIn { from { opacity:0; transform:scale(0.94); } to { opacity:1; transform:scale(1); } }
-          .anim-fade   { animation: fadeIn  .6s ease both; }
-          .anim-slide  { animation: slideIn .5s ease both; }
-          .anim-zoom   { animation: zoomIn  .5s ease both; }
-          .anim-delay-1 { animation-delay: .1s; }
-          .anim-delay-2 { animation-delay: .2s; }
-          .anim-delay-3 { animation-delay: .3s; }
-        `}</style>
-      </head>
-      <body dangerouslySetInnerHTML={{ __html: html }} />
-    </html>
+    <div className="preview-root">
+      <style>{`
+        .preview-root *, .preview-root *::before, .preview-root *::after {
+          box-sizing: border-box; margin: 0; padding: 0;
+        }
+        @keyframes fadeIn  { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+        @keyframes slideIn { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:none; } }
+        @keyframes zoomIn  { from { opacity:0; transform:scale(0.94); } to { opacity:1; transform:scale(1); } }
+      `}</style>
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+    </div>
   );
 }
 
@@ -165,8 +169,11 @@ function buildPreviewHtml(
   // Product cards
   const productCards = products.map((p, idx) => {
     const disc = discount(p);
-    const img = Array.isArray(p.images) && p.images[0]
-      ? `<img src="${p.images[0]}" alt="${p.name}" style="width:100%;height:140px;object-fit:cover;" loading="lazy" />`
+    const firstImg = Array.isArray(p.images) && p.images[0]
+      ? (typeof p.images[0] === "string" ? p.images[0] : (p.images[0] as any)?.url || "")
+      : "";
+    const img = firstImg
+      ? `<img src="${firstImg}" alt="${p.name}" style="width:100%;height:140px;object-fit:cover;" loading="lazy" />`
       : `<div style="width:100%;height:140px;background:linear-gradient(135deg,${color}33,${color}11);display:flex;align-items:center;justify-content:center;font-size:32px;">🛍️</div>`;
 
     const stockBadge = effects.includes("compteur_stock") && p.stock_quantity !== undefined && p.stock_quantity < 5
@@ -189,7 +196,7 @@ function buildPreviewHtml(
             <span style="font-size:14px;font-weight:700;color:${color};">${formatPrice(p.price)}</span>
             ${p.original_price ? `<span style="font-size:11px;color:#9ca3af;text-decoration:line-through;">${formatPrice(p.original_price)}</span>` : ""}
           </div>
-          <button style="margin-top:8px;width:100%;background:${color};color:#fff;border:none;border-radius:8px;padding:7px;font-size:12px;font-weight:600;cursor:pointer;">Commander</button>
+          <button onclick={"openPreviewOrder(\"" + p.name.replace(/[^a-zA-Z0-9À-ÿ ]/g, " ") + "\", " + p.price + ")"} style="margin-top:8px;width:100%;background:${color};color:#fff;border:none;border-radius:8px;padding:7px;font-size:12px;font-weight:600;cursor:pointer;">Commander</button>
         </div>
       </div>`;
   }).join("");
@@ -255,5 +262,89 @@ function buildPreviewHtml(
       <footer style="border-top:1px solid rgba(0,0,0,.07);padding:16px;text-align:center;">
         <p style="font-size:11px;color:#9ca3af;">&copy; ${new Date().getFullYear()} ${store.name} · Tous droits réservés</p>
       </footer>
+          <!-- Order Modal for Preview -->
+      <div id="previewOrderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+        <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:24px;color:#1e293b;box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);position:relative;">
+          <button onclick="closePreviewOrder()" style="position:absolute;top:16px;right:16px;border:none;background:none;font-size:20px;cursor:pointer;color:#64748b;">✕</button>
+          <h3 style="font-size:18px;font-weight:700;margin-bottom:4px;color:#0f172a;">Commander ce produit</h3>
+          <p id="modalProdTitle" style="font-size:13px;color:#64748b;margin-bottom:16px;font-weight:600;"></p>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:#475569;">Nom et Prénom</label>
+              <input id="modalCustName" type="text" placeholder="Ex: Mohamed Benali" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px 12px;font-size:13px;outline:none;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:#475569;">Numéro de Téléphone</label>
+              <input id="modalCustPhone" type="tel" placeholder="Ex: 0550 12 34 56" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px 12px;font-size:13px;outline:none;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:#475569;">Wilaya de livraison</label>
+              <select id="modalCustWilaya" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px 12px;font-size:13px;outline:none;background:#fff;">
+                <option value="16">16 - Alger</option>
+                <option value="31">31 - Oran</option>
+                <option value="25">25 - Constantine</option>
+                <option value="06">06 - Béjaïa</option>
+                <option value="09">09 - Blida</option>
+                <option value="15">15 - Tizi Ouzou</option>
+                <option value="19">19 - Sétif</option>
+                <option value="autre">Autre wilaya</option>
+              </select>
+            </div>
+            <button id="modalSubmitBtn" onclick="submitPreviewOrder()" style="margin-top:6px;width:100%;background:${color};color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">
+              Valider la commande
+            </button>
+          </div>
+        </div>
+      </div>
+      <script>
+        let currentModalProd = { name: "", price: 0 };
+        function openPreviewOrder(name, price) {
+          currentModalProd = { name: name, price: price };
+          document.getElementById("modalProdTitle").innerText = name + " — " + price + " DA";
+          const modal = document.getElementById("previewOrderModal");
+          if (modal) modal.style.display = "flex";
+        }
+        function closePreviewOrder() {
+          const modal = document.getElementById("previewOrderModal");
+          if (modal) modal.style.display = "none";
+        }
+        async function submitPreviewOrder() {
+          const name = document.getElementById("modalCustName").value.trim();
+          const phone = document.getElementById("modalCustPhone").value.trim();
+          const wilaya = document.getElementById("modalCustWilaya").value;
+          if (!name || !phone) {
+            alert("Veuillez remplir votre nom et numéro de téléphone.");
+            return;
+          }
+          const btn = document.getElementById("modalSubmitBtn");
+          if (btn) { btn.disabled = true; btn.innerText = "Enregistrement..."; }
+          try {
+            const res = await fetch("/api/orders", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                store_id: "${store.id}",
+                customer_name: name,
+                customer_phone: phone,
+                wilaya: wilaya,
+                items: [{ name: currentModalProd.name, price: currentModalProd.price, quantity: 1 }],
+                total_amount: currentModalProd.price
+              })
+            });
+            if (res.ok) {
+              alert("Félicitations " + name + " ! Votre commande a été enregistrée avec succès.");
+              closePreviewOrder();
+              document.getElementById("modalCustName").value = "";
+              document.getElementById("modalCustPhone").value = "";
+            } else {
+              alert("Erreur lors de la validation. Veuillez réessayer.");
+            }
+          } catch(e) {
+            alert("Erreur réseau. Veuillez vérifier votre connexion.");
+          } finally {
+            if (btn) { btn.disabled = false; btn.innerText = "Valider la commande"; }
+          }
+        }
+      </script>
     </div>`;
 }

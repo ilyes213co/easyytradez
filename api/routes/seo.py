@@ -30,7 +30,7 @@ async def get_sitemap(store_id: str, request: Request, supabase=Depends(get_supa
     
     store = store_res.data
     seo_meta = store.get("seo_metadata") or {}
-    base_url = store.get("published_url") or f"https://{store['slug']}.storegen.shop"
+    base_url = store.get("published_url") or f"https://{store['slug']}.easytrade.dz"
     last_mod = store.get("updated_at", datetime.now().isoformat())[:10]
 
     # 2. Récupérer les produits actifs et leurs catégories
@@ -81,20 +81,16 @@ async def get_sitemap(store_id: str, request: Request, supabase=Depends(get_supa
     
     full_xml = "\n".join(xml_content).encode("utf-8")
     
-    # Compression gzip ou brotli si acceptée
+    # Compression gzip si acceptée
     encoding = request.headers.get("Accept-Encoding", "")
-    if "gzip" in encoding or "br" in encoding:
+    if "gzip" in encoding:
         out = io.BytesIO()
-        encoding_to_use = "br" in encoding and "gzip" not in encoding
-        with gzip.GzipFile(fileobj=out, mode="w" if encoding_to_use else "wb") as f:
+        with gzip.GzipFile(fileobj=out, mode="wb") as f:
             f.write(full_xml)
-        media_type = "application/xml"
-        if encoding_to_use:
-            media_type = "application/x-brotli"
         return Response(
             content=out.getvalue(),
-            media_type=media_type,
-            headers={"Content-Encoding": "br" if encoding_to_use else "gzip"}
+            media_type="application/xml",
+            headers={"Content-Encoding": "gzip"},
         )
 
     return Response(content=full_xml, media_type="application/xml")
@@ -118,7 +114,7 @@ async def get_robots(store_id: str, supabase=Depends(get_supabase)):
         raise HTTPException(status_code=404, detail="Boutique introuvable")
 
     store = store_res.data
-    base_url = store.get("published_url") or f"https://{store['slug']}.storegen.shop"
+    base_url = store.get("published_url") or f"https://{store['slug']}.easytrade.dz"
     
     # Custom robots settings from metadata if exists
     seo_meta = store.get("seo_metadata") or {}

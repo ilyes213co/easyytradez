@@ -1,15 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  Legend
-} from "recharts";
 import { analyticsApi } from "@/lib/api";
-import { resolveOwnedStore } from "@/lib/current-store";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useStores } from "@/hooks/use-stores";
+
+const AnalyticsCharts = dynamic(
+  () => import("@/components/analytics/AnalyticsCharts"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="h-64 bg-white/[0.04] rounded-2xl border border-white/[0.06] animate-pulse" />
+        <div className="h-64 bg-white/[0.04] rounded-2xl border border-white/[0.06] animate-pulse" />
+      </div>
+    ),
+  }
+);
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -56,12 +66,10 @@ const PERIOD_LABELS: Record<Period, string> = {
   "3m":  "3 mois",
 };
 
-const PIE_COLORS = ["#6366f1","#8b5cf6","#06b6d4","#64748b"];
-
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   pending:   { bg: "bg-amber-500/10",   text: "text-amber-400",   label: "En attente" },
   confirmed: { bg: "bg-blue-500/10",    text: "text-blue-400",    label: "Confirmée"  },
-  shipped:   { bg: "bg-indigo-500/10",  text: "text-indigo-400",  label: "Expédiée"   },
+  shipped: { bg: "bg-cyan-500/15", text: "text-cyan-300", label: "Expédiée" },
   delivered: { bg: "bg-emerald-500/10", text: "text-emerald-400", label: "Livrée"     },
   cancelled: { bg: "bg-red-500/10",     text: "text-red-400",     label: "Annulée"    },
 };
@@ -84,38 +92,6 @@ function maskName(name: string): string {
   const parts = name.trim().split(" ");
   return parts.map((p, i) => i === 0 ? p : p[0] + "***").join(" ");
 }
-
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
-
-const LineTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-[#0f1117] border border-white/10 rounded-xl px-3 py-2 text-sm shadow-xl">
-      <p className="text-white/50 text-xs mb-1">{label}</p>
-      <p className="text-indigo-300 font-semibold">{payload[0].value} vues</p>
-    </div>
-  );
-};
-
-const BarTooltip = ({ active, payload }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-[#0f1117] border border-white/10 rounded-xl px-3 py-2 text-sm shadow-xl">
-      <p className="text-white/80 font-medium truncate max-w-[160px]">{payload[0].payload.name}</p>
-      <p className="text-violet-300 font-semibold">{payload[0].value} vues</p>
-    </div>
-  );
-};
-
-const PieTooltip = ({ active, payload }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-[#0f1117] border border-white/10 rounded-xl px-3 py-2 text-sm shadow-xl">
-      <p className="text-white/80">{payload[0].name}</p>
-      <p className="font-semibold" style={{ color: payload[0].payload.fill }}>{payload[0].value}</p>
-    </div>
-  );
-};
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 
@@ -156,19 +132,48 @@ async function fetchAnalytics(storeId: string, period: Period): Promise<Analytic
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function AnalyticsPage() {
+function AnalyticsSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="flex items-center justify-between">
+        <div className="h-8 w-48 bg-white/[0.06] rounded-xl" />
+        <div className="h-9 w-64 bg-white/[0.06] rounded-xl" />
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-28 bg-white/[0.04] rounded-2xl border border-white/[0.06]" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-64 bg-white/[0.04] rounded-2xl border border-white/[0.06]" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AnalyticsContent() {
+  const { user } = useAuth();
   const [period, setPeriod] = useState<Period>("7d");
   const searchParams = useSearchParams();
   const requestedStoreId = searchParams.get("store");
 
-  const {
-    data: store,
-    isLoading: isStoreLoading,
-    isError: isStoreError,
-  } = useQuery({
-    queryKey: ["owned-store", requestedStoreId],
-    queryFn: () => resolveOwnedStore(requestedStoreId),
-  });
+  const { data: stores = [], isLoading: isStoresLoading } = useStores();
+
+  const store = useMemo(() => {
+    if (!stores.length) return null;
+    if (requestedStoreId) {
+      const match = stores.find((s) => s.id === requestedStoreId);
+      if (match) return match;
+    }
+    const saved = typeof window !== "undefined" ? localStorage.getItem("active_store_id") : null;
+    if (saved) {
+      const match = stores.find((s) => s.id === saved);
+      if (match) return match;
+    }
+    return stores[0] ?? null;
+  }, [stores, requestedStoreId]);
 
   const { data, isLoading, isError } = useQuery<AnalyticsData>({
     queryKey: ["analytics", store?.id, period],
@@ -179,28 +184,11 @@ export default function AnalyticsPage() {
   });
 
   // ── Skeleton ────────────────────────────────────────────────────────────────
-  if (isStoreLoading || isLoading || (!store && !isStoreError) || !data) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="flex items-center justify-between">
-          <div className="h-8 w-48 bg-white/[0.06] rounded-xl" />
-          <div className="h-9 w-64 bg-white/[0.06] rounded-xl" />
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-28 bg-white/[0.04] rounded-2xl border border-white/[0.06]" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-64 bg-white/[0.04] rounded-2xl border border-white/[0.06]" />
-          ))}
-        </div>
-      </div>
-    );
+  if (isStoresLoading || isLoading || (!store && !isError) || !data) {
+    return <AnalyticsSkeleton />;
   }
 
-  if (isStoreError || !store) {
+  if (!store) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-white/40">
         <span className="text-4xl mb-3">🏪</span>
@@ -224,9 +212,9 @@ export default function AnalyticsPage() {
 
   const TOP_PRODUCT_COLORS = ["#6366f1", "#8b5cf6", "#06b6d4", "#f59e0b"];
 
-const maxProductViews = Math.max(...top_products.map(p => p.views), 1);
+  const maxProductViews = Math.max(...top_products.map(p => p.views), 1);
 
-const productColor = (index: number) => TOP_PRODUCT_COLORS[index % TOP_PRODUCT_COLORS.length];
+  const productColor = (index: number) => TOP_PRODUCT_COLORS[index % TOP_PRODUCT_COLORS.length];
 
   return (
     <div className="space-y-6">
@@ -243,9 +231,9 @@ const productColor = (index: number) => TOP_PRODUCT_COLORS[index % TOP_PRODUCT_C
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 period === p
-                  ? "bg-indigo-600 text-white shadow"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-900/30 text-white shadow"
                   : "text-white/40 hover:text-white/70"
               }`}
             >
@@ -262,7 +250,7 @@ const productColor = (index: number) => TOP_PRODUCT_COLORS[index % TOP_PRODUCT_C
           value={kpi.views}
           prev={kpi.views_prev}
           icon="👁️"
-          color="bg-indigo-500"
+          color="bg-blue-500"
         />
         <KpiCard
           label="Clics WhatsApp"
@@ -288,92 +276,8 @@ const productColor = (index: number) => TOP_PRODUCT_COLORS[index % TOP_PRODUCT_C
         />
       </div>
 
-      {/* ── Charts row 1 ────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-        {/* LineChart — Vues 30j */}
-        <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-white mb-1">Vues sur la période</h2>
-          <p className="text-white/30 text-xs mb-4">Visiteurs uniques par jour</p>
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={daily_views} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
-              <defs>
-                <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-                interval="preserveStartEnd"
-              />
-              <YAxis
-                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip content={<LineTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="views"
-                stroke="#6366f1"
-                strokeWidth={2.5}
-                dot={false}
-                activeDot={{ r: 5, fill: "#6366f1", strokeWidth: 0 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* PieChart — Sources de trafic */}
-        <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-white mb-1">Sources de trafic</h2>
-          <p className="text-white/30 text-xs mb-4">Répartition des visiteurs</p>
-          <div className="flex items-center gap-6">
-            <ResponsiveContainer width="55%" height={220}>
-              <PieChart>
-                <Pie
-                  data={traffic_sources}
-                  dataKey="count"
-                  nameKey="source"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={55}
-                  outerRadius={90}
-                  paddingAngle={3}
-                >
-                  {traffic_sources.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<PieTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex-1 space-y-2">
-              {traffic_sources.map((s, i) => {
-                const total = traffic_sources.reduce((a, b) => a + b.count, 0);
-                const pct = total > 0 ? Math.round((s.count / total) * 100) : 0;
-                return (
-                  <div key={s.source} className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
-                      />
-                      <span className="text-white/60 text-xs truncate">{s.source}</span>
-                    </div>
-                    <span className="text-white/80 text-xs font-medium tabular-nums">{pct}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* ── Charts row 1 (Lazy Loaded) ────────────────────────────────────────── */}
+      <AnalyticsCharts daily_views={daily_views} traffic_sources={traffic_sources} />
 
       {/* ── Charts row 2 ────────────────────────────────────────────────────── */}
       <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5">
@@ -425,7 +329,7 @@ const productColor = (index: number) => TOP_PRODUCT_COLORS[index % TOP_PRODUCT_C
           </div>
           <a
             href="/dashboard/orders"
-            className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
           >
             Voir tout →
           </a>
@@ -479,7 +383,7 @@ const productColor = (index: number) => TOP_PRODUCT_COLORS[index % TOP_PRODUCT_C
                       <td className="px-5 py-3.5">
                         <a
                           href={`/dashboard/orders?id=${order.id}`}
-                          className="text-xs text-indigo-400 hover:text-indigo-300 opacity-0 group-hover:opacity-100 transition-all"
+                          className="text-xs text-blue-400 hover:text-blue-300 opacity-0 group-hover:opacity-100 transition-all"
                         >
                           Détails →
                         </a>
@@ -516,5 +420,13 @@ const productColor = (index: number) => TOP_PRODUCT_COLORS[index % TOP_PRODUCT_C
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AnalyticsPage() {
+  return (
+    <Suspense fallback={<AnalyticsSkeleton />}>
+      <AnalyticsContent />
+    </Suspense>
   );
 }

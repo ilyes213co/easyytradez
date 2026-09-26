@@ -35,9 +35,13 @@ interface PushSubscriptionRow {
 import { createClient } from "@supabase/supabase-js";
 
 function getAdminClient() {
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    "";
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    serviceKey,
     { auth: { persistSession: false } }
   );
 }
@@ -49,7 +53,7 @@ function buildPayload(table: string, record: Record<string, unknown>, type: stri
   if (table === "orders" && type === "INSERT") {
     return {
       title: "🛒 Nouvelle commande !",
-      body:  `${record.customer_name} vient de commander — ${Number(record.total).toLocaleString("fr-DZ")} DZD`,
+      body:  `${record.customer_name} vient de commander — ${Number(record.total ?? record.total_amount ?? 0).toLocaleString("fr-DZ")} DZD`,
       type:  "new_order",
       url:   "/dashboard/orders",
     };

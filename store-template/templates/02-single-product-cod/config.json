@@ -1,0 +1,16 @@
+{
+  "id": "single-product-cod",
+  "name": "Landing Page Direct COD",
+  "type": "landing",
+  "badge": "Page 1 Produit (Conversion Max)",
+  "description": "Conçue pour les publicités TikTok et Facebook avec formulaire de commande immédiat sans panier.",
+  "category": "Produit Unique / Viral",
+  "themeColor": "#e11d48",
+  "font": "Outfit",
+  "features": [
+    "Formulaire COD direct",
+    "Compte à rebours promo",
+    "Avis vérifiés",
+    "Forte conversion"
+  ]
+}

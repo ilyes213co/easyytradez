@@ -10,15 +10,20 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          50:  "#EEEDFE",
-          100: "#CECBF6",
-          200: "#AFA9EC",
-          400: "#7F77DD",
-          600: "#534AB7",
-          800: "#3C3489",
-          900: "#26215C",
+          50:  "#ffe5ef",
+          100: "#ffb3ce",
+          200: "#ff80ad",
+          400: "#ff337d",
+          600: "#ff006c",
+          800: "#cc0056",
+          900: "#990041",
         },
-        brand: "var(--brand-color, #534AB7)",
+        brand: {
+          DEFAULT: "#ff006c",
+          glow: "rgba(255, 0, 108, 0.35)",
+        },
+        neon: "#ff006c",
+        obsidian: "#07080c",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],

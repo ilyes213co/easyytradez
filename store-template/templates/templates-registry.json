@@ -1,0 +1,182 @@
+[
+  {
+    "id": "pantry-basics",
+    "name": "Pantry (Basics & Essentiels)",
+    "type": "store",
+    "badge": "Populaire & Énergique",
+    "description": "Design chaleureux et moderne (orange & crème). Parfait pour le prêt-à-porter quotidien, t-shirts et packs promo.",
+    "category": "Mode & Vêtements",
+    "themeColor": "#e07b2a",
+    "font": "Segoe UI",
+    "features": [
+      "Bandeau défilant promo",
+      "Packs promotionnels",
+      "Avis clients vérifiés",
+      "Panier COD rapide"
+    ],
+    "folder": "01-pantry-basics",
+    "previewSvg": "/store-templates/01-pantry-basics/preview.svg"
+  },
+  {
+    "id": "habitat-occasions",
+    "name": "Habitat (Par Occasion)",
+    "type": "store",
+    "badge": "Terracotta & Élégant",
+    "description": "Style raffiné et naturel. Organisation par moments de vie (Travail, Week-end, Voyage) avec haute conversion.",
+    "category": "Mode & Lifestyle",
+    "themeColor": "#b3593a",
+    "font": "Segoe UI",
+    "features": [
+      "Filtre par occasion",
+      "Fiche produit soignée",
+      "Engagements qualité",
+      "Commande simplifiée"
+    ],
+    "folder": "02-habitat-occasions",
+    "previewSvg": "/store-templates/02-habitat-occasions/preview.svg"
+  },
+  {
+    "id": "botanica-organic",
+    "name": "Botanica (Bio & Matières Naturelles)",
+    "type": "store",
+    "badge": "Vert Sauge Éco",
+    "description": "Ambiance végétale et apaisante. Conçu pour les vêtements en lin, coton biologique, soins et produits naturels.",
+    "category": "Bio & Éco-responsable",
+    "themeColor": "#3d5c3a",
+    "font": "Segoe UI",
+    "features": [
+      "Badges écologiques",
+      "Chiffres d'impact",
+      "Histoire des matières",
+      "Paiement à la livraison"
+    ],
+    "folder": "03-botanica-organic",
+    "previewSvg": "/store-templates/03-botanica-organic/preview.svg"
+  },
+  {
+    "id": "circuit-performance",
+    "name": "Circuit (Performance & Sport)",
+    "type": "store",
+    "badge": "Athlétique & Technique",
+    "description": "Design technologique et épuré (bleu électrique). Idéal pour sportswear, fitness, baskets et équipements actifs.",
+    "category": "Sport & Fitness",
+    "themeColor": "#2563eb",
+    "font": "Segoe UI",
+    "features": [
+      "Avantages express en haut",
+      "Fiche technique tissus",
+      "Avis de sportifs",
+      "Commande 1 clic"
+    ],
+    "folder": "04-circuit-performance",
+    "previewSvg": "/store-templates/04-circuit-performance/preview.svg"
+  },
+  {
+    "id": "atelier-editorial",
+    "name": "Atelier (Luxe & Éditorial)",
+    "type": "store",
+    "badge": "Haute Couture & Prestige",
+    "description": "Typographie noble, esthétique éditoriale magazine et dorures discrètes. Parfait pour les créateurs et le luxe.",
+    "category": "Luxe & Création",
+    "themeColor": "#a08b4f",
+    "font": "Georgia",
+    "features": [
+      "Esthétique magazine chic",
+      "Éditions limitées",
+      "Savoir-faire artisanal",
+      "Panier discret"
+    ],
+    "folder": "05-atelier-editorial",
+    "previewSvg": "/store-templates/05-atelier-editorial/preview.svg"
+  },
+  {
+    "id": "neo-brutalist",
+    "name": "Neo-Brutalist (Audacieux & Fort)",
+    "type": "store",
+    "badge": "Impact Visuel Fort",
+    "description": "Bordures noires épaisses, jaune dynamique et typographie monospace moderne.",
+    "category": "Mode & Streetwear",
+    "themeColor": "#ffd400",
+    "font": "Space Mono",
+    "features": [
+      "Bordures épaisses & ombres nettes",
+      "Design haute conversion",
+      "Bandeau réassurance COD",
+      "Panier 58 wilayas"
+    ],
+    "folder": "06-neo-brutalist",
+    "previewSvg": "/store-templates/06-neo-brutalist/preview.svg"
+  },
+  {
+    "id": "tuareg-indigo",
+    "name": "Tinariwen (Indigo & Terroir)",
+    "type": "store",
+    "badge": "Saharien & Artisanal",
+    "description": "Indigo profond, dorures chaudes et élégance saharienne artisanale.",
+    "category": "Artisanat & Terroir",
+    "themeColor": "#2c3b7d",
+    "font": "Amiri",
+    "features": [
+      "Couleurs nobles & dorures",
+      "Esthétique artisanale",
+      "Filtres catégories",
+      "Commande rapide COD"
+    ],
+    "folder": "07-tuareg-indigo",
+    "previewSvg": "/store-templates/07-tuareg-indigo/preview.svg"
+  },
+  {
+    "id": "energetic",
+    "name": "Pulse (Énergie & Mouvement)",
+    "type": "store",
+    "badge": "Sport & Performance",
+    "description": "Bleu électrique, néon dynamique et typographie sportive percutante.",
+    "category": "Sport & Fitness",
+    "themeColor": "#2f4dff",
+    "font": "Archivo",
+    "features": [
+      "Style athlétique affirmé",
+      "Contrastes vifs & dynamiques",
+      "Aperçu produits express",
+      "Paiement à la livraison"
+    ],
+    "folder": "08-energetic",
+    "previewSvg": "/store-templates/08-energetic/preview.svg"
+  },
+  {
+    "id": "natural",
+    "name": "Terre DZ (Naturel & Bio)",
+    "type": "store",
+    "badge": "Bio & Éco-responsable",
+    "description": "Vert olive doux, tons pierre minéraux et esprit terroir authentique.",
+    "category": "Bio & Terroir",
+    "themeColor": "#4e6b39",
+    "font": "Newsreader",
+    "features": [
+      "Atmosphère sereine et naturelle",
+      "Design épuré et chaleureux",
+      "Mise en avant qualité",
+      "Commande facile"
+    ],
+    "folder": "09-natural",
+    "previewSvg": "/store-templates/09-natural/preview.svg"
+  },
+  {
+    "id": "luxe-noir",
+    "name": "Maison Noir (Luxe & Prestige)",
+    "type": "store",
+    "badge": "Haute Couture & Prestige",
+    "description": "Fond noir profond, dorures discrètes et typographie raffinée.",
+    "category": "Luxe & Beauté",
+    "themeColor": "#c6a76a",
+    "font": "Cormorant Garamond",
+    "features": [
+      "Ambiance nocturne prestige",
+      "Finitions dorées élégantes",
+      "Cartes produits minimalistes",
+      "Checkout discret"
+    ],
+    "folder": "10-luxe-noir",
+    "previewSvg": "/store-templates/10-luxe-noir/preview.svg"
+  }
+]

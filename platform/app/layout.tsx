@@ -5,23 +5,19 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "StoreGen — Créez votre boutique en ligne",
-    template: "%s | StoreGen",
+    default: "EasyTrade — Plateforme E-Commerce Algérie",
+    template: "%s | EasyTrade",
   },
   description:
-    "Créez et publiez votre boutique e-commerce en quelques minutes grâce à l'IA. Aucune compétence technique requise.",
-  keywords: ["boutique en ligne", "e-commerce", "Algérie", "shopify algérie"],
-  authors: [{ name: "StoreGen" }],
-  creator: "StoreGen",
-  openGraph: {
-    type: "website",
-    locale: "fr_DZ",
-    url: process.env.NEXT_PUBLIC_APP_URL,
-    siteName: "StoreGen",
-    title: "StoreGen — Créez votre boutique en ligne",
-    description: "Créez et publiez votre boutique e-commerce en quelques minutes grâce à l'IA.",
+    "Votre boutique en ligne en 5 minutes. Une infrastructure e-commerce tout-en-un pensée pour le marché algérien (COD 58 Wilayas, Yalidine, ZR Express).",
+  keywords: ["boutique en ligne", "e-commerce", "Algérie", "COD", "EasyTrade", "yalidine", "zr express"],
+  authors: [{ name: "EasyTrade" }],
+  creator: "EasyTrade",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/apple-icon.png",
   },
-  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
@@ -31,7 +27,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className="min-h-screen bg-gray-50 font-sans antialiased">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-screen bg-[#06060f] text-white antialiased" suppressHydrationWarning>
         <Providers>
           {children}
         </Providers>

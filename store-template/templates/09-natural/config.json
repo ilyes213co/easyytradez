@@ -1,0 +1,18 @@
+{
+  "id": "natural",
+  "name": "Terre DZ (Naturel & Bio)",
+  "type": "store",
+  "badge": "Bio & Éco-responsable",
+  "description": "Vert olive doux, tons pierre minéraux et esprit terroir authentique.",
+  "category": "Bio & Terroir",
+  "themeColor": "#4e6b39",
+  "font": "Newsreader",
+  "features": [
+    "Atmosphère sereine et naturelle",
+    "Design épuré et chaleureux",
+    "Mise en avant qualité",
+    "Commande facile"
+  ],
+  "folder": "09-natural",
+  "previewSvg": "/store-templates/09-natural/preview.svg"
+}
