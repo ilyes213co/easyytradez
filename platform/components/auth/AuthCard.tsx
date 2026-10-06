@@ -20,7 +20,7 @@ function AuthCardContent({ initialMode = "login" }: AuthCardProps) {
   const supabase = createClient();
 
   const [mode, setMode] = useState<"login" | "register">(initialMode);
-  const [authMethod, setAuthMethod] = useState<"otp" | "password">("otp");
+  const [authMethod, setAuthMethod] = useState<"otp" | "password">("password");
   const [step, setStep] = useState<"form" | "otp" | "email_confirm_sent">("form");
 
   // Form states
@@ -183,8 +183,7 @@ function AuthCardContent({ initialMode = "login" }: AuthCardProps) {
           ? "Boutique créée avec succès ! Bienvenue sur easytrade."
           : "Connexion réussie ! Bienvenue sur votre espace."
       );
-      router.push("/dashboard");
-      router.refresh();
+      window.location.href = "/dashboard";
     } catch (err: any) {
       toast.error(err?.message || "Erreur lors de la validation du code.");
     } finally {
@@ -218,9 +217,8 @@ function AuthCardContent({ initialMode = "login" }: AuthCardProps) {
         return;
       }
 
-      toast.success("Connexion réussie ! Redirection en cours...");
-      router.push("/dashboard");
-      router.refresh();
+      toast.success("Connexion réussie ! Redirection vers votre tableau de bord...");
+      window.location.href = "/dashboard";
     } catch (err: any) {
       toast.error(err?.message || "Erreur lors de la connexion.");
     } finally {
@@ -280,8 +278,7 @@ function AuthCardContent({ initialMode = "login" }: AuthCardProps) {
 
       if (data.session) {
         toast.success("Compte créé avec succès ! Bienvenue sur EasyTrade.");
-        router.push("/dashboard");
-        router.refresh();
+        window.location.href = "/dashboard";
       } else {
         toast.info("Inscription enregistrée ! Veuillez confirmer votre email.");
         setStep("email_confirm_sent");
@@ -864,7 +861,11 @@ function AuthCardContent({ initialMode = "login" }: AuthCardProps) {
                       className="text-xs text-white/50 hover:text-white inline-flex items-center gap-1.5 transition-colors"
                     >
                       <Mail className="w-3.5 h-3.5" />
-                      <span>Connexion rapide sans mot de passe (code email)</span>
+                      <span>
+                        {mode === "login"
+                          ? "Connexion rapide sans mot de passe (code email)"
+                          : "Inscription rapide sans mot de passe (code email)"}
+                      </span>
                     </button>
                   </div>
                 </form>
