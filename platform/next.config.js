@@ -76,6 +76,38 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/stores",
+        destination: "/api/stores",
+      },
+      {
+        source: "/stores/:path*",
+        destination: "/api/stores/:path*",
+      },
+      {
+        source: "/products",
+        destination: "/api/products",
+      },
+      {
+        source: "/products/:path*",
+        destination: "/api/products/:path*",
+      },
+      {
+        source: "/upload/:path*",
+        destination: "/api/upload/:path*",
+      },
+      {
+        source: "/deploy/:path*",
+        destination: "/api/deploy/:path*",
+      },
+      {
+        source: "/analytics/:path*",
+        destination: "/api/analytics/:path*",
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

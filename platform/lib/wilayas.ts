@@ -1,7 +1,7 @@
 import type { Wilaya } from "@/types/product";
 
 // ─── 58 Wilayas d'Algérie avec tarifs réels Home / StopDesk ──────────────────
-const RAW_WILAYAS = [
+export const RAW_WILAYAS = [
   { id: 1, name: "Adrar", price_home: 950, price_desk: 600, eta: "3-5 j" },
   { id: 2, name: "Chlef", price_home: 550, price_desk: 300, eta: "24-48h" },
   { id: 3, name: "Laghouat", price_home: 700, price_desk: 400, eta: "2-4 j" },

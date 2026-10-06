@@ -73,54 +73,54 @@ const toUploadFormData = (payload: File | FormData, storeId?: string) => {
 };
 
 export const storesApi = {
-  create: (data: Record<string, unknown>) => apiLong.post("/stores/", data).then(r => r.data),
-  getAll: (type?: "boutique" | "funnel") => api.get("/stores/", { params: type ? { type } : undefined }).then(r => r.data),
-  getOne: (id: string) => api.get(`/stores/${id}`).then(r => r.data),
-  update: (id: string, data: Record<string, unknown>) => api.patch(`/stores/${id}`, data).then(r => r.data),
+  create: (data: Record<string, unknown>) => apiLong.post("/api/stores", data).then(r => r.data),
+  getAll: (type?: "boutique" | "funnel") => api.get("/api/stores", { params: type ? { type } : undefined }).then(r => r.data),
+  getOne: (id: string) => api.get(`/api/stores/${id}`).then(r => r.data),
+  update: (id: string, data: Record<string, unknown>) => api.patch(`/api/stores/${id}`, data).then(r => r.data),
   updateTheme: (id: string, theme: string) => api.patch(`/api/stores/${id}/theme`, { theme }).then(r => r.data),
   getShippingRates: (id: string) => api.get(`/api/stores/${id}/shipping-rates`).then(r => r.data),
   updateShippingRatesBulk: (id: string, data: { price_home?: number; price_desk?: number }) =>
     api.patch(`/api/stores/${id}/shipping-rates/bulk`, data).then(r => r.data),
   updateShippingRate: (id: string, wilayaId: number, data: { price_home?: number; price_desk?: number }) =>
     api.patch(`/api/stores/${id}/shipping-rates/${wilayaId}`, data).then(r => r.data),
-  delete: (id: string) => api.delete(`/stores/${id}`).then(r => r.data),
+  delete: (id: string) => api.delete(`/api/stores/${id}`).then(r => r.data),
 };
 
 export const productsApi = {
-  create: (data: Record<string, unknown>) => api.post("/products/", data).then(r => r.data),
-  getByStore: (storeId: string) => api.get(`/products/?store_id=${storeId}`).then(r => r.data),
-  update: (id: string, data: Record<string, unknown>) => api.patch(`/products/${id}`, data).then(r => r.data),
-  delete: (id: string) => api.delete(`/products/${id}`).then(r => r.data),
+  create: (data: Record<string, unknown>) => api.post("/api/products", data).then(r => r.data),
+  getByStore: (storeId: string) => api.get(`/api/products?store_id=${storeId}`).then(r => r.data),
+  update: (id: string, data: Record<string, unknown>) => api.patch(`/api/products/${id}`, data).then(r => r.data),
+  delete: (id: string) => api.delete(`/api/products/${id}`).then(r => r.data),
 };
 
 export const uploadApi = {
   image: (payload: File | FormData, storeId?: string) =>
-    api.post("/upload/image", toUploadFormData(payload, storeId), {
+    api.post("/api/upload/image", toUploadFormData(payload, storeId), {
       headers: { "Content-Type": "multipart/form-data" },
     }).then(r => r.data),
   logo: (payload: File | FormData, storeId?: string) =>
-    api.post("/upload/logo", toUploadFormData(payload, storeId), {
+    api.post("/api/upload/logo", toUploadFormData(payload, storeId), {
       headers: { "Content-Type": "multipart/form-data" },
     }).then(r => r.data),
   delete: (publicId: string) =>
-    api.delete("/upload/image", { params: { public_id: publicId } }).then(r => r.data),
+    api.delete("/api/upload/image", { params: { public_id: publicId } }).then(r => r.data),
 };
 
 export const analyticsApi = {
   get: (storeId: string, period: "today" | "7d" | "30d" | "3m") =>
-    api.get(`/analytics/${storeId}`, { params: { period } }).then(r => r.data),
+    api.get(`/api/analytics/${storeId}`, { params: { period } }).then(r => r.data),
 };
 
 export const deployApi = {
-  start: (storeId: string) => apiLong.post(`/deploy/${storeId}`).then(r => r.data),
-  deploy: (storeId: string) => apiLong.post(`/deploy/${storeId}`).then(r => r.data),
-  redeploy: (storeId: string) => apiLong.post(`/deploy/${storeId}/redeploy`).then(r => r.data),
-  status: (jobId: string) => api.get(`/deploy/status/${jobId}`).then(r => r.data),
+  start: (storeId: string) => apiLong.post(`/api/deploy/${storeId}`).then(r => r.data),
+  deploy: (storeId: string) => apiLong.post(`/api/deploy/${storeId}`).then(r => r.data),
+  redeploy: (storeId: string) => apiLong.post(`/api/deploy/${storeId}/redeploy`).then(r => r.data),
+  status: (jobId: string) => api.get(`/api/deploy/status/${jobId}`).then(r => r.data),
 };
 
 export const seoApi = {
   update: (storeId: string, data: Record<string, unknown>) =>
-    api.patch(`/stores/${storeId}`, { seo_metadata: data }).then(r => r.data),
+    api.patch(`/api/stores/${storeId}`, { seo_metadata: data }).then(r => r.data),
   getSitemapUrl: (storeId: string) => `${API_URL}/seo/${storeId}/sitemap.xml`,
   getRobotsUrl: (storeId: string) => `${API_URL}/seo/${storeId}/robots.txt`,
 };
