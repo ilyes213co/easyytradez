@@ -1,126 +1,208 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { DEFAULT_WILAYAS } from "@/lib/wilayas";
 
-// Client Supabase avec les droits d'administration (service role) pour enregistrer et lire sans blocage
-function getAdminSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
-  const serviceKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-  return createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
 }
 
-// ── GET: Récupérer les commandes d'une boutique ─────────────────────────────
-export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const storeId = searchParams.get("store_id");
+// Support CORS pour que les boutiques et funnels déployés sur Vercel puissent soumettre leurs commandes
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
 
-    const supabase = getAdminSupabase();
-
-    let query = supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (storeId) {
-      query = query.eq("store_id", storeId);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, orders: data ?? [] });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err?.message || "Erreur serveur" }, { status: 500 });
-  }
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
 }
 
-// ── POST: Enregistrer une nouvelle commande client ───────────────────────────
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    let {
-      store_id,
+    const {
+      product_id,
+      options_selected = {},
+      qty = 1,
+      wilaya_id,
       customer_name,
       customer_phone,
       customer_email,
       customer_address,
-      wilaya,
-      items,
-      total_amount,
+      items: rawItems,
+      total_amount: rawTotalAmount,
       notes,
     } = body;
 
-    const supabase = getAdminSupabase();
+    const shipMode = body.ship_mode || body.shipMode || "domicile";
+    let store_id = body.store_id;
 
-    // Si le store_id est manquant ou en mode démo, on rattache à la boutique la plus récente
-    if (!store_id || store_id === "demo" || store_id.startsWith("{{")) {
-      const { data: stores } = await supabase
-        .from("stores")
-        .select("id")
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (stores && stores.length > 0) {
-        store_id = stores[0]?.id;
-      }
-    }
-
-    if (!store_id) {
-      return NextResponse.json({ success: false, error: "Boutique introuvable" }, { status: 400 });
-    }
-
-    if (!customer_name || !customer_phone) {
+    // 1. Validation de base des champs client
+    if (!customer_name || typeof customer_name !== "string" || customer_name.trim().length < 2) {
       return NextResponse.json(
-        { success: false, error: "Nom et numéro de téléphone obligatoires" },
-        { status: 400 }
+        { error: "Le nom du client doit comporter au moins 2 caractères" },
+        { status: 400, headers: corsHeaders }
       );
     }
 
-    const fullAddress = wilaya
-      ? `Wilaya ${wilaya}${customer_address ? " — " + customer_address : ""}`
-      : customer_address || "Non spécifiée";
+    const cleanPhone = String(customer_phone || "").replace(/\D/g, "");
+    if (cleanPhone.length < 9) {
+      return NextResponse.json(
+        { error: "Numéro de téléphone invalide (au moins 9 chiffres requis)" },
+        { status: 400, headers: corsHeaders }
+      );
+    }
 
-    const formattedItems = Array.isArray(items) && items.length > 0
-      ? items.map((i: any) => ({
-          name: i.name || i.title || "Produit",
-          price: Number(i.price) || 0,
-          quantity: Number(i.quantity || i.qty) || 1,
-          image: i.image || null,
-        }))
-      : [{ name: "Commande Express", price: Number(total_amount) || 0, quantity: 1 }];
+    const supabase = getSupabaseAdmin();
 
-    const orderPayload = {
+    // 2. Résolution du produit si product_id fourni
+    let items = Array.isArray(rawItems) ? rawItems : [];
+    let product: any = null;
+
+    if (product_id) {
+      const { data: prodData } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", String(product_id))
+        .single();
+
+      if (prodData) {
+        product = prodData;
+        store_id = store_id || product.store_id;
+
+        if (items.length === 0) {
+          items = [
+            {
+              product_id: product.id,
+              name: product.name,
+              price: Number(product.price || 0),
+              quantity: Math.max(1, Number(qty) || 1),
+              options_selected: options_selected || {},
+            },
+          ];
+        }
+      }
+    }
+
+    // 3. Validation du store_id
+    if (!store_id || String(store_id).trim().toLowerCase() in { demo: 1, null: 1, undefined: 1 }) {
+      return NextResponse.json(
+        { error: "Identifiant de boutique (store_id) manquant pour cette commande" },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // 4. Calcul des frais de livraison via Wilaya
+    let wilayaName = body.wilaya || "";
+    let deliveryCost = 0;
+
+    if (wilaya_id) {
+      const wId = Number(wilaya_id);
+      const wilayaConfig = DEFAULT_WILAYAS.find((w) => w.id === wId);
+      if (wilayaConfig) {
+        wilayaName = wilayaConfig.name;
+        deliveryCost = shipMode === "stopdesk" ? wilayaConfig.price_desk : wilayaConfig.price_home;
+      } else {
+        deliveryCost = shipMode === "stopdesk" ? 300 : 500;
+      }
+    }
+
+    // 5. Calcul du montant total
+    let totalAmount = 0;
+    if (rawTotalAmount !== undefined && rawTotalAmount !== null && Number(rawTotalAmount) > 0) {
+      totalAmount = Number(rawTotalAmount);
+    } else if (items.length > 0) {
+      const subtotal = items.reduce(
+        (sum, item) => sum + Number(item.price || 0) * Math.max(1, Number(item.quantity) || 1),
+        0
+      );
+      totalAmount = subtotal + deliveryCost;
+    } else if (product) {
+      totalAmount = Number(product.price || 0) * Math.max(1, Number(qty) || 1) + deliveryCost;
+    }
+
+    // 6. Formatage de l'adresse et de la note client réelle
+    const modeLabel = shipMode === "stopdesk" ? "Stop Desk" : "À domicile";
+    const addressParts: string[] = [];
+    if (wilayaName) addressParts.push(`Wilaya: ${wilayaName} (${modeLabel})`);
+    if (customer_address && String(customer_address).trim()) {
+      addressParts.push(String(customer_address).trim());
+    }
+    const fullAddress = addressParts.join(" — ") || "Non spécifiée";
+
+    // Seule la vraie note libre écrite par le client est conservée
+    const cleanCustomerNote =
+      typeof notes === "string" && notes.trim().length > 0 ? notes.trim() : null;
+
+    // 7. Insertion de la commande en base avec clé service_role (bypasse RLS)
+    const payload = {
       store_id,
-      customer_name: String(customer_name).trim(),
-      customer_phone: String(customer_phone).trim(),
+      customer_name: customer_name.trim(),
+      customer_phone: cleanPhone,
       customer_email: customer_email || null,
       customer_address: fullAddress,
-      items: formattedItems,
-      total_amount: Number(total_amount) || 0,
+      items,
+      total_amount: Math.round(totalAmount),
       status: "pending",
       payment_status: "pending",
-      notes: notes || null,
+      notes: cleanCustomerNote,
     };
 
-    const { data: newOrder, error } = await supabase
+    const { data: createdOrder, error: insertError } = await supabase
       .from("orders")
-      .insert(orderPayload)
+      .insert(payload)
       .select()
       .single();
 
-    if (error) {
-      console.error("Erreur insertion commande:", error);
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    if (insertError || !createdOrder) {
+      console.error("Erreur insertion commande:", insertError);
+      return NextResponse.json(
+        { error: "Impossible d'enregistrer la commande", details: insertError?.message },
+        { status: 500, headers: corsHeaders }
+      );
     }
 
-    return NextResponse.json({ success: true, order: newOrder }, { status: 201 });
+    // 8. Déduction du stock (non-bloquante)
+    try {
+      for (const item of items) {
+        const prodId = item.product_id || item.id;
+        const q = Math.max(1, Number(item.quantity) || 1);
+        if (prodId) {
+          const { data: pData } = await supabase
+            .from("products")
+            .select("stock_quantity")
+            .eq("id", prodId)
+            .single();
+
+          if (pData && pData.stock_quantity !== null && pData.stock_quantity !== undefined) {
+            await supabase
+              .from("products")
+              .update({ stock_quantity: Math.max(0, pData.stock_quantity - q) })
+              .eq("id", prodId);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Déduction stock non bloquante:", e);
+    }
+
+    return NextResponse.json(
+      {
+        message: "Commande enregistrée avec succès",
+        order_id: createdOrder.id,
+        total_amount: totalAmount,
+        order: createdOrder,
+      },
+      { status: 200, headers: corsHeaders }
+    );
   } catch (err: any) {
-    console.error("Erreur serveur lors de la commande:", err);
-    return NextResponse.json({ success: false, error: err?.message || "Erreur interne" }, { status: 500 });
+    console.error("Erreur route /api/orders:", err);
+    return NextResponse.json(
+      { error: "Erreur serveur interne lors du traitement de la commande", details: err?.message },
+      { status: 500, headers: corsHeaders }
+    );
   }
 }

@@ -251,36 +251,38 @@ class StoreDeployer:
             # ── Step 4: Configure custom domain (best-effort) ──────────
             subdomain = f"{slug}.{PLATFORM_DOMAIN}"
             custom_domain_ok = False
-            try:
-                logger.info(
-                    "Deploy step=domain store_id=%s project_id=%s domain=%s",
-                    store_id, project_id, subdomain,
-                )
-                custom_domain_ok = await self._add_vercel_domain(
-                    http, project_id, subdomain,
-                )
-            except Exception as e:
-                logger.warning(
-                    "Custom domain %s add failed (non-fatal): %s",
-                    subdomain, e,
-                )
+            if PLATFORM_DOMAIN and PLATFORM_DOMAIN not in ("yourdomain.com", "example.com"):
+                try:
+                    logger.info(
+                        "Deploy step=domain store_id=%s project_id=%s domain=%s",
+                        store_id, project_id, subdomain,
+                    )
+                    custom_domain_ok = await self._add_vercel_domain(
+                        http, project_id, subdomain,
+                    )
+                except Exception as e:
+                    logger.warning(
+                        "Custom domain %s add failed (non-fatal): %s",
+                        subdomain, e,
+                    )
 
             # ── Step 5: Choose the public URL ──────────────────────────
             #
-            # Priority: custom domain if it succeeded, otherwise the
-            # Vercel default `*.vercel.app` (which always works once the
-            # deployment is ready).
+            # Priority: verified custom domain if DNS resolves, otherwise
+            # the permanent functional Vercel URL https://store-{slug}.vercel.app
+            canonical_vercel_url = f"https://{repo_name}.vercel.app"
             if custom_domain_ok:
                 published_url = f"https://{subdomain}"
             else:
-                published_url = deploy_url  # already a full https:// URL
+                published_url = canonical_vercel_url
 
             # ── Step 6: Update Supabase store record ────────────────────
             supabase.table("stores").update({
                 "vercel_project_id": project_id,
-                "subdomain": subdomain if custom_domain_ok else None,
+                "subdomain": subdomain if custom_domain_ok else f"{repo_name}.vercel.app",
                 "published_url": published_url,
                 "status": "published",
+                "generated_html": html,
             }).eq("id", store_id).execute()
 
             logger.info(
@@ -329,7 +331,7 @@ class StoreDeployer:
         await self._upsert_github_file(http, owner, repo_name, "vercel.json", VERCEL_JSON)
         await self._upsert_github_file(
             http, owner, repo_name, "robots.txt",
-            f"User-agent: *\nAllow: /\nSitemap: https://{store['slug']}.{PLATFORM_DOMAIN}/sitemap.xml",
+            f"User-agent: *\nAllow: /\nSitemap: https://{repo_name}.vercel.app/sitemap.xml",
         )
         # Ship the client runtime to the repo too, so the gitSource path serves
         # the same working page as the upload path.
@@ -632,8 +634,9 @@ class StoreDeployer:
     ) -> bool:
         """
         Add a custom domain to the project. Returns True if Vercel
-        accepted it (200/201/409). The caller treats False as a
-        non-fatal failure and falls back to the Vercel default URL.
+        accepted it AND DNS is verified (not misconfigured). If DNS
+        is misconfigured, deletes the broken domain from Vercel so
+        it doesn't leave an error badge, and returns False.
         """
         resp = await http.post(
             f"https://api.vercel.com/v10/projects/{project_id}/domains",
@@ -641,16 +644,40 @@ class StoreDeployer:
             timeout=15,
             json={"name": domain},
         )
-        if resp.status_code in (200, 201, 409):
-            # 409 = already configured, treat as success
-            if resp.status_code == 409:
-                logger.info("Domain %s already configured on project %s", domain, project_id)
-            return True
-        logger.warning(
-            "Domain add %s returned %d: %s",
-            domain, resp.status_code, resp.text[:300],
-        )
-        return False
+        if resp.status_code not in (200, 201, 409):
+            logger.warning(
+                "Domain add %s returned %d: %s",
+                domain, resp.status_code, resp.text[:300],
+            )
+            return False
+
+        # Verify whether DNS actually resolves to Vercel
+        try:
+            cfg_resp = await http.get(
+                f"https://api.vercel.com/v6/domains/{domain}/config",
+                headers=VERCEL_HEADERS,
+                timeout=10,
+            )
+            if cfg_resp.status_code == 200:
+                cfg = cfg_resp.json()
+                if cfg.get("misconfigured"):
+                    logger.warning(
+                        "Custom domain %s is misconfigured on Vercel (no DNS). Removing broken domain.",
+                        domain,
+                    )
+                    await http.delete(
+                        f"https://api.vercel.com/v9/projects/{project_id}/domains/{domain}",
+                        headers=VERCEL_HEADERS,
+                        timeout=10,
+                    )
+                    return False
+        except Exception as e:
+            logger.warning("Error checking domain config for %s: %s", domain, e)
+            return False
+
+        if resp.status_code == 409:
+            logger.info("Domain %s already configured on project %s", domain, project_id)
+        return True
 
     # ── Redeploy ───────────────────────────────────────────────────────────
 
@@ -695,8 +722,11 @@ class StoreDeployer:
             url, deploy_id = await self._trigger_deployment(
                 http, project_id, owner, repo_name, html,
             )
+            canonical_url = store.get("published_url") or f"https://{repo_name}.vercel.app"
+            if "storegen.shop" in canonical_url:
+                canonical_url = f"https://{repo_name}.vercel.app"
             supabase.table("stores").update({
-                "published_url": url,
+                "published_url": canonical_url,
             }).eq("id", store_id).execute()
-            logger.info("Store %s redeployed: %s", store_id, url)
-            return url
+            logger.info("Store %s redeployed: %s", store_id, canonical_url)
+            return canonical_url

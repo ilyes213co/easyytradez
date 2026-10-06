@@ -23,9 +23,13 @@ def test_store_create_accepts_missing_slug_and_ignores_extra_fields():
         "owner_id": "",
         "status": "draft",
         "whatsapp_phone": "",
+        "type": "funnel",
+        "seo_metadata": {"title": "Mon Funnel"},
     })
     assert payload.slug is None
     assert payload.whatsapp_phone is None
+    assert payload.type == "funnel"
+    assert payload.seo_metadata == {"title": "Mon Funnel"}
 
 
 def test_store_response_tolerates_null_json_fields():
@@ -220,6 +224,44 @@ def test_phase2_team_member_create():
     )
     assert member.role == "manager"
     assert member.user_email == "manager@shop.dz"
+
+
+def test_store_models_support_type():
+    from models.schemas import StoreCreate, StoreUpdate, StoreResponse
+    # Default is boutique
+    sc = StoreCreate(name="Boutique Test")
+    assert sc.type == "boutique"
+
+    # Funnel type
+    sf = StoreCreate(name="Funnel Test", type="funnel")
+    assert sf.type == "funnel"
+
+    # StoreUpdate
+    su = StoreUpdate(type="funnel")
+    assert su.type == "funnel"
+
+    # StoreResponse default fallback
+    sr = StoreResponse.model_validate({
+        "id": "11111111-1111-1111-1111-111111111111",
+        "owner_id": "22222222-2222-2222-2222-222222222222",
+        "name": "Demo",
+        "slug": "demo",
+        "created_at": "2026-08-27T00:00:00Z",
+        "updated_at": "2026-08-27T00:00:00Z",
+    })
+    assert sr.type == "boutique"
+
+    sr_funnel = StoreResponse.model_validate({
+        "id": "11111111-1111-1111-1111-111111111111",
+        "owner_id": "22222222-2222-2222-2222-222222222222",
+        "name": "Funnel Demo",
+        "slug": "funnel-demo",
+        "type": "funnel",
+        "created_at": "2026-08-27T00:00:00Z",
+        "updated_at": "2026-08-27T00:00:00Z",
+    })
+    assert sr_funnel.type == "funnel"
+
 
 
 

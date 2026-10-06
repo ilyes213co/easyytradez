@@ -1,7 +1,10 @@
-"use client";
+import AuthCard from "@/components/auth/AuthCard";
 
-import EasyTradeAuth from "@/components/auth/EasyTradeAuth";
+export const metadata = {
+  title: "Créer une boutique",
+  description: "Créez votre boutique en ligne easytrade en 5 minutes en Algérie.",
+};
 
 export default function RegisterPage() {
-  return <EasyTradeAuth initialMode="register" />;
+  return <AuthCard initialMode="register" />;
 }

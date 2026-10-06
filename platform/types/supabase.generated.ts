@@ -53,6 +53,7 @@ export type Database = {
           phone: string | null;
           plan: PlanType;
           avatar_url: string | null;
+          plan_expires_at?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -62,6 +63,7 @@ export type Database = {
           phone?: string | null;
           plan?: PlanType;
           avatar_url?: string | null;
+          plan_expires_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -71,6 +73,7 @@ export type Database = {
           phone?: string | null;
           plan?: PlanType;
           avatar_url?: string | null;
+          plan_expires_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -97,6 +100,7 @@ export type Database = {
           primary_color: string;
           font_family: string | null;
           theme: string;
+          brand_accent: string | null;
           animation_style: string;
           special_effects: string[];
           category: string | null;
@@ -104,6 +108,7 @@ export type Database = {
           city: string | null;
           country: string;
           status: StoreStatus;
+          type: "boutique" | "funnel";
           subdomain: string | null;
           vercel_project_id: string | null;
           published_url: string | null;
@@ -127,6 +132,7 @@ export type Database = {
           primary_color?: string;
           font_family?: string | null;
           theme?: string;
+          brand_accent?: string | null;
           animation_style?: string;
           special_effects?: string[];
           category?: string | null;
@@ -134,6 +140,7 @@ export type Database = {
           city?: string | null;
           country?: string;
           status?: StoreStatus;
+          type?: "boutique" | "funnel";
           subdomain?: string | null;
           vercel_project_id?: string | null;
           published_url?: string | null;
@@ -157,6 +164,7 @@ export type Database = {
           primary_color?: string;
           font_family?: string | null;
           theme?: string;
+          brand_accent?: string | null;
           animation_style?: string;
           special_effects?: string[];
           category?: string | null;
@@ -164,6 +172,7 @@ export type Database = {
           city?: string | null;
           country?: string;
           status?: StoreStatus;
+          type?: "boutique" | "funnel";
           subdomain?: string | null;
           vercel_project_id?: string | null;
           published_url?: string | null;
@@ -473,32 +482,64 @@ export type Database = {
         };
         Relationships: [];
       };
-      store_members: {
+      plan_transactions: {
         Row: {
           id: string;
-          store_id: string;
-          user_email: string;
-          role: "admin" | "manager" | "viewer";
-          status: "active" | "invited";
+          user_id: string;
+          plan: PlanType;
+          amount: number;
+          currency: string;
+          billing_period: "monthly" | "yearly";
+          invoice_id: string | null;
+          payment_url: string | null;
+          slickpay_raw: Json | null;
+          status: "pending" | "paid" | "failed" | "expired" | "cancelled";
+          paid_at: string | null;
+          expires_at: string | null;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
-          store_id: string;
-          user_email: string;
-          role?: "admin" | "manager" | "viewer";
-          status?: "active" | "invited";
+          user_id: string;
+          plan: PlanType;
+          amount: number;
+          currency?: string;
+          billing_period?: "monthly" | "yearly";
+          invoice_id?: string | null;
+          payment_url?: string | null;
+          slickpay_raw?: Json | null;
+          status?: "pending" | "paid" | "failed" | "expired" | "cancelled";
+          paid_at?: string | null;
+          expires_at?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
-          store_id?: string;
-          user_email?: string;
-          role?: "admin" | "manager" | "viewer";
-          status?: "active" | "invited";
+          user_id?: string;
+          plan?: PlanType;
+          amount?: number;
+          currency?: string;
+          billing_period?: "monthly" | "yearly";
+          invoice_id?: string | null;
+          payment_url?: string | null;
+          slickpay_raw?: Json | null;
+          status?: "pending" | "paid" | "failed" | "expired" | "cancelled";
+          paid_at?: string | null;
+          expires_at?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "plan_transactions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: Record<string, never>;

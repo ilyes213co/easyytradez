@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="natural">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Huile d'olive extra vierge 1 L — Terre&nbsp;de&nbsp;Kabylie</title>
+<meta name="description" content="Huile d'olive extra vierge de Kabylie, première pression à froid.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --maxw:1200px;
+  --gap:44px;
+  --cols:1.05fr .95fr;
+  --radius:10px;
+  --radius-sm:8px;
+  --radius-xs:4px;
+  --swatch-radius:50%;
+  --dot-radius:50%;
+  --box-bg:#fffdf7;
+  --box-border:1px solid #e3dfcd;
+  --box-pad:26px;
+  --box-shadow:none;
+  --font-btn:var(--font-body);
+  --btn-ls:0;
+  --btn-tt:none;
+  --btn-radius:8px;
+  --btn-shadow:none;
+  --brand-ls:-.01em;
+  --brand-w:500;
+  --title-w:500;
+  --title-size:clamp(28px,3.6vw,40px);
+  --title-ls:-.01em;
+  --title-tt:none;
+  --price-size:31px;
+  --price-w:500;
+  --price-ink:var(--text);
+  --stage-border:1px solid var(--border);
+  --star:#9a7b2e;
+  --low:#b3261e;
+  --btn2-bg:transparent;
+  --btn2-ink:var(--text);
+  --btn2-border:1.5px solid var(--border);
+  --ship-bg:#f4f2e6;
+  --ship-border:1px solid #ddd9c8;
+  --chip-bg:transparent;
+  --chip-on:var(--accent-soft);
+  --chip-on-ink:var(--text);
+  --off-bg:var(--accent-soft);
+  --off-ink:var(--accent-text);
+  --flag-bg:var(--accent);
+  --flag-ink:var(--accent-ink);
+  --toast-bg:var(--text);
+  --toast-ink:var(--bg);
+  --focus:var(--accent);
+  --accent-text:#3d5629;
+  --font-display:'Newsreader',Georgia,serif;
+  --font-body:'Work Sans',system-ui,sans-serif;
+  --bg:#f7f5ee;
+  --surface:#fffdf7;
+  --text:#232a1e;
+  --muted:#6d7362;
+  --border:#ddd9c8;
+  --accent:#4e6b39;
+  --accent-ink:#fbfdf7;
+  --accent-soft:#e7eeda;
+  --stage:#ebe8d9;
+  --shot-1:#9aa877;
+  --shot-2:#4e6b39;
+  --shot-3:#cfc7ab;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%;display:block}
+button,input,select{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- shell ---------- */
+.pd-shell{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+.pd-top{border-bottom:1px solid var(--border);background:var(--surface)}
+.pd-top__in{max-width:var(--maxw);margin:0 auto;padding:14px 20px;display:flex;
+  align-items:center;justify-content:space-between;gap:16px}
+.pd-brand{font-family:var(--font-display);font-size:19px;letter-spacing:var(--brand-ls);
+  font-weight:var(--brand-w);text-decoration:none}
+.pd-top__note{font-size:13px;color:var(--muted)}
+.pd-crumbs{font-size:13px;color:var(--muted);padding:18px 0 0}
+.pd-crumbs a{text-decoration:none}
+.pd-crumbs a:hover{text-decoration:underline}
+
+.pd-product{display:grid;gap:var(--gap);padding:26px 0 54px;align-items:start}
+@media (min-width:980px){.pd-product{grid-template-columns:var(--cols)}}
+
+/* ---------- gallery ---------- */
+.pd-gallery{display:grid;gap:12px}
+.pd-stage{position:relative;background:var(--stage);border-radius:var(--radius);
+  overflow:hidden;border:var(--stage-border);aspect-ratio:1/1;display:grid;place-items:center}
+.pd-stage svg{width:100%;height:100%}
+.pd-stage__flag{position:absolute;top:14px;left:14px;background:var(--flag-bg);color:var(--flag-ink);
+  font-size:12px;font-weight:700;padding:6px 11px;border-radius:var(--radius-xs);letter-spacing:.01em}
+.pd-thumbs{display:flex;gap:10px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
+.pd-thumb{width:70px;height:70px;border-radius:var(--radius-sm);border:2px solid var(--border);
+  background:var(--stage);padding:0;cursor:pointer;overflow:hidden;transition:border-color .16s}
+.pd-thumb svg{width:100%;height:100%}
+.pd-thumb[aria-current="true"]{border-color:var(--accent)}
+/* side thumbs variant */
+@media (min-width:980px){
+  .g-side .pd-gallery{grid-template-columns:78px 1fr}
+  .g-side .pd-stage{grid-column:2;grid-row:1}
+  .g-side .pd-thumbs{grid-column:1;grid-row:1;flex-direction:column;flex-wrap:nowrap}
+  .g-side .pd-thumb{width:78px;height:78px}
+}
+/* stacked variant */
+.g-stack .pd-thumbs{display:none}
+.g-stack .pd-extra{display:grid;gap:12px}
+.pd-extra{display:none}
+.g-stack .pd-extra .pd-stage{aspect-ratio:4/5}
+
+/* ---------- buy box ---------- */
+.pd-buybox{background:var(--box-bg);border:var(--box-border);border-radius:var(--radius);
+  padding:var(--box-pad);box-shadow:var(--box-shadow)}
+@media (min-width:980px){.pd-buybox{position:sticky;top:20px}}
+.pd-vendor{margin:0 0 6px;font-size:13px;color:var(--muted)}
+.pd-title{font-family:var(--font-display);font-weight:var(--title-w);font-size:var(--title-size);
+  line-height:1.12;letter-spacing:var(--title-ls);margin:0 0 10px;text-transform:var(--title-tt)}
+.pd-rating{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);margin-bottom:18px}
+.pd-stars{color:var(--star);letter-spacing:2px}
+.pd-pricing{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.pd-price{font-family:var(--font-display);font-size:var(--price-size);font-weight:var(--price-w);
+  letter-spacing:var(--title-ls);color:var(--price-ink)}
+.pd-was{color:var(--muted);text-decoration:line-through;font-size:16px}
+.pd-off{background:var(--off-bg);color:var(--off-ink);font-size:12.5px;font-weight:700;
+  padding:4px 9px;border-radius:var(--radius-xs)}
+.pd-taxnote{font-size:13px;color:var(--muted);margin:0 0 20px}
+
+.pd-field{margin-bottom:18px}
+.pd-label{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  font-size:13.5px;font-weight:600;margin-bottom:9px}
+.pd-label span{font-weight:400;color:var(--muted)}
+.pd-opts{display:flex;gap:9px;flex-wrap:wrap}
+.pd-chip{border:1.5px solid var(--border);background:var(--chip-bg);border-radius:var(--radius-sm);
+  padding:9px 15px;cursor:pointer;font-size:14px;transition:.16s}
+.pd-chip[aria-pressed="true"]{border-color:var(--accent);background:var(--chip-on);color:var(--chip-on-ink)}
+.pd-chip:disabled{opacity:.38;cursor:not-allowed;text-decoration:line-through}
+.pd-swatch{width:38px;height:38px;border-radius:var(--swatch-radius);border:2px solid var(--border);
+  cursor:pointer;padding:0;position:relative}
+.pd-swatch[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+.pd-qtyrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.pd-qty{display:inline-flex;align-items:center;border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);overflow:hidden;background:var(--chip-bg)}
+.pd-qty button{width:42px;height:44px;border:0;background:transparent;cursor:pointer;font-size:18px}
+.pd-qty button:hover{background:var(--accent-soft)}
+.pd-qty input{width:48px;height:44px;border:0;background:transparent;text-align:center;
+  font-weight:600;-moz-appearance:textfield}
+.pd-qty input::-webkit-outer-spin-button,.pd-qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.pd-stock{font-size:13px;color:var(--muted)}
+.pd-stock b{color:var(--low)}
+
+/* delivery block: the heart of the box for cash-on-delivery selling */
+.pd-ship{border:var(--ship-border);background:var(--ship-bg);border-radius:var(--radius-sm);
+  padding:15px;margin-bottom:18px}
+.pd-ship__head{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;margin-bottom:12px}
+.pd-ship__head svg{width:18px;height:18px;flex:none;color:var(--accent)}
+.pd-select{width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);background:var(--chip-bg);cursor:pointer}
+.pd-modes{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.pd-mode{display:flex;gap:9px;align-items:flex-start;border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 11px;cursor:pointer;background:var(--chip-bg);font-size:13.5px}
+.pd-mode input{margin:2px 0 0;accent-color:var(--accent)}
+.pd-mode:has(input:checked){border-color:var(--accent);background:var(--chip-on);color:var(--chip-on-ink)}
+.pd-mode small{display:block;color:var(--muted);font-size:12px}
+.pd-mode:has(input:checked) small{color:inherit;opacity:.75}
+
+.pd-sum{list-style:none;margin:14px 0 0;padding:13px 0 0;border-top:1px solid var(--border);
+  display:grid;gap:7px;font-size:14px}
+.pd-sum li{display:flex;justify-content:space-between;gap:12px}
+.pd-sum li span:first-child{color:var(--muted)}
+.pd-sum .pd-sum__total{font-weight:700;font-size:17px;padding-top:7px;border-top:1px dashed var(--border)}
+.pd-sum .pd-sum__total span:first-child{color:inherit}
+
+.pd-actions{display:grid;gap:10px;margin-bottom:16px}
+.pd-btn{border:0;border-radius:var(--btn-radius);padding:13px 20px;min-height:54px;font-size:15.5px;
+  line-height:1.25;text-align:center;
+  font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  transition:transform .12s,filter .16s,box-shadow .16s;font-family:var(--font-btn);
+  letter-spacing:var(--btn-ls);text-transform:var(--btn-tt)}
+.pd-btn--buy{background:var(--accent);color:var(--accent-ink);box-shadow:var(--btn-shadow)}
+.pd-btn--buy:hover{filter:brightness(1.06)}
+.pd-btn--buy:active{transform:translateY(1px)}
+.pd-btn--cart{background:var(--btn2-bg);color:var(--btn2-ink);border:var(--btn2-border)}
+.pd-btn--cart:hover{background:var(--accent-soft)}
+.pd-btn--call{background:transparent;color:var(--text);border:1.5px dashed var(--border);min-height:48px;font-size:14.5px}
+.pd-btn--call:hover{border-color:var(--accent);color:var(--accent-text)}
+
+.pd-trust{list-style:none;margin:0;padding:16px 0 0;border-top:1px solid var(--border);
+  display:grid;gap:11px;font-size:13.5px}
+.pd-trust li{display:flex;gap:10px;align-items:flex-start;color:var(--muted)}
+.pd-trust svg{width:17px;height:17px;flex:none;margin-top:2px;color:var(--accent)}
+.pd-trust b{color:var(--text);font-weight:600}
+
+/* ---------- details ---------- */
+.pd-details{padding:0 0 60px}
+.pd-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:26px;
+  overflow-x:auto;scrollbar-width:none}
+.pd-tabs::-webkit-scrollbar{display:none}
+.pd-tab{background:0;border:0;padding:13px 16px;cursor:pointer;font-size:14.5px;font-weight:600;
+  color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
+.pd-tab[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
+.pd-panel{max-width:68ch}
+.pd-panel p{margin:0 0 15px}
+.pd-panel h3{font-family:var(--font-display);font-size:19px;margin:26px 0 10px;font-weight:var(--title-w)}
+.pd-list{margin:0;padding:0;list-style:none;display:grid;gap:9px}
+.pd-list li{display:flex;gap:10px}
+.pd-list li::before{content:"";width:7px;height:7px;margin-top:9px;flex:none;
+  background:var(--accent);border-radius:var(--dot-radius)}
+.pd-specs{width:100%;border-collapse:collapse;font-size:14.5px;max-width:560px}
+.pd-specs th,.pd-specs td{text-align:left;padding:11px 0;border-bottom:1px solid var(--border);vertical-align:top}
+.pd-specs th{font-weight:600;width:42%;color:var(--muted)}
+
+/* ---------- sticky bar (mobile) ---------- */
+.pd-stickybar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);
+  border-top:1px solid var(--border);padding:11px 16px;display:flex;gap:12px;align-items:center;
+  transform:translateY(110%);transition:transform .22s ease;box-shadow:0 -8px 28px rgba(0,0,0,.09)}
+.pd-stickybar[data-open="true"]{transform:none}
+.pd-stickybar .pd-btn{min-height:46px;flex:1;font-size:14.5px;padding:10px 16px}
+.pd-stickybar__price{font-family:var(--font-display);font-weight:700;font-size:16px;white-space:nowrap}
+.pd-stickybar__price small{display:block;font-size:11.5px;color:var(--muted);font-weight:400;font-family:var(--font-body)}
+@media (min-width:980px){.pd-stickybar{display:none}}
+
+.pd-toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,140%);z-index:60;
+  background:var(--toast-bg);color:var(--toast-ink);padding:13px 20px;border-radius:var(--radius-sm);
+  font-size:14.5px;box-shadow:0 14px 34px rgba(0,0,0,.24);transition:transform .24s;max-width:90vw}
+.pd-toast[data-open="true"]{transform:translate(-50%,0)}
+@media (min-width:980px){.pd-toast{bottom:32px}}
+
+.pd-foot{border-top:1px solid var(--border);padding:22px 0 90px;font-size:13px;color:var(--muted)}
+@media (min-width:980px){.pd-foot{padding-bottom:30px}}
+
+/* ---------- theme: Natural ---------- */
+
+.pd-brand{font-family:'Newsreader',serif;font-size:21px;letter-spacing:0}
+.pd-stage{border-radius:120px 12px 120px 12px;background:linear-gradient(170deg,#eeecdd,#e3e2cf)}
+.pd-stage__flag{background:#fffdf7;color:var(--accent-text);border:1px solid #d7d2bb;border-radius:999px;font-weight:600}
+.pd-thumb{border-radius:14px 4px 14px 4px}
+.pd-buybox{border-radius:12px}
+.pd-chip{background:#fffdf7}
+.pd-title{max-width:16ch}
+.pd-panel p{line-height:1.72}
+.pd-btn--cart{background:#f0eee0;border-color:#ddd9c8}
+.pd-trust svg{color:var(--accent)}
+.pd-list li::before{border-radius:50% 50% 50% 0;transform:rotate(-45deg)}
+
+</style>
+</head>
+<body class="">
+
+<header class="pd-top">
+  <div class="pd-top__in">
+    <a class="pd-brand" href="#">Terre&nbsp;de&nbsp;Kabylie</a>
+    <p class="pd-top__note">Récolte de novembre · pressée à froid en 12 h</p>
+  </div>
+</header>
+
+<div class="pd-shell">
+  <nav class="pd-crumbs" aria-label="Fil d'ariane">
+    <a href="#">Accueil</a> / <a href="#">Épicerie</a> / <span>Huile d'olive extra vierge 1 L</span>
+  </nav>
+
+  <section class="pd-product">
+
+    <!-- ======================= GALERIE ======================= -->
+    <div class="pd-gallery">
+      <figure class="pd-stage" data-stage data-shot="1">
+        <span class="pd-stage__flag">Récolte 2026</span>
+        <svg viewBox="0 0 400 400" role="img" aria-label="Huile d'olive extra vierge 1 L"><rect width="400" height="400" fill="var(--stage)"/><path d="M60 150 Q200 92 340 150 L340 330 Q200 300 60 330 Z" fill="var(--shot-1)"/><circle cx="200" cy="196" r="58" fill="var(--shot-2)"/><rect x="176" y="70" width="48" height="48" rx="10" fill="var(--shot-3)"/></svg>
+      </figure>
+      <ul class="pd-thumbs">
+        <li><button class="pd-thumb" data-thumb="1" aria-current="true" aria-label="Vue 1"><svg viewBox="0 0 400 400" role="img" aria-label=""><rect width="400" height="400" fill="var(--stage)"/><path d="M60 150 Q200 92 340 150 L340 330 Q200 300 60 330 Z" fill="var(--shot-1)"/><circle cx="200" cy="196" r="58" fill="var(--shot-2)"/><rect x="176" y="70" width="48" height="48" rx="10" fill="var(--shot-3)"/></svg></button></li>
+        <li><button class="pd-thumb" data-thumb="2" aria-current="false" aria-label="Vue 2"><svg viewBox="0 0 400 400" role="img" aria-label=""><rect width="400" height="400" fill="var(--stage)"/><path d="M60 166 Q200 112 340 166 L340 330 Q200 300 60 330 Z" fill="var(--shot-1)"/><circle cx="200" cy="204" r="65" fill="var(--shot-2)"/><rect x="176" y="70" width="48" height="48" rx="10" fill="var(--shot-3)"/></svg></button></li>
+        <li><button class="pd-thumb" data-thumb="3" aria-current="false" aria-label="Vue 3"><svg viewBox="0 0 400 400" role="img" aria-label=""><rect width="400" height="400" fill="var(--stage)"/><path d="M60 182 Q200 132 340 182 L340 330 Q200 300 60 330 Z" fill="var(--shot-1)"/><circle cx="200" cy="212" r="72" fill="var(--shot-2)"/><rect x="176" y="70" width="48" height="48" rx="10" fill="var(--shot-3)"/></svg></button></li>
+      </ul>
+      <div class="pd-extra">
+        <figure class="pd-stage"><svg viewBox="0 0 400 400" role="img" aria-label="Huile d'olive extra vierge 1 L vue 2"><rect width="400" height="400" fill="var(--stage)"/><path d="M60 166 Q200 112 340 166 L340 330 Q200 300 60 330 Z" fill="var(--shot-1)"/><circle cx="200" cy="204" r="65" fill="var(--shot-2)"/><rect x="176" y="70" width="48" height="48" rx="10" fill="var(--shot-3)"/></svg></figure>
+        <figure class="pd-stage"><svg viewBox="0 0 400 400" role="img" aria-label="Huile d'olive extra vierge 1 L vue 3"><rect width="400" height="400" fill="var(--stage)"/><path d="M60 182 Q200 132 340 182 L340 330 Q200 300 60 330 Z" fill="var(--shot-1)"/><circle cx="200" cy="212" r="72" fill="var(--shot-2)"/><rect x="176" y="70" width="48" height="48" rx="10" fill="var(--shot-3)"/></svg></figure>
+      </div>
+    </div>
+
+    <!-- ======================= BUY BOX ======================= -->
+    <div class="pd-buybox" data-buybox>
+      <p class="pd-vendor">Coopérative de Bouira</p>
+      <h1 class="pd-title">Huile d'olive extra vierge 1 L</h1>
+
+      <div class="pd-rating">
+        <span class="pd-stars" aria-hidden="true">★★★★★</span>
+        <span>4,9/5 · 418 avis · 5200 vendus</span>
+      </div>
+
+      <div class="pd-pricing">
+        <strong class="pd-price" data-price="2300">2 300 DA</strong>
+        <s class="pd-was">2 900 DA</s>
+        <span class="pd-off">-21%</span>
+      </div>
+      <p class="pd-taxnote">Prix TTC. Payable en espèces à la réception.</p>
+
+      <div class="pd-field">
+        <p class="pd-label">Couleur <span data-variant-out="color">Verre foncé</span></p>
+        <div class="pd-opts" data-variant-group="color">
+          <button class="pd-swatch" data-variant="Verre foncé" aria-pressed="true" aria-label="Verre foncé" style="background:#3d5c3a" title="Verre foncé"></button>
+          <button class="pd-swatch" data-variant="Bidon 5 L" aria-pressed="false" aria-label="Bidon 5 L" style="background:#8a9a5b" title="Bidon 5 L"></button>
+          <button class="pd-swatch" data-variant="Coffret bois" aria-pressed="false" aria-label="Coffret bois" style="background:#8c6a4a" title="Coffret bois"></button>
+        </div>
+      </div>
+
+      <div class="pd-field">
+        <p class="pd-label">Contenance <span data-variant-out="size">500 ml</span></p>
+        <div class="pd-opts" data-variant-group="size">
+          <button class="pd-chip" data-variant="500 ml" aria-pressed="true">500 ml</button>
+          <button class="pd-chip" data-variant="1 L" aria-pressed="false">1 L</button>
+          <button class="pd-chip" data-variant="5 L" aria-pressed="false">5 L</button>
+        </div>
+      </div>
+
+      <div class="pd-field">
+        <p class="pd-label">Quantité</p>
+        <div class="pd-qtyrow">
+          <div class="pd-qty">
+            <button type="button" data-qty-step="-1" aria-label="Retirer un article">−</button>
+            <input type="number" value="1" min="1" max="60" data-qty aria-label="Quantité">
+            <button type="button" data-qty-step="1" aria-label="Ajouter un article">+</button>
+          </div>
+          <p class="pd-stock">Il reste <b>60 pièces</b> en stock</p>
+        </div>
+      </div>
+
+      <!-- livraison + total : le coeur de la vente en COD -->
+      <div class="pd-ship">
+        <p class="pd-ship__head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3z"/><path d="M14 9h4l3 3v4h-7z"/><circle cx="7" cy="18.5" r="1.7"/><circle cx="17.5" cy="18.5" r="1.7"/></svg> Livraison &amp; total</p>
+        <label class="pd-label" for="wilaya-natural">Wilaya de livraison</label>
+        <select class="pd-select" id="wilaya-natural" data-wilaya>
+          <option value="">Choisissez votre wilaya</option>
+          <option value="Oran" data-home="400" data-desk="250" data-eta="24-48h">Oran</option>
+            <option value="Alger" data-home="600" data-desk="350" data-eta="48-72h">Alger</option>
+            <option value="Blida" data-home="600" data-desk="350" data-eta="48-72h">Blida</option>
+            <option value="Constantine" data-home="700" data-desk="400" data-eta="2-4 j">Constantine</option>
+            <option value="Annaba" data-home="750" data-desk="450" data-eta="2-4 j">Annaba</option>
+            <option value="Setif" data-home="700" data-desk="400" data-eta="2-4 j">Setif</option>
+            <option value="Tlemcen" data-home="550" data-desk="300" data-eta="48-72h">Tlemcen</option>
+            <option value="Bejaia" data-home="700" data-desk="400" data-eta="2-4 j">Bejaia</option>
+            <option value="Mostaganem" data-home="450" data-desk="280" data-eta="24-48h">Mostaganem</option>
+            <option value="Sidi Bel Abbes" data-home="500" data-desk="300" data-eta="24-48h">Sidi Bel Abbes</option>
+            <option value="Ouargla" data-home="900" data-desk="550" data-eta="3-5 j">Ouargla</option>
+            <option value="Bechar" data-home="950" data-desk="600" data-eta="4-6 j">Bechar</option>
+            <option value="Tamanrasset" data-home="1400" data-desk="900" data-eta="5-8 j">Tamanrasset</option>
+        </select>
+
+        <div class="pd-modes">
+          <label class="pd-mode">
+            <input type="radio" name="ship-natural" value="domicile" data-ship-mode checked>
+            <span>À domicile<small>Le livreur vous appelle</small></span>
+          </label>
+          <label class="pd-mode">
+            <input type="radio" name="ship-natural" value="stopdesk" data-ship-mode>
+            <span>Stop desk<small>Retrait au bureau</small></span>
+          </label>
+        </div>
+
+        <ul class="pd-sum">
+          <li><span>Sous-total</span><span data-subtotal>2 300 DA</span></li>
+          <li data-ship-line hidden><span>Livraison (<span data-ship-eta>—</span>)</span><span data-ship-cost>—</span></li>
+          <li class="pd-sum__total"><span>À payer à la livraison</span><span data-total>2 300 DA</span></li>
+        </ul>
+      </div>
+
+      <div class="pd-actions">
+        <button class="pd-btn pd-btn--buy" data-action="order"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/></svg> Commander — paiement à la livraison</button>
+        <button class="pd-btn pd-btn--cart" data-action="cart">Ajouter au panier</button>
+        <a class="pd-btn pd-btn--call" href="tel:+213555000000"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h3.5l1.8 4.4-2.2 1.6a12 12 0 0 0 5.9 5.9l1.6-2.2L20 14.5V18a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 3 5.2 2 2 0 0 1 5 3z"/></svg> Commander par téléphone</a>
+      </div>
+
+      <ul class="pd-trust">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg><span><b>Vous payez à la réception.</b> Aucun acompte, aucune carte.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3z"/><path d="M14 9h4l3 3v4h-7z"/><circle cx="7" cy="18.5" r="1.7"/><circle cx="17.5" cy="18.5" r="1.7"/></svg><span><b>58 wilayas livrées</b> par Yalidine et ZR Express.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4.5V9h4.5"/></svg><span><b>Retour sous 7 jours</b> si le produit ne correspond pas.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ======================= DETAILS ======================= -->
+  <section class="pd-details">
+    <div class="pd-tabs" role="tablist">
+      <button class="pd-tab" role="tab" data-tab="desc" aria-selected="true">Description</button>
+      <button class="pd-tab" role="tab" data-tab="spec" aria-selected="false">Caractéristiques</button>
+      <button class="pd-tab" role="tab" data-tab="ship" aria-selected="false">Livraison &amp; retour</button>
+    </div>
+
+    <div class="pd-panel" data-panel="desc" role="tabpanel">
+      <p>Olives Chemlal cueillies à la main en novembre, pressées dans les douze heures à moins de 27 °C. Acidité mesurée à 0,3 %.</p><p>Le goût est herbacé, avec une amertume franche en fin de bouche. C'est le signe des polyphénols, pas d'un défaut.</p>
+      <h3>Ce qui est inclus</h3>
+      <ul class="pd-list"><li>Bouteille verre teinté 1 L</li><li>Bec verseur anti-goutte</li><li>Fiche d'analyse du lot</li><li>Étiquette datée du jour de pressage</li></ul>
+    </div>
+
+    <div class="pd-panel" data-panel="spec" role="tabpanel" hidden>
+      <table class="pd-specs"><tbody><tr><th>Variété</th><td>Chemlal</td></tr><tr><th>Origine</th><td>Bouira, Kabylie</td></tr><tr><th>Acidité</th><td>0,3 %</td></tr><tr><th>Extraction</th><td>À froid, < 27 °C</td></tr><tr><th>Récolte</th><td>Novembre 2026</td></tr><tr><th>À consommer avant</th><td>Novembre 2027</td></tr></tbody></table>
+    </div>
+
+    <div class="pd-panel" data-panel="ship" role="tabpanel" hidden>
+      <p>Expédition sous 24 h ouvrées depuis Oran. Le livreur vous appelle avant de passer : gardez votre téléphone joignable.</p>
+      <h3>Tarifs</h3>
+      <ul class="pd-list">
+        <li>Oran et wilayas limitrophes : 400–550 DA à domicile, 250–300 DA en stop desk.</li>
+        <li>Nord et Est : 600–750 DA à domicile, 350–450 DA en stop desk.</li>
+        <li>Sud : 900–1 400 DA à domicile, 550–900 DA en stop desk.</li>
+      </ul>
+      <h3>Retour</h3>
+      <p>Vous ouvrez le colis devant le livreur. Si le produit ne correspond pas à la description, refusez-le : rien à payer. Après réception, vous avez 7 jours pour demander un échange.</p>
+    </div>
+  </section>
+</div>
+
+<footer class="pd-foot">
+  <div class="pd-shell">Terre&nbsp;de&nbsp;Kabylie — Oran, Algérie · Commandes 7j/7 de 9h à 19h · 0555 00 00 00</div>
+</footer>
+
+<!-- barre d'achat mobile -->
+<div class="pd-stickybar" data-stickybar data-open="false">
+  <p class="pd-stickybar__price">2 300 DA<small>paiement à la livraison</small></p>
+  <button class="pd-btn pd-btn--buy" data-action="order">Commander</button>
+</div>
+
+<div class="pd-toast" data-toast data-open="false" role="status" aria-live="polite"></div>
+
+<script>
+// ---------------------------------------------------------------
+// Shared behaviour. No dependencies. Port each handler 1:1 to React.
+// ---------------------------------------------------------------
+(function () {
+  var money = function (n) { return new Intl.NumberFormat('fr-DZ').format(n) + ' DA'; };
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  // ---- Gallery -------------------------------------------------
+  $$('[data-thumb]').forEach(function (t) {
+    t.addEventListener('click', function () {
+      $$('[data-thumb]').forEach(function (o) { o.setAttribute('aria-current', 'false'); });
+      t.setAttribute('aria-current', 'true');
+      var stage = $('[data-stage]');
+      if (stage) stage.dataset.shot = t.dataset.thumb;
+    });
+  });
+
+  // ---- Variants ------------------------------------------------
+  $$('[data-variant-group]').forEach(function (group) {
+    group.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-variant]');
+      if (!btn || btn.disabled) return;
+      $$('[data-variant]', group).forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
+      btn.setAttribute('aria-pressed', 'true');
+      var out = $('[data-variant-out="' + group.dataset.variantGroup + '"]');
+      if (out) out.textContent = btn.dataset.variant;
+    });
+  });
+
+  // ---- Quantity ------------------------------------------------
+  var qty = $('[data-qty]');
+  $$('[data-qty-step]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var next = parseInt(qty.value, 10) + parseInt(b.dataset.qtyStep, 10);
+      qty.value = Math.min(Math.max(next, 1), parseInt(qty.max, 10) || 99);
+      total();
+    });
+  });
+  if (qty) qty.addEventListener('change', total);
+
+  // ---- Delivery ------------------------------------------------
+  var wilaya = $('[data-wilaya]');
+  var mode = $$('[data-ship-mode]');
+  function shipping() {
+    if (!wilaya || !wilaya.value) return null;
+    var o = wilaya.selectedOptions[0];
+    var picked = mode.filter(function (m) { return m.checked; })[0];
+    var home = picked ? picked.value === 'domicile' : true;
+    return { cost: parseInt(home ? o.dataset.home : o.dataset.desk, 10), eta: o.dataset.eta };
+  }
+  function total() {
+    var unit = parseInt($('[data-price]').dataset.price, 10);
+    var n = qty ? parseInt(qty.value, 10) : 1;
+    var s = shipping();
+    var sub = unit * n;
+    var line = $('[data-ship-line]');
+    var out = $('[data-total]');
+    if (s) {
+      line.hidden = false;
+      $('[data-ship-cost]').textContent = money(s.cost);
+      $('[data-ship-eta]').textContent = s.eta;
+      out.textContent = money(sub + s.cost);
+    } else {
+      line.hidden = true;
+      out.textContent = money(sub);
+    }
+    $('[data-subtotal]').textContent = money(sub);
+  }
+  if (wilaya) wilaya.addEventListener('change', total);
+  mode.forEach(function (m) { m.addEventListener('change', total); });
+  total();
+
+  // ---- Order ---------------------------------------------------
+  var toast = $('[data-toast]'), timer;
+  function say(msg) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.dataset.open = 'true';
+    clearTimeout(timer);
+    timer = setTimeout(function () { toast.dataset.open = 'false'; }, 3200);
+  }
+  $$('[data-action]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (b.dataset.action === 'order' && wilaya && !wilaya.value) {
+        wilaya.focus();
+        say('Choisissez votre wilaya pour confirmer la commande.');
+        return;
+      }
+      say(b.dataset.action === 'cart' ? 'Ajouté au panier.' : 'Commande enregistrée. Nous appelons pour confirmer.');
+    });
+  });
+
+  // ---- Tabs ----------------------------------------------------
+  $$('[data-tab]').forEach(function (t) {
+    t.addEventListener('click', function () {
+      $$('[data-tab]').forEach(function (o) { o.setAttribute('aria-selected', o === t); });
+      $$('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== t.dataset.tab; });
+    });
+  });
+
+  // ---- Sticky bar ----------------------------------------------
+  var anchor = $('[data-buybox]'), bar = $('[data-stickybar]');
+  if (anchor && bar && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) {
+      bar.dataset.open = String(!es[0].isIntersecting);
+    }, { threshold: 0.12 }).observe(anchor);
+  }
+})();
+</script>
+</body>
+</html>

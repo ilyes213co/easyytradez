@@ -37,6 +37,7 @@ store-template/.env.local
 tmp*/
 tmp-*.log
 .sixth/
+scratch/
 
 # OS / editors
 .DS_Store

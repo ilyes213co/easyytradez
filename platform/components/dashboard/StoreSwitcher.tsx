@@ -1,243 +1,162 @@
-                                                                                                                                                                                                                                              "use client";
+"use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter, usePathname, useParams, useSearchParams } from "next/navigation";
+import { useState, useMemo } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { 
-  Store as StoreIcon, 
-  ChevronDown, 
-  Check, 
-  Plus, 
-  Layers, 
-  ExternalLink,
-  Sparkles,
-  Loader2
+  ChevronsUpDown, Check, Plus, Sparkles 
 } from "lucide-react";
 import { storesApi } from "@/lib/api";
-import type { Store } from "@/types/database";
+import type { Store as StoreType } from "@/types/database";
 
-import { useStores } from "@/hooks/use-stores";
+interface StoreSwitcherProps {
+  typeOverride?: "boutique" | "funnel";
+}
 
-export function StoreSwitcher() {
-  const router = useRouter();
+export default function StoreSwitcher({ typeOverride }: StoreSwitcherProps) {
   const pathname = usePathname();
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
 
-  // Fetch all stores (partagé en cache)
-  const { data: stores = [], isLoading } = useStores();
+  // Deduce navigation section
+  const currentType: "boutique" | "funnel" = useMemo(() => {
+    if (typeOverride) return typeOverride;
+    if (pathname.startsWith("/dashboard/funnel")) return "funnel";
+    return "boutique";
+  }, [pathname, typeOverride]);
 
-  // Determine active store
-  const [activeStoreId, setActiveStoreId] = useState<string | null>(null);
+  const isFunnel = currentType === "funnel";
 
-  useEffect(() => {
-    if (!stores.length) return;
+  // Fetch stores filtered by currentType
+  const { data: stores = [], isLoading } = useQuery<StoreType[]>({
+    queryKey: ["stores", currentType],
+    queryFn: () => storesApi.getAll(currentType),
+  });
 
-    // 1. From URL param /dashboard/store/[id]
-    if (params?.id && typeof params.id === "string") {
-      const match = stores.find(s => s.id === params.id);
-      if (match) {
-        setActiveStoreId(match.id);
-        localStorage.setItem("active_store_id", match.id);
-        return;
-      }
+  // Extract store ID from URL if on [id] route, otherwise first store
+  const currentStoreId = useMemo(() => {
+    const match = pathname.match(new RegExp(`/dashboard/${currentType}/([a-zA-Z0-9-]+)`));
+    if (match && match[1] && !["orders", "delivery", "products", "create"].includes(match[1])) {
+      return match[1];
     }
-
-    // 2. From URL query ?store=... or ?store_id=...
-    const qStore = searchParams.get("store") || searchParams.get("store_id");
-    if (qStore) {
-      const match = stores.find(s => s.id === qStore);
-      if (match) {
-        setActiveStoreId(match.id);
-        localStorage.setItem("active_store_id", match.id);
-        return;
-      }
+    const saved = typeof window !== "undefined" ? localStorage.getItem(`active_store_${currentType}`) : null;
+    if (saved && stores.some(s => s.id === saved)) {
+      return saved;
     }
+    return stores[0]?.id ?? null;
+  }, [pathname, currentType, stores]);
 
-    // 3. From localStorage
-    const saved = localStorage.getItem("active_store_id");
-    if (saved) {
-      const match = stores.find(s => s.id === saved);
-      if (match) {
-        setActiveStoreId(match.id);
-        return;
-      }
-    }
+  const activeStore = stores.find(s => s.id === currentStoreId) || stores[0] || null;
 
-    // 4. Default to newest
-    if (stores[0]) {
-      setActiveStoreId(stores[0].id);
-      localStorage.setItem("active_store_id", stores[0].id);
-    }
-  }, [stores, params?.id, searchParams]);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const activeStore = stores.find(s => s.id === activeStoreId) || stores[0];
-
-  const handleSelectStore = (store: Store) => {
-    setActiveStoreId(store.id);
-    localStorage.setItem("active_store_id", store.id);
-    setIsOpen(false);
-
-    // Notify other components
+  const handleSelect = (store: StoreType) => {
+    setOpen(false);
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("active_store_changed", { detail: store.id }));
+      localStorage.setItem(`active_store_${currentType}`, store.id);
     }
-
-    // Smart contextual navigation:
-    if (pathname.startsWith("/dashboard/store/")) {
-      // Stay on store details but for the newly selected store
-      router.push(`/dashboard/store/${store.id}`);
-    } else if (pathname.startsWith("/dashboard/products")) {
-      router.push(`/dashboard/products?store=${store.id}`);
-    } else if (pathname.startsWith("/dashboard/orders")) {
-      router.push(`/dashboard/orders?store_id=${store.id}`);
-    } else if (pathname.startsWith("/dashboard/analytics")) {
-      router.push(`/dashboard/analytics?store=${store.id}`);
+    // If on a store detail page, navigate to the selected store detail page
+    if (pathname.includes(`/${currentType}/`)) {
+      router.push(`/dashboard/${currentType}/${store.id}`);
     } else {
-      router.push(`/dashboard/store/${store.id}`);
+      router.refresh();
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="h-12 w-full animate-pulse rounded-xl bg-white/[0.04] border border-white/[0.08]" />
-    );
-  }
-
-  if (!stores.length) {
-    return (
-      <button
-        onClick={() => router.push("/dashboard/create-store")}
-        className="flex w-full items-center justify-between gap-2 rounded-xl border border-dashed border-blue-500/40 bg-blue-500/10 px-3 py-2.5 text-xs font-semibold text-blue-300 hover:bg-blue-500/20 transition-all"
-      >
-        <span className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Créer une boutique
-        </span>
-      </button>
-    );
-  }
-
-  const isOnline = activeStore?.status === "published";
-
   return (
-    <div className="relative w-full" ref={dropdownRef}>
-      {/* Switcher Button */}
+    <div className="relative w-full">
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="group flex w-full items-center justify-between gap-2.5 rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.03] p-2.5 text-left transition-all hover:border-blue-500/50 hover:bg-white/[0.08] shadow-md shadow-black/30"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/70 dark:bg-white/[0.04] dark:hover:bg-white/[0.07] border border-slate-200/80 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.16] transition-all text-left group shadow-sm"
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs shadow-sm">
-            <StoreIcon className="h-4 w-4" />
-            <span 
-              className={`absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#090b10] ${
-                isOnline ? "bg-emerald-400" : "bg-amber-400"
-              }`} 
-            />
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm border border-black/10 dark:border-white/20 overflow-hidden"
+            style={{ backgroundColor: activeStore?.primary_color || "#2540ea" }}
+          >
+            {activeStore?.logo_url ? (
+              <img src={activeStore.logo_url} alt="" className="w-full h-full object-contain" />
+            ) : (
+              activeStore?.name?.[0]?.toUpperCase() || (isFunnel ? "F" : "B")
+            )}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <span className="truncate text-xs font-bold text-white group-hover:text-blue-300 transition-colors">
-                {activeStore?.name || "Ma Boutique"}
+            <p className="text-xs font-semibold text-slate-900 dark:text-white/95 truncate leading-tight">
+              {isLoading ? "Chargement..." : activeStore?.name || (isFunnel ? "Aucun funnel" : "Aucune boutique")}
+            </p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${isFunnel ? "bg-accent dark:bg-sky animate-pulse" : "bg-indigo-500"}`} />
+              <span className="text-[10px] text-slate-500 dark:text-white/45 font-medium tracking-wide">
+                {isFunnel ? "Funnel mono-produit" : "Catalogue multi-produits"}
               </span>
             </div>
-            <p className="truncate text-[10px] text-white/50">
-              {isOnline ? "En ligne • Prête" : "Brouillon"}
-            </p>
           </div>
         </div>
-        <ChevronDown 
-          className={`h-4 w-4 flex-shrink-0 text-white/40 transition-transform duration-200 ${
-            isOpen ? "rotate-180 text-blue-400" : "group-hover:text-white/70"
-          }`} 
-        />
+        <ChevronsUpDown className={`w-3.5 h-3.5 text-slate-400 dark:text-white/40 group-hover:text-slate-700 dark:group-hover:text-white/80 transition-colors shrink-0 ${open ? "text-slate-900 dark:text-white" : ""}`} />
       </button>
 
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-1.5 w-full rounded-2xl border border-blue-500/30 bg-[#0c1024]/95 p-1.5 backdrop-blur-2xl shadow-2xl shadow-black/80 animate-in fade-in zoom-in-95 duration-150">
-          <div className="px-2.5 py-1.5 flex items-center justify-between border-b border-white/[0.08] mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">
-              Vos Boutiques ({stores.length})
-            </span>
-            <span className="text-[10px] text-blue-400 font-semibold">Changer</span>
-          </div>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 right-0 top-full mt-2 z-40 rounded-2xl bg-white dark:bg-[#090915] border border-slate-200 dark:border-white/10 shadow-xl dark:shadow-[0_12px_40px_rgba(0,0,0,0.6)] p-1.5 backdrop-blur-2xl animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between px-2.5 py-1.5">
+              <span className="text-[10px] font-bold text-accent dark:text-sky-light/80 uppercase tracking-widest font-mono">
+                {isFunnel ? "Funnels" : "Boutiques"}
+              </span>
+              <span className="text-[10px] text-slate-400 dark:text-white/30 font-mono">
+                {stores.length} {stores.length > 1 ? "actifs" : "actif"}
+              </span>
+            </div>
 
-          {/* List of Stores */}
-          <div className="max-h-56 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-            {stores.map((s) => {
-              const isSelected = s.id === activeStore?.id;
-              const online = s.status === "published";
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => handleSelectStore(s)}
-                  className={`flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-left text-xs transition-all ${
-                    isSelected
-                      ? "bg-blue-600/25 text-white font-bold border border-blue-500/40 shadow-sm"
-                      : "text-white/70 hover:bg-white/[0.06] hover:text-white border border-transparent"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span 
-                      className={`h-2 w-2 rounded-full flex-shrink-0 ${
-                        online ? "bg-emerald-400 shadow-[0_0_6px_#10b981]" : "bg-amber-400"
-                      }`} 
-                    />
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold">{s.name}</p>
-                      <p className="truncate text-[10px] text-white/40">
-                        {s.slug || s.theme || "Boutique standard"}
-                      </p>
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <Check className="h-4 w-4 flex-shrink-0 text-blue-400" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+            <div className="max-h-56 overflow-y-auto space-y-0.5 py-0.5 custom-scrollbar">
+              {stores.length === 0 ? (
+                <div className="p-3 text-center text-xs text-slate-500 dark:text-white/40">
+                  Aucun {isFunnel ? "funnel" : "boutique"} créé.
+                </div>
+              ) : (
+                stores.map((s) => {
+                  const isSelected = s.id === activeStore?.id;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => handleSelect(s)}
+                      className={`w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl text-left text-xs transition-all ${
+                        isSelected
+                          ? "bg-accent/10 dark:bg-accent/20 text-accent dark:text-white font-semibold border border-accent/20 dark:border-accent/40 shadow-sm"
+                          : "text-slate-700 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/[0.05] hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold text-white shrink-0 border border-black/10 dark:border-white/10"
+                          style={{ backgroundColor: s.primary_color || "#2540ea" }}
+                        >
+                          {s.name[0]?.toUpperCase()}
+                        </div>
+                        <span className="truncate">{s.name}</span>
+                      </div>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-accent dark:text-sky shrink-0" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
 
-          {/* Footer Actions */}
-          <div className="mt-1.5 border-t border-white/[0.08] pt-1.5 space-y-0.5">
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                router.push("/dashboard/stores");
-              }}
-              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-white/60 hover:bg-white/[0.06] hover:text-white transition-colors"
-            >
-              <Layers className="h-3.5 w-3.5 text-blue-400" />
-              <span>Gérer toutes mes boutiques</span>
-            </button>
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                router.push("/dashboard/create-store");
-              }}
-              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-blue-400 hover:bg-blue-500/10 transition-colors"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Créer une nouvelle boutique</span>
-            </button>
+            <div className="mt-1 pt-1 border-t border-slate-100 dark:border-white/[0.06]">
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  router.push(`/dashboard/${currentType}/create`);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-accent dark:text-sky-light hover:bg-accent/10 dark:hover:bg-accent/20 border border-transparent hover:border-accent/20 dark:hover:border-accent/30 transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{isFunnel ? "Nouveau Funnel" : "Nouvelle Boutique"}</span>
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

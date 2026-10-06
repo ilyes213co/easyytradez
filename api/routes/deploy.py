@@ -151,6 +151,9 @@ async def deploy_store(
         .execute()
     )
 
+    if not products.data:
+        logger.warning("Deploy triggered for store %s with 0 products in database.", store_id)
+
     job_id = str(uuid.uuid4())
     job = _job_payload(job_id, store_id, user.id)
     _persist_job(job)

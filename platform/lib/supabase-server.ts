@@ -11,15 +11,10 @@ import type { Database } from "./supabase";
 export async function getSupabaseServerClient() {
   const cookieStore = await cookies();
 
-  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const rawKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-  const url = rawUrl && rawUrl.startsWith("http") ? rawUrl : "https://placeholder.supabase.co";
-  const key = rawKey || "placeholder-anon-key";
-
   // Keep SSR cookie behavior, but force stable client typing to avoid `never`.
   return createServerClient<Database>(
-    url,
-    key,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {

@@ -26,7 +26,7 @@ class ProductStatus(str, Enum):
 
 class ImageItem(BaseModel):
     url:       str
-    public_id: str
+    public_id: Optional[str] = "img"
     width:     int = 0
     height:    int = 0
 
@@ -47,6 +47,7 @@ class ProductCreate(BaseModel):
     status:             ProductStatus   = ProductStatus.ACTIVE
     sku:                Optional[str]   = None
     variants:           List[dict]      = Field(default_factory=list)
+    options:            List[dict]      = Field(default_factory=list)
     upsells:            List[dict]      = Field(default_factory=list)
 
     @model_validator(mode="before")
@@ -57,6 +58,23 @@ class ProductCreate(BaseModel):
                 data["name"] = data["title"]
             if (data.get("stock_quantity") is None or data.get("stock_quantity") == 0) and data.get("inventory_quantity"):
                 data["stock_quantity"] = data.get("inventory_quantity")
+            raw_images = data.get("images")
+            if isinstance(raw_images, list):
+                normalized = []
+                for item in raw_images:
+                    if isinstance(item, str):
+                        clean_url = item.strip()
+                        if clean_url:
+                            pid = clean_url.split("/")[-1].split("?")[0] or "img"
+                            normalized.append({"url": clean_url, "public_id": pid})
+                    elif isinstance(item, dict):
+                        d = dict(item)
+                        if not d.get("public_id") and d.get("url"):
+                            d["public_id"] = str(d["url"]).split("/")[-1].split("?")[0] or "img"
+                        normalized.append(d)
+                    elif hasattr(item, "url"):
+                        normalized.append(item)
+                data["images"] = normalized
         return data
 
 
@@ -72,7 +90,31 @@ class ProductUpdate(BaseModel):
     status:         Optional[ProductStatus] = None
     sku:            Optional[str]           = None
     variants:       Optional[List[dict]]    = None
+    options:        Optional[List[dict]]    = None
     upsells:        Optional[List[dict]]    = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_aliases(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            raw_images = data.get("images")
+            if isinstance(raw_images, list):
+                normalized = []
+                for item in raw_images:
+                    if isinstance(item, str):
+                        clean_url = item.strip()
+                        if clean_url:
+                            pid = clean_url.split("/")[-1].split("?")[0] or "img"
+                            normalized.append({"url": clean_url, "public_id": pid})
+                    elif isinstance(item, dict):
+                        d = dict(item)
+                        if not d.get("public_id") and d.get("url"):
+                            d["public_id"] = str(d["url"]).split("/")[-1].split("?")[0] or "img"
+                        normalized.append(d)
+                    elif hasattr(item, "url"):
+                        normalized.append(item)
+                data["images"] = normalized
+        return data
 
 
 class ReorderRequest(BaseModel):
@@ -187,11 +229,23 @@ async def create_product(
     if not data.get("name") and data.get("title"):
         data["name"] = data["title"]
     data.pop("title", None)
-    if "inventory_quantity" in data:
-        if not data.get("stock_quantity"):
-            data["stock_quantity"] = data["inventory_quantity"]
-        data.pop("inventory_quantity", None)
-    data["images"]   = [img.dict() for img in payload.images]
+    if not data.get("name"):
+        data["name"] = "Produit sans titre"
+
+    inv_qty = data.pop("inventory_quantity", None)
+    current_stock = data.get("stock_quantity")
+    if (current_stock is None or current_stock == 0) and inv_qty is not None:
+        data["stock_quantity"] = inv_qty
+    elif current_stock is None:
+        data["stock_quantity"] = 0
+
+    status_val = payload.status.value if hasattr(payload.status, "value") else str(payload.status)
+    status_clean = str(status_val).lower().strip()
+    if status_clean not in ("active", "draft", "archived"):
+        status_clean = "active"
+    data["status"] = status_clean
+
+    data["images"] = [img.dict() if hasattr(img, "dict") else img for img in payload.images]
     data["position"] = position
 
     try:
@@ -199,25 +253,15 @@ async def create_product(
         res = safe_insert("products", data, supabase)
     except Exception as e:
         err_msg = str(e)
-        logger.warning(f"Error on product insert: {err_msg}")
-        if "status" in err_msg and "status" in data:
-            data.pop("status", None)
-            try:
-                from db_resilience import safe_insert
-                res = safe_insert("products", data, supabase)
-            except Exception as e2:
-                logger.error(f"Error on product insert without status: {e2}")
-                raise HTTPException(status_code=500, detail=f"Erreur Supabase: {str(e2)}")
-        else:
-            raise HTTPException(status_code=500, detail=f"Erreur Supabase: {err_msg}")
+        logger.error(f"Error on product insert: {err_msg}")
+        raise HTTPException(status_code=500, detail=f"Erreur Supabase: {err_msg}")
 
     if not res.data:
-        raise HTTPException(status_code=500, detail="Erreur lors de la création")
+        raise HTTPException(status_code=500, detail="Erreur lors de la création du produit (data vide)")
 
     product = res.data[0]
     if "status" not in product or not product.get("status"):
-        status_val = payload.status.value if hasattr(payload.status, "value") else str(payload.status)
-        product["status"] = status_val or "active"
+        product["status"] = data["status"]
     return product
 
 
@@ -278,15 +322,16 @@ async def reorder_products(
     return {"updated": len(payload.product_ids)}
 
 
-# ─── PATCH /products/:id ──────────────────────────────────────────────────────
+# ─── PATCH & PUT /products/:id ────────────────────────────────────────────────
 
 @router.patch("/{product_id}")
+@router.put("/{product_id}")
 async def update_product(
     product_id: str,
     payload:    ProductUpdate,
     user_id:    str = Depends(verify_token),
 ):
-    """Met à jour un produit (champs partiels acceptés)."""
+    """Met à jour un produit (champs partiels acceptés via PATCH ou PUT)."""
     await assert_product_owner(product_id, user_id)
 
     supabase = get_supabase()
@@ -327,7 +372,7 @@ async def update_product(
 
 # ─── DELETE /products/:id ─────────────────────────────────────────────────────
 
-@router.delete("/{product_id}", status_code=204)
+@router.delete("/{product_id}")
 async def delete_product(
     product_id: str,
     user_id:    str = Depends(verify_token),
@@ -355,7 +400,7 @@ async def delete_product(
         except Exception as e:
             logger.error(f"Error deleting image from Cloudinary {img.get('public_id')}: {e}")
 
-    return None
+    return {"success": True, "id": product_id}
 
 
 # ─── GET /products/:id/public (vitrine, pas d'auth) ──────────────────────────

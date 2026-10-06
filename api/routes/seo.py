@@ -30,7 +30,7 @@ async def get_sitemap(store_id: str, request: Request, supabase=Depends(get_supa
     
     store = store_res.data
     seo_meta = store.get("seo_metadata") or {}
-    base_url = store.get("published_url") or f"https://{store['slug']}.easytrade.dz"
+    base_url = store.get("published_url") or f"https://store-{store['slug']}.vercel.app"
     last_mod = store.get("updated_at", datetime.now().isoformat())[:10]
 
     # 2. Récupérer les produits actifs et leurs catégories
@@ -114,7 +114,7 @@ async def get_robots(store_id: str, supabase=Depends(get_supabase)):
         raise HTTPException(status_code=404, detail="Boutique introuvable")
 
     store = store_res.data
-    base_url = store.get("published_url") or f"https://{store['slug']}.easytrade.dz"
+    base_url = store.get("published_url") or f"https://store-{store['slug']}.vercel.app"
     
     # Custom robots settings from metadata if exists
     seo_meta = store.get("seo_metadata") or {}

@@ -27,11 +27,15 @@ class StoreCreate(BaseModel):
     whatsapp_phone: Optional[str] = None
     theme: str = "modern"
     animation_style: str = "soft"
+    type: Literal["boutique", "funnel"] = "boutique"
     special_effects: list[str] = Field(default_factory=list)
     custom_domain: Optional[str] = None
     facebook_pixel_id: Optional[str] = None
     tiktok_pixel_id: Optional[str] = None
     payment_settings: Optional[dict] = None
+    seo_title: Optional[str] = None
+    seo_description: Optional[str] = None
+    seo_metadata: Optional[dict] = None
 
     @field_validator("slug", "logo_url", "description", "category", "custom_domain", "facebook_pixel_id", "tiktok_pixel_id", mode="before")
     @classmethod
@@ -64,6 +68,7 @@ class StoreUpdate(BaseModel):
     whatsapp_phone: Optional[str] = None
     theme: Optional[str] = None
     animation_style: Optional[str] = None
+    type: Literal["boutique", "funnel"] = "boutique"
     special_effects: Optional[list[str]] = None
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
@@ -92,6 +97,7 @@ class StoreResponse(BaseModel):
     whatsapp_phone: Optional[str] = None
     theme: str = "modern"
     animation_style: str = "soft"
+    type: Literal["boutique", "funnel"] = "boutique"
     special_effects: list[str] = Field(default_factory=list)
     status: str = "draft"
     subdomain: Optional[str] = None
@@ -105,6 +111,11 @@ class StoreResponse(BaseModel):
     payment_settings: dict = Field(default_factory=dict)
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("type", mode="before")
+    @classmethod
+    def default_type(cls, v):
+        return v or "boutique"
 
     @field_validator("payment_settings", mode="before")
     @classmethod
@@ -141,6 +152,7 @@ class ProductCreate(BaseModel):
     position: int = 0
     sku: Optional[str] = None
     variants: list[dict] = Field(default_factory=list)
+    options: list[dict] = Field(default_factory=list)
     upsells: list[dict] = Field(default_factory=list)
 
 class ProductUpdate(BaseModel):
@@ -155,6 +167,7 @@ class ProductUpdate(BaseModel):
     position: Optional[int] = None
     sku: Optional[str] = None
     variants: Optional[list[dict]] = None
+    options: Optional[list[dict]] = None
     upsells: Optional[list[dict]] = None
 
 class ReorderItem(BaseModel):

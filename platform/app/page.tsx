@@ -1,28 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useThree } from "@/lib/useThree";
-
-const PALETTES = [
-  { name: "Bleu Royal DZ", color: "#2540ea", colord: "#1a2ca3", colorl: "#93c5fd", dot: "#2540ea", dotBorder: "#60a5fa" },
-  { name: "Berry Électrique", color: "#e1007a", colord: "#9d174d", colorl: "#fbcfe8", dot: "#e1007a", dotBorder: "#f472b6" },
-  { name: "Émeraude DZ", color: "#10b981", colord: "#047857", colorl: "#a7f3d0", dot: "#10b981", dotBorder: "#34d399" },
-  { name: "Ambre Saharien", color: "#f59e0b", colord: "#b45309", colorl: "#fde68a", dot: "#f59e0b", dotBorder: "#fbbf24" },
-  { name: "Violet Digital", color: "#8b5cf6", colord: "#5b21b6", colorl: "#ddd6fe", dot: "#8b5cf6", dotBorder: "#a78bfa" },
-  { name: "Cyan Méditerranée", color: "#06b6d4", colord: "#0e7490", colorl: "#a5f3fc", dot: "#06b6d4", dotBorder: "#22d3ee" },
-];
-
-const FONTS = [
-  { name: "Outfit + Jakarta", h: "Outfit", b: "Plus Jakarta Sans" },
-  { name: "Alexandria (Bilingue)", h: "Alexandria", b: "Alexandria" },
-  { name: "Readex Pro (DZ)", h: "Readex Pro", b: "Readex Pro" },
-  { name: "Cairo + Jakarta", h: "Cairo", b: "Plus Jakarta Sans" },
-  { name: "Urbanist + Inter", h: "Urbanist", b: "Inter" },
-  { name: "Syne + Jakarta", h: "Syne", b: "Plus Jakarta Sans" },
-  { name: "Space + DM Sans", h: "Space Grotesk", b: "DM Sans" },
-  { name: "Unbounded (Impact)", h: "Unbounded", b: "Plus Jakarta Sans" },
-];
+import { ArrowRight, ChevronDown, CheckCircle2 } from "lucide-react";
+import EasyTradeLogo from "@/components/brand/EasyTradeLogo";
+import ThreeAmbientScene from "@/components/brand/ThreeAmbientScene";
+import StyleStudio from "@/components/brand/StyleStudio";
 
 const TICKER_ITEMS = [
   "Paiement à la livraison",
@@ -37,702 +20,584 @@ const TICKER_ITEMS = [
   "Ouverture en 5 minutes",
 ];
 
+const FEATURES = [
+  {
+    num: "01",
+    title: "Paiement à la livraison",
+    body: "Le standard incontournable en Algérie. Vos clients règlent en espèces à la remise du colis par le livreur. Zéro friction, confiance maximale.",
+    tag: "Standard Algérie",
+  },
+  {
+    num: "02",
+    title: "IA intégrée",
+    body: "Génération de boutiques stylées et fiches produits captivantes grâce à l'IA en moins d'une minute.",
+    tag: "Intelligent",
+  },
+  {
+    num: "03",
+    title: "Livraison Intégrée",
+    body: "Connectez Yalidine, Zr Express, Procolis et d'autres transporteurs en un clic. Génération automatique de bordereaux et tracking précis.",
+    tag: "58 Wilayas",
+  },
+  {
+    num: "04",
+    title: "Déploiement rapide",
+    body: "Votre boutique sera en ligne dans moins d'une minute, prête à recevoir des commandes et à convertir vos visiteurs.",
+    tag: "< 60 secondes",
+  },
+  {
+    num: "05",
+    title: "100% Mobile-first",
+    body: "9 commandes sur 10 se font sur smartphone en Algérie. Les vitrines sont calibrées pour se charger instantanément même en connexion 3G/4G.",
+    tag: "Ultra-rapide",
+  },
+  {
+    num: "06",
+    title: "Protection Anti-Faux Ordres",
+    body: "Certificat SSL inclus, filtres intelligents pour bloquer les commandes frauduleuses ou spams et infrastructure cloud toujours en ligne.",
+    tag: "Sécurité Pro",
+  },
+];
+
+const STATS = [
+  { target: 99, suffix: "%", label: "Disponibilité garantie" },
+  { target: 58, suffix: "", label: "Wilayas couvertes" },
+  { target: 5, suffix: "min", label: "Pour ouvrir sa boutique" },
+  { target: 0, suffix: " DZD", label: "Pour commencer" },
+];
+
+const STEPS = [
+  {
+    step: "Étape 01",
+    title: "Créez votre compte en 60s",
+    body: "Renseignez votre nom et numéro de téléphone. Votre boutique et son sous-domaine sont immédiatement configurés.",
+  },
+  {
+    step: "Étape 02",
+    title: "Ajoutez vos produits en DZD",
+    body: "Importez vos photos, décrivez vos articles et fixez vos tarifs en dinars algériens en toute simplicité grâce à nos modèles.",
+  },
+  {
+    step: "Étape 03",
+    title: "Encaissez à la livraison",
+    body: "Recevez vos premières commandes en direct, expédiez avec Yalidine ou ZR Express, et encaissez vos paiements en espèces.",
+  },
+];
+
 export default function LandingPage() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const heroRef = useRef<HTMLElement | null>(null);
-  const updateThreeColorRef = useRef<((hex: string) => void) | null>(null);
+  const [counts, setCounts] = useState<number[]>([0, 0, 0, 0]);
+  const statsRef = useRef<HTMLDivElement | null>(null);
+  const animatedRef = useRef<boolean>(false);
 
-  const [activePalette, setActivePalette] = useState(0);
-  const [activeFont, setActiveFont] = useState(0);
-  const [isStudioOpen, setIsStudioOpen] = useState(false);
-  const threeLoaded = useThree();
-
-  // ─── Initialisation Three.js ───────────────────────────────────────────────
+  // Intersection Observer for animated counter
   useEffect(() => {
-    if (!threeLoaded || !canvasRef.current || !heroRef.current) return;
-    const THREE = window.THREE;
-    if (!THREE) return;
-
-    const hero = heroRef.current;
-    const canvas = canvasRef.current;
-
-    const W = () => hero.clientWidth || window.innerWidth;
-    const H = () => hero.clientHeight || window.innerHeight;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(65, W() / H(), 0.1, 1000);
-    camera.position.z = 6.2;
-
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setSize(W(), H());
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    // Matériaux réactifs à la couleur
-    const knotMat = new THREE.MeshBasicMaterial({ color: 0x2540ea, wireframe: true, transparent: true, opacity: 0.35 });
-    const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(2.1, 0.5, 128, 20), knotMat);
-    scene.add(knot);
-
-    const icoMat = new THREE.MeshBasicMaterial({ color: 0x60a5fa, wireframe: true, transparent: true, opacity: 0.09 });
-    const ico = new THREE.Mesh(new THREE.IcosahedronGeometry(3.5, 1), icoMat);
-    scene.add(ico);
-
-    const sphereMat = new THREE.MeshBasicMaterial({ color: 0x93c5fd, wireframe: true, transparent: true, opacity: 0.25 });
-    const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.8, 20, 20), sphereMat);
-    scene.add(sphere);
-
-    // Particules stellaires
-    const N = 1800;
-    const pos = new Float32Array(N * 3);
-    for (let i = 0; i < N * 3; i++) pos[i] = (Math.random() - 0.5) * 24;
-    const pGeo = new THREE.BufferGeometry();
-    pGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    const ptsMat = new THREE.PointsMaterial({ size: 0.025, color: 0xffffff, transparent: true, opacity: 0.45 });
-    const pts = new THREE.Points(pGeo, ptsMat);
-    scene.add(pts);
-
-    updateThreeColorRef.current = (hexStr: string) => {
-      const col = new THREE.Color(hexStr);
-      knotMat.color = col;
-      sphereMat.color = col;
-    };
-
-    let tx = 0, ty = 0, cx = 0, cy = 0;
-    const onMouseMove = (e: MouseEvent) => {
-      tx = (e.clientX / window.innerWidth - 0.5) * 1.5;
-      ty = -(e.clientY / window.innerHeight - 0.5) * 1.5;
-    };
-    const onTouchMove = (e: TouchEvent) => {
-      if (e.touches && e.touches[0]) {
-        tx = (e.touches[0].clientX / window.innerWidth - 0.5) * 1.2;
-        ty = -(e.touches[0].clientY / window.innerHeight - 0.5) * 1.2;
-      }
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
-
-    let animId = 0;
-    let f = 0;
-    function animate() {
-      animId = requestAnimationFrame(animate);
-      f += 0.005;
-      knot.rotation.x = f * 0.35;
-      knot.rotation.y = f * 0.52;
-      ico.rotation.x = -f * 0.12;
-      ico.rotation.y = f * 0.16;
-      sphere.rotation.y = f * 0.4;
-      pts.rotation.y = f * 0.03;
-
-      cx += (tx - cx) * 0.04;
-      cy += (ty - cy) * 0.04;
-      camera.position.x = cx;
-      camera.position.y = cy;
-      camera.lookAt(scene.position);
-
-      renderer.render(scene, camera);
-    }
-    animate();
-
-    const onResize = () => {
-      camera.aspect = W() / H();
-      camera.updateProjectionMatrix();
-      renderer.setSize(W(), H());
-    };
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("resize", onResize);
-      renderer.dispose();
-    };
-  }, [threeLoaded]);
-
-  // ─── IntersectionObserver pour apparition & compteurs ──────────────────────
-  useEffect(() => {
-    function countUp(el: HTMLElement, target: number, suffix: string) {
-      const start = performance.now();
-      const dur = 1800;
-      function frame(now: number) {
-        const p = Math.min((now - start) / dur, 1);
-        const ease = 1 - Math.pow(1 - p, 3);
-        el.textContent = Math.round(ease * target).toLocaleString("fr-DZ") + suffix;
-        if (p < 1) requestAnimationFrame(frame);
-      }
-      requestAnimationFrame(frame);
-    }
-
-    const obs = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((e) => {
-          if (!e.isIntersecting) return;
-          e.target.classList.add("in");
-          e.target.querySelectorAll<HTMLElement>("[data-t]").forEach((el) => {
-            if (el.dataset.done) return;
-            el.dataset.done = "1";
-            countUp(el, Number(el.dataset.t), el.dataset.s || "");
-          });
-        });
+        const first = entries[0];
+        if (first && first.isIntersecting && !animatedRef.current) {
+          animatedRef.current = true;
+          const duration = 1800;
+          const startTime = performance.now();
+
+          const updateCounter = (currentTime: number) => {
+            const elapsed = Math.min((currentTime - startTime) / duration, 1);
+            const easeOut = 1 - Math.pow(1 - elapsed, 3);
+
+            setCounts(STATS.map((s) => Math.round(easeOut * s.target)));
+
+            if (elapsed < 1) {
+              requestAnimationFrame(updateCounter);
+            }
+          };
+
+          requestAnimationFrame(updateCounter);
+        }
       },
-      { threshold: 0.1 }
+      { threshold: 0.2 }
     );
 
-    document.querySelectorAll(".r").forEach((el) => obs.observe(el));
+    if (statsRef.current) {
+      observer.observe(statsRef.current);
+    }
 
-    // Lueur volumétrique sur fcard
-    const cards = document.querySelectorAll<HTMLElement>(".fcard");
-    const cleanups: (() => void)[] = [];
-    cards.forEach((card) => {
-      const handler = (e: MouseEvent) => {
-        const rect = card.getBoundingClientRect();
-        card.style.setProperty("--mx", (((e.clientX - rect.left) / rect.width) * 100).toFixed(1) + "%");
-        card.style.setProperty("--my", (((e.clientY - rect.top) / rect.height) * 100).toFixed(1) + "%");
-      };
-      card.addEventListener("mousemove", handler);
-      cleanups.push(() => card.removeEventListener("mousemove", handler));
-    });
-
-    return () => {
-      obs.disconnect();
-      cleanups.forEach((c) => c());
-    };
+    return () => observer.disconnect();
   }, []);
 
-  // ─── Changement Palette ───────────────────────────────────────────────────
-  const applyPalette = (index: number) => {
-    const p = PALETTES[index];
-    if (!p) return;
-    setActivePalette(index);
-    const root = document.documentElement;
-    root.style.setProperty("--g", p.color);
-    root.style.setProperty("--gd", p.colord);
-    root.style.setProperty("--gl", p.colorl);
-    root.style.setProperty("--g-glow", p.color + "88");
-    root.style.setProperty("--g-subtle", p.color + "33");
-
-    if (updateThreeColorRef.current) {
-      updateThreeColorRef.current(p.color);
-    }
-  };
-
-  // ─── Changement Typographie ───────────────────────────────────────────────
-  const applyFont = (index: number) => {
-    const f = FONTS[index];
-    if (!f) return;
-    setActiveFont(index);
-    const root = document.documentElement;
-    root.style.setProperty("--font-heading", `'${f.h}', -apple-system, sans-serif`);
-    root.style.setProperty("--font-body", `'${f.b}', -apple-system, sans-serif`);
+  // Card cursor light glow effect
+  const handleCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    card.style.setProperty("--mx", `${x.toFixed(1)}%`);
+    card.style.setProperty("--my", `${y.toFixed(1)}%`);
   };
 
   return (
-    <div className="landing-page-root min-h-screen bg-[#06060f] text-white">
-      <style dangerouslySetInnerHTML={{ __html: `
-        :root {
-          --bg: #06060f;
-          --card: linear-gradient(155deg, rgba(28, 44, 148, 0.35) 0%, rgba(10, 14, 38, 0.85) 100%);
-          --border: rgba(96, 165, 250, 0.28);
-          --text: #ffffff;
-          --muted: rgba(226, 232, 240, 0.78);
-          
-          --g: #2540ea;
-          --gd: #1a2ca3;
-          --gl: #93c5fd;
-          --g-glow: rgba(37, 64, 234, 0.6);
-          --g-subtle: rgba(37, 64, 234, 0.18);
-          --g-border: rgba(96, 165, 250, 0.5);
-          --btn-text: #ffffff;
+    <div className="min-h-screen bg-[#06060f] text-white selection:bg-[#2540ea] selection:text-white relative">
+      {/* ── STICKY NAVIGATION ── */}
+      <nav
+        className="sticky top-0 z-40 flex items-center justify-between px-6 py-4 md:px-12 backdrop-blur-2xl transition-colors duration-300"
+        style={{
+          background: "rgba(6, 6, 15, 0.84)",
+          borderBottom: "1px solid var(--border, rgba(96, 165, 250, 0.28))",
+        }}
+      >
+        <EasyTradeLogo size={34} href="/" />
 
-          --font-heading: 'Outfit', -apple-system, sans-serif;
-          --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
-        }
+        {/* Center links */}
+        <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-white/70">
+          <a href="#features" className="hover:text-white transition-colors duration-200">
+            Fonctionnalités
+          </a>
+          <a href="#how-it-works" className="hover:text-white transition-colors duration-200">
+            Comment ça marche
+          </a>
+          <a href="#stats" className="hover:text-white transition-colors duration-200">
+            Statistiques
+          </a>
+        </div>
 
-        body {
-          background: var(--bg);
-          color: var(--text);
-          font-family: var(--font-body);
-          -webkit-font-smoothing: antialiased;
-          overflow-x: hidden;
-          line-height: 1.6;
-        }
-
-        h1, h2, h3, h4, .logo, .bnum, .fh, .sth {
-          font-family: var(--font-heading);
-        }
-
-        /* NAVIGATION */
-        .landing-nav {
-          position: sticky; top: 0; z-index: 70;
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 20px 40px;
-          background: rgba(6, 6, 15, 0.82);
-          backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-          border-bottom: 1px solid var(--border);
-          transition: border-color .3s ease;
-        }
-        .landing-logo {
-          font-size: 1.35rem; font-weight: 900; letter-spacing: -0.5px;
-          color: #ffffff; text-decoration: none;
-          display: inline-flex; align-items: center; gap: 11px;
-        }
-        .landing-logo-icon {
-          width: 34px; height: auto; flex-shrink: 0;
-          filter: drop-shadow(0 4px 12px rgba(37, 64, 234, 0.45));
-          transition: transform .28s cubic-bezier(.2,.8,.2,1);
-        }
-        .landing-logo:hover .landing-logo-icon {
-          transform: scale(1.08) translateY(-1px);
-        }
-        .landing-logo em {
-          color: var(--gl); font-style: normal;
-          text-shadow: 0 0 16px var(--g-glow);
-        }
-        .landing-nav-links {
-          display: flex; align-items: center; gap: 24px; list-style: none;
-        }
-        .landing-nav-links a {
-          color: var(--muted); text-decoration: none;
-          font-size: .92rem; font-weight: 600; transition: color .2s;
-        }
-        .landing-nav-links a:hover { color: #ffffff; }
-        .landing-nbtn {
-          background: linear-gradient(135deg, var(--g) 0%, var(--gd) 100%);
-          color: var(--btn-text); font-size: .9rem; font-weight: 700;
-          padding: 11px 24px; border-radius: 12px; text-decoration: none;
-          box-shadow: 0 8px 24px -6px var(--g-glow), inset 0 1px 0 rgba(255,255,255,.3);
-          transition: all .25s ease; border: 1px solid rgba(255,255,255,.15);
-          display: inline-flex; align-items: center; gap: 6px;
-        }
-        .landing-nbtn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 32px -4px var(--g-glow);
-          filter: brightness(1.1);
-        }
-
-        @media(max-width: 768px) {
-          .landing-nav-links { display: none; }
-          .landing-nav { padding: 16px 20px; }
-        }
-
-        /* HERO */
-        #hero {
-          position: relative; min-height: 86vh;
-          display: flex; align-items: center; justify-content: center;
-          text-align: center; padding: 120px 24px 80px; overflow: hidden;
-        }
-        #tcanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-        .hgrad {
-          position: absolute; inset: 0; pointer-events: none; z-index: 1;
-          background:
-            radial-gradient(ellipse 70% 60% at 50% 45%, var(--g-subtle) 0%, transparent 72%),
-            radial-gradient(ellipse at bottom, rgba(6,6,15,1) 0%, transparent 65%);
-        }
-        .hinner { position: relative; z-index: 2; max-width: 920px; margin: 0 auto; }
-
-        h1.hero-h1 {
-          font-size: clamp(3rem, 6.8vw, 6.2rem); font-weight: 900;
-          letter-spacing: -2.5px; line-height: 1.06; margin-bottom: 38px;
-          animation: fadeU .85s ease .15s both; color: #ffffff;
-        }
-        .gh {
-          background: linear-gradient(135deg, #ffffff 0%, #93c5fd 40%, var(--g) 90%);
-          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-          text-shadow: 0 0 40px var(--g-glow);
-        }
-
-        .hctas {
-          display: flex; align-items: center; justify-content: center; gap: 16px;
-          animation: fadeU .85s ease .3s both; flex-wrap: wrap;
-        }
-        .btno {
-          display: inline-flex; align-items: center; gap: 10px;
-          background: rgba(10,14,38,.75);
-          color: #ffffff; font-size: 1.02rem; font-weight: 600;
-          padding: 16px 36px; border-radius: 14px; text-decoration: none;
-          border: 1px solid rgba(96,165,250,.4);
-          backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-          box-shadow: 0 12px 32px -8px rgba(0,0,0,.6), 0 0 24px rgba(37,64,234,.25);
-          transition: all .28s cubic-bezier(.2,.8,.2,1);
-        }
-        .btno:hover {
-          border-color: rgba(147,197,253,.9);
-          background: rgba(37,64,234,.2);
-          transform: translateY(-3px);
-          box-shadow: 0 18px 40px -8px var(--g-glow);
-        }
-
-        /* TICKER BANNER */
-        .ticker {
-          border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-          overflow: hidden; padding: 16px 0;
-          background: linear-gradient(90deg, rgba(10,14,38,.8) 0%, rgba(26,44,163,.15) 50%, rgba(10,14,38,.8) 100%);
-          backdrop-filter: blur(12px);
-        }
-        .ticker-inner {
-          display: flex; gap: 36px; width: max-content; animation: scroll 32s linear infinite;
-        }
-        .tick {
-          display: flex; align-items: center; gap: 10px; font-size: .9rem; font-weight: 600; color: var(--muted); white-space: nowrap;
-        }
-        .tsep {
-          width: 6px; height: 6px; background: var(--gl); border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 8px var(--gl);
-        }
-        @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-
-        /* FONCTIONNALITÉS */
-        .feat-s { padding: 110px 24px; max-width: 1180px; margin: 0 auto; }
-        .eyebrow {
-          display: inline-block; font-size: .82rem; font-weight: 800; letter-spacing: 3px;
-          text-transform: uppercase; color: var(--gl); margin-bottom: 14px;
-          text-shadow: 0 0 16px var(--g-glow);
-        }
-        .sh2 {
-          font-size: clamp(2.2rem, 4.6vw, 3.6rem); font-weight: 900; letter-spacing: -1.8px;
-          line-height: 1.12; margin-bottom: 16px; color: #ffffff;
-        }
-        .ssub { color: var(--muted); font-size: 1.08rem; line-height: 1.8; max-width: 620px; }
-
-        .fgrid {
-          display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-          gap: 26px; margin-top: 60px;
-        }
-        .fcard {
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: 24px;
-          padding: 34px 30px;
-          cursor: default; position: relative; overflow: hidden;
-          transition: all .35s cubic-bezier(.2,.8,.2,1);
-          box-shadow: 0 12px 36px -10px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.16);
-          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-          display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;
-        }
-        .fcard::before {
-          content: ''; position: absolute; inset: 0;
-          background: radial-gradient(circle at var(--mx,50%) var(--my,50%), var(--g-glow) 0%, transparent 65%);
-          opacity: 0; transition: opacity .35s; pointer-events: none;
-        }
-        .fcard::after {
-          content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-          background: linear-gradient(90deg, transparent, var(--gl), var(--g), transparent);
-          opacity: 0; transition: opacity .35s;
-        }
-        .fcard:hover {
-          border-color: rgba(147,197,253,.9);
-          transform: translateY(-7px);
-          box-shadow: 0 26px 60px -12px var(--g-glow), 0 0 30px rgba(37,64,234,.35), inset 0 1px 0 rgba(255,255,255,.3);
-        }
-        .fcard:hover::before, .fcard:hover::after { opacity: 1; }
-        .fhead { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 14px; }
-        .fnum {
-          font-family: var(--font-heading); font-size: 1.4rem; font-weight: 900;
-          color: #60a5fa; opacity: .75; letter-spacing: -1px; transition: all .3s ease;
-        }
-        .fcard:hover .fnum { opacity: 1; transform: scale(1.1); color: #ffffff; text-shadow: 0 0 12px #60a5fa; }
-
-        .fh {
-          font-size: 1.28rem; font-weight: 800; color: #ffffff;
-          margin-bottom: 12px; letter-spacing: -.4px; line-height: 1.3;
-        }
-        .fp { color: var(--muted); font-size: .96rem; line-height: 1.75; font-weight: 400; }
-
-        /* BANDE STATISTIQUES */
-        .sbelt {
-          background: linear-gradient(180deg, rgba(37,64,234,.18) 0%, rgba(10,14,38,.85) 100%);
-          border-top: 1px solid rgba(96,165,250,.45); border-bottom: 1px solid rgba(96,165,250,.45);
-          padding: 72px 24px; box-shadow: inset 0 0 40px rgba(37,64,234,.22);
-        }
-        .sbelt-in {
-          max-width: 1080px; margin: 0 auto;
-          display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 40px; text-align: center;
-        }
-        .bnum {
-          font-size: 3.6rem; font-weight: 900; color: var(--gl); letter-spacing: -2.5px;
-          line-height: 1; text-shadow: 0 0 30px var(--g-glow);
-        }
-        .blbl {
-          font-size: .9rem; color: #e2e8f0; margin-top: 14px; font-weight: 700;
-          text-transform: uppercase; letter-spacing: 1px;
-        }
-
-        /* CTA FINAL */
-        .ctaw { padding: 96px 24px; }
-        .ctabox {
-          max-width: 760px; margin: 0 auto; background: var(--card);
-          border: 1px solid rgba(96,165,250,.45); border-radius: 30px;
-          padding: 72px 48px; text-align: center; position: relative; overflow: hidden;
-          box-shadow: 0 28px 70px -15px rgba(0,0,0,.8), 0 0 40px var(--g-subtle);
-          backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-        }
-        .ctabox::before {
-          content: ''; position: absolute; width: 600px; height: 260px;
-          background: radial-gradient(ellipse, var(--g-glow) 0%, transparent 70%);
-          top: -80px; left: 50%; transform: translateX(-50%); pointer-events: none;
-        }
-        .ctabox h2 {
-          font-size: clamp(2.1rem, 4.2vw, 3.2rem); font-weight: 900;
-          letter-spacing: -1.5px; margin-bottom: 32px; position: relative; color: #ffffff;
-        }
-        .btng {
-          display: inline-flex; align-items: center; gap: 10px;
-          background: linear-gradient(135deg, var(--g) 0%, var(--gd) 100%);
-          color: var(--btn-text); font-size: 1.05rem; font-weight: 700;
-          padding: 16px 36px; border-radius: 14px; text-decoration: none;
-          box-shadow: 0 14px 40px -8px var(--g-glow), inset 0 1px 0 rgba(255,255,255,.3);
-          transition: all .26s ease; border: 1px solid rgba(255,255,255,.2);
-          position: relative;
-        }
-        .btng:hover { transform: translateY(-3px); filter: brightness(1.12); box-shadow: 0 20px 50px -6px var(--g-glow); }
-
-        /* FOOTER */
-        .landing-footer {
-          border-top: 1px solid var(--border); padding: 44px 24px;
-          text-align: center; color: var(--muted); font-size: .85rem; line-height: 1.8;
-          background: rgba(6,6,15,.95);
-        }
-        .landing-footer strong { color: var(--gl); font-weight: 700; }
-
-        /* ANIMATIONS */
-        .r { opacity: 0; transform: translateY(36px); transition: opacity .65s ease, transform .65s ease; }
-        .r.in { opacity: 1; transform: translateY(0); }
-        .d1 { transition-delay: .08s; } .d2 { transition-delay: .16s; } .d3 { transition-delay: .24s; }
-        .d4 { transition-delay: .32s; } .d5 { transition-delay: .4s; } .d6 { transition-delay: .48s; }
-
-        @keyframes fadeU { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeD { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* STUDIO FLOTTANT */
-        .studio-toggle {
-          position: fixed; bottom: 24px; right: 24px; z-index: 90;
-          background: linear-gradient(135deg, var(--g) 0%, var(--gd) 100%);
-          color: #fff; border: 1px solid rgba(255,255,255,.3);
-          padding: 12px 22px; border-radius: 100px; font-size: .88rem; font-weight: 800;
-          cursor: pointer; box-shadow: 0 12px 36px var(--g-glow);
-          display: inline-flex; align-items: center; gap: 10px; transition: all .25s ease;
-        }
-        .studio-toggle:hover { transform: translateY(-3px) scale(1.03); }
-
-        .studio-panel {
-          position: fixed; bottom: 84px; right: 24px; z-index: 90; width: 370px; max-width: calc(100vw - 32px);
-          max-height: 80vh; overflow-y: auto; background: rgba(10,14,38,.96);
-          border: 1px solid rgba(96,165,250,.4); border-radius: 22px;
-          padding: 24px; box-shadow: 0 30px 80px rgba(0,0,0,.9), 0 0 40px var(--g-subtle);
-          backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-          display: flex; flex-direction: column; gap: 20px;
-        }
-        .studio-title { font-size: 1.05rem; font-weight: 800; color: #fff; display: flex; align-items: center; justify-content: space-between; }
-        .studio-close { background: transparent; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; }
-        .studio-sec { display: flex; flex-direction: column; gap: 10px; }
-        .studio-sec-h { font-size: .76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--gl); }
-        .studio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .studio-btn {
-          background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
-          color: #fff; padding: 10px 12px; border-radius: 10px; cursor: pointer;
-          font-size: .78rem; font-weight: 600; text-align: left; transition: all .2s;
-          display: flex; align-items: center; gap: 8px;
-        }
-        .studio-btn:hover, .studio-btn.active {
-          background: rgba(37,64,234,.35); border-color: var(--gl);
-        }
-        .dot-c { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
-      ` }} />
-
-      {/* NAVIGATION */}
-      <nav className="landing-nav">
-        <Link className="landing-logo" href="/" scroll={false}>
-          {/* LOGO OFFICIEL EASYTRADE */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/icon-white.png"
-            alt="EasyTrade"
-            className="landing-logo-icon h-7 w-auto object-contain"
-          />
-          <span>Easy<em>Trade</em></span>
-        </Link>
-        
-        <div className="flex items-center gap-4">
-          <Link href="/login" scroll={false} className="text-sm font-semibold text-white/70 hover:text-white transition-colors hidden sm:inline-block">
+        {/* Right CTA buttons */}
+        <div className="flex items-center gap-3">
+          <Link
+            href="/login"
+            className="text-sm font-semibold text-white/70 hover:text-white px-3.5 py-2 rounded-xl transition-colors"
+          >
             Connexion
           </Link>
-          <Link className="landing-nbtn" href="/register" scroll={false}>
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-2 text-sm font-bold text-white px-5 py-2.5 rounded-xl shadow-lg transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+            style={{
+              background:
+                "linear-gradient(135deg, var(--g, #2540ea) 0%, var(--gd, #1a2ca3) 100%)",
+              boxShadow: "0 8px 24px -4px var(--g-glow, rgba(37, 64, 234, 0.6))",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+            }}
+          >
             <span>Commencer</span>
-            <span>→</span>
+            <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </nav>
 
-      {/* HERO */}
-      <section id="hero" ref={heroRef}>
-        <canvas id="tcanvas" ref={canvasRef}></canvas>
-        <div className="hgrad"></div>
-        <div className="hinner">
-          <h1 className="hero-h1">
-            Votre boutique<br />en ligne, <span className="gh">en 5 minutes.</span>
+      {/* ── HERO SECTION ── */}
+      <section
+        id="hero"
+        className="relative min-h-[86vh] flex items-center justify-center text-center px-4 pt-24 pb-20 md:pt-36 md:pb-28 overflow-hidden"
+      >
+        {/* Three.js 3D interactive ambient canvas */}
+        <ThreeAmbientScene opacity={0.88} interactive={true} />
+
+        {/* Radial subtle glowing overlay */}
+        <div
+          className="absolute inset-0 pointer-events-none z-[1]"
+          style={{
+            background: `
+              radial-gradient(ellipse 70% 60% at 50% 45%, var(--g-subtle, rgba(37, 64, 234, 0.18)) 0%, transparent 72%),
+              radial-gradient(ellipse at bottom, rgba(6, 6, 15, 1) 0%, transparent 65%)
+            `,
+          }}
+          aria-hidden="true"
+        />
+
+        {/* Hero content */}
+        <div className="relative z-10 max-w-[920px] mx-auto space-y-7">
+          {/* Top pill badge */}
+          <div
+            className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-xs font-bold text-[#bfdbfe] border backdrop-blur-md shadow-lg"
+            style={{
+              background: "rgba(37, 64, 234, 0.16)",
+              borderColor: "rgba(96, 165, 250, 0.4)",
+              boxShadow: "0 0 24px var(--g-subtle, rgba(37, 64, 234, 0.35))",
+            }}
+          >
+            <span
+              className="w-2 h-2 rounded-full bg-[#60a5fa]"
+              style={{
+                animation: "pulse-dot 2s ease infinite",
+              }}
+            />
+            <span>Plateforme E-Commerce Algérie 🇩🇿 · En ligne en 5 minutes</span>
+          </div>
+
+          {/* Hero H1 */}
+          <h1
+            className="text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-tight leading-[1.08]"
+            style={{ fontFamily: "var(--font-heading, 'Outfit', sans-serif)" }}
+          >
+            Votre boutique<br />en ligne,{" "}
+            <span
+              className="bg-clip-text text-transparent"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, #ffffff 0%, var(--gl, #93c5fd) 40%, var(--g, #2540ea) 90%)",
+                filter: "drop-shadow(0 0 24px var(--g-glow, rgba(37, 64, 234, 0.5)))",
+              }}
+            >
+              en 5 minutes.
+            </span>
           </h1>
-          
-          <div className="hctas">
-            <a href="#features" className="btno">Explorer la plateforme ↓</a>
-            <Link href="/register" className="landing-nbtn" style={{ padding: "16px 36px", fontSize: "1.02rem" }}>
-              Lancer ma boutique gratuitement →
+
+          {/* Subtitle */}
+          <p className="text-base sm:text-lg md:text-xl text-white/70 max-w-2xl mx-auto leading-relaxed font-normal">
+            Une infrastructure e-commerce tout-en-un pensée pour le marché algérien :
+            paiement à la livraison (COD), intégration Yalidine & ZR Express, et boutique ultra-rapide sur mobile.
+          </p>
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <Link
+              href="/register"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl font-bold text-base text-white shadow-2xl transition-all duration-200 hover:-translate-y-1 hover:brightness-110"
+              style={{
+                background:
+                  "linear-gradient(135deg, var(--g, #2540ea) 0%, var(--gd, #1a2ca3) 100%)",
+                boxShadow: "0 14px 40px -8px var(--g-glow, rgba(37, 64, 234, 0.6))",
+                border: "1px solid rgba(255, 255, 255, 0.25)",
+              }}
+            >
+              <span>Créer ma boutique</span>
+              <ArrowRight className="w-5 h-5" />
             </Link>
+
+            <a
+              href="#features"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl font-semibold text-base text-white transition-all duration-200 hover:-translate-y-0.5"
+              style={{
+                background: "rgba(10, 14, 38, 0.75)",
+                border: "1px solid var(--border, rgba(96, 165, 250, 0.4))",
+                backdropFilter: "blur(16px)",
+                boxShadow: "0 12px 32px -8px rgba(0, 0, 0, 0.6)",
+              }}
+            >
+              <span>Explorer la plateforme</span>
+              <ChevronDown className="w-4 h-4 text-white/70" />
+            </a>
+          </div>
+
+          {/* Trust badges */}
+          <div className="pt-6 flex flex-wrap items-center justify-center gap-6 text-xs text-white/60">
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-[#60a5fa]" />
+              <span>Zéro carte bancaire requise</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-[#60a5fa]" />
+              <span>Prêt pour Yalidine & ZR Express</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-[#60a5fa]" />
+              <span>Comptabilité directe en DZD</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* TICKER DÉFILANT */}
-      <div className="ticker">
-        <div className="ticker-inner">
-          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-            <span key={i} className="tick">
-              {item}
-              <span className="tsep" />
-            </span>
+      {/* ── TICKER BANNER (INFINITE SCROLL) ── */}
+      <div
+        className="overflow-hidden py-4 border-y"
+        style={{
+          borderColor: "var(--border, rgba(96, 165, 250, 0.28))",
+          background:
+            "linear-gradient(90deg, rgba(10, 14, 38, 0.8) 0%, rgba(26, 44, 163, 0.15) 50%, rgba(10, 14, 38, 0.8) 100%)",
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        <div className="animate-marquee gap-8">
+          {[...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS].map((item, idx) => (
+            <div key={idx} className="flex items-center gap-4 text-sm font-semibold text-white/70 whitespace-nowrap">
+              <span>{item}</span>
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{
+                  backgroundColor: "var(--gl, #93c5fd)",
+                  boxShadow: "0 0 8px var(--gl, #93c5fd)",
+                }}
+              />
+            </div>
           ))}
         </div>
       </div>
 
-      {/* SECTION FONCTIONNALITÉS */}
-      <section className="feat-s" id="features">
-        <div className="eyebrow r">Fonctionnalités</div>
-        <h2 className="sh2 r">Tout ce qu&apos;il faut<br />pour vendre en Algérie</h2>
-        <p className="ssub r">Une infrastructure tout-en-un pensée pour le marché algérien, sans carte de crédit bancaire, sans complications.</p>
-        
-        <div className="fgrid">
-          {/* Carte 01 */}
-          <div className="fcard r d1">
-            <div className="fhead"><span className="fnum">01</span></div>
-            <div className="fh">Paiement à la livraison</div>
-            <p className="fp">Le standard incontournable en Algérie. Vos clients règlent en espèces à la remise du colis par le livreur. Zéro friction, confiance maximale.</p>
-          </div>
+      {/* ── FEATURES SECTION (6 CLEAN, HIGH-VISIBILITY CARDS) ── */}
+      <section id="features" className="py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
+        <div className="space-y-3 mb-14 text-center md:text-left">
+          <span
+            className="text-xs font-black uppercase tracking-[3px]"
+            style={{
+              color: "var(--gl, #93c5fd)",
+              textShadow: "0 0 16px var(--g-glow, rgba(37, 64, 234, 0.6))",
+            }}
+          >
+            Fonctionnalités
+          </span>
+          <h2
+            className="text-3xl md:text-5xl font-black text-white tracking-tight"
+            style={{ fontFamily: "var(--font-heading, 'Outfit', sans-serif)" }}
+          >
+            Tout ce qu&apos;il faut<br />pour vendre en Algérie
+          </h2>
+          <p className="text-white/70 text-base md:text-lg max-w-2xl">
+            Une infrastructure tout-en-un pensée pour le marché algérien, sans carte de crédit bancaire, sans complications techniques.
+          </p>
+        </div>
 
-          {/* Carte 02 */}
-          <div className="fcard r d2">
-            <div className="fhead"><span className="fnum">02</span></div>
-            <div className="fh"><strong>IA intégrée</strong></div>
-            <p className="fp">Génération de boutiques stylées grâce à l&apos;IA.</p>
-          </div>
+        {/* Feature Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {FEATURES.map((feat, idx) => (
+            <div
+              key={idx}
+              onMouseMove={handleCardMouseMove}
+              className="group relative rounded-3xl p-8 flex flex-col justify-between min-h-[250px] transition-all duration-300 hover:-translate-y-2 overflow-hidden"
+              style={{
+                background:
+                  "linear-gradient(155deg, rgba(28, 44, 148, 0.35) 0%, rgba(10, 14, 38, 0.85) 100%)",
+                border: "1px solid var(--border, rgba(96, 165, 250, 0.28))",
+                boxShadow: "0 12px 36px -10px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.16)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+              }}
+            >
+              {/* Dynamic mouse cursor radial light */}
+              <div
+                className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  background:
+                    "radial-gradient(circle at var(--mx, 50%) var(--my, 50%), var(--g-glow, rgba(37, 64, 234, 0.5)) 0%, transparent 65%)",
+                }}
+              />
 
-          {/* Carte 03 */}
-          <div className="fcard r d3">
-            <div className="fhead"><span className="fnum">03</span></div>
-            <div className="fh">Livraison Intégrée</div>
-            <p className="fp">Connectez Yalidine, Zr Express, Procolis et d&apos;autres transporteurs en un clic. Génération automatique de bordereaux et tracking précis.</p>
-          </div>
+              {/* Glowing top accent border on hover */}
+              <div
+                className="absolute top-0 left-0 right-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, var(--gl, #93c5fd), var(--g, #2540ea), transparent)",
+                }}
+              />
 
-          {/* Carte 04 */}
-          <div className="fcard r d4">
-            <div className="fhead"><span className="fnum">04</span></div>
-            <div className="fh"><strong>Déploiement rapide</strong></div>
-            <p className="fp">Votre boutique sera en ligne dans moins d&apos;une minute.</p>
-          </div>
+              {/* Card top */}
+              <div className="relative z-10 flex items-center justify-between mb-4">
+                <span
+                  className="px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase border text-white/80"
+                  style={{
+                    background: "rgba(37, 64, 234, 0.2)",
+                    borderColor: "var(--border, rgba(96, 165, 250, 0.3))",
+                  }}
+                >
+                  {feat.tag}
+                </span>
+                <span
+                  className="text-2xl font-black transition-all duration-300 group-hover:scale-110"
+                  style={{
+                    color: "var(--gl, #60a5fa)",
+                    fontFamily: "var(--font-heading, 'Outfit', sans-serif)",
+                  }}
+                >
+                  {feat.num}
+                </span>
+              </div>
 
-          {/* Carte 05 */}
-          <div className="fcard r d5">
-            <div className="fhead"><span className="fnum">05</span></div>
-            <div className="fh">100% Mobile-first</div>
-            <p className="fp">9 commandes sur 10 se font sur smartphone en Algérie. Les vitrines sont calibrées pour se charger instantanément même en connexion 3G/4G.</p>
-          </div>
+              {/* Card body */}
+              <div className="relative z-10 space-y-2">
+                <h3
+                  className="text-xl font-extrabold text-white tracking-tight"
+                  style={{ fontFamily: "var(--font-heading, 'Outfit', sans-serif)" }}
+                >
+                  {feat.title}
+                </h3>
+                <p className="text-sm text-white/70 leading-relaxed font-normal">{feat.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-          {/* Carte 06 */}
-          <div className="fcard r d6">
-            <div className="fhead"><span className="fnum">06</span></div>
-            <div className="fh">Protection Anti-Faux Ordres</div>
-            <p className="fp">Certificat SSL inclus, filtres intelligents pour bloquer les commandes frauduleuses ou spams et infrastructure cloud toujours en ligne.</p>
+      {/* ── STATS BELT ── */}
+      <div
+        id="stats"
+        ref={statsRef}
+        className="py-16 px-6 border-y"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(37, 64, 234, 0.18) 0%, rgba(10, 14, 38, 0.85) 100%)",
+          borderColor: "rgba(96, 165, 250, 0.45)",
+          boxShadow: "inset 0 0 40px var(--g-subtle, rgba(37, 64, 234, 0.22))",
+        }}
+      >
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          {STATS.map((stat, idx) => (
+            <div key={idx} className="space-y-2">
+              <div
+                className="text-4xl md:text-5xl font-black tracking-tight"
+                style={{
+                  color: "var(--gl, #93c5fd)",
+                  fontFamily: "var(--font-heading, 'Outfit', sans-serif)",
+                  textShadow: "0 0 30px var(--g-glow, rgba(37, 64, 234, 0.6))",
+                }}
+              >
+                {counts[idx]}
+                {stat.suffix}
+              </div>
+              <div className="text-xs md:text-sm font-bold uppercase tracking-wider text-white/80">
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── HOW IT WORKS / STEPS ── */}
+      <section id="how-it-works" className="py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
+        <div className="space-y-3 mb-14 text-center">
+          <span
+            className="text-xs font-black uppercase tracking-[3px]"
+            style={{
+              color: "var(--gl, #93c5fd)",
+              textShadow: "0 0 16px var(--g-glow, rgba(37, 64, 234, 0.6))",
+            }}
+          >
+            Démarrage Express
+          </span>
+          <h2
+            className="text-3xl md:text-5xl font-black text-white tracking-tight"
+            style={{ fontFamily: "var(--font-heading, 'Outfit', sans-serif)" }}
+          >
+            Comment ça marche ?
+          </h2>
+          <p className="text-white/70 text-base md:text-lg max-w-xl mx-auto">
+            Trois étapes simples pour commencer à vendre en ligne partout en Algérie.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {STEPS.map((s, idx) => (
+            <div
+              key={idx}
+              className="relative rounded-3xl p-8 space-y-4 transition-all duration-300 hover:-translate-y-1.5 overflow-hidden"
+              style={{
+                background:
+                  "linear-gradient(155deg, rgba(28, 44, 148, 0.35) 0%, rgba(10, 14, 38, 0.85) 100%)",
+                border: "1px solid var(--border, rgba(96, 165, 250, 0.28))",
+                boxShadow: "0 12px 36px -10px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.16)",
+                backdropFilter: "blur(20px)",
+              }}
+            >
+              {/* Vertical glowing accent line on left */}
+              <div
+                className="absolute top-0 left-0 bottom-0 w-1"
+                style={{
+                  background:
+                    "linear-gradient(180deg, var(--gl, #60a5fa), var(--g, #2540ea))",
+                }}
+              />
+
+              <div
+                className="inline-block text-[11px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-lg border text-[#bfdbfe]"
+                style={{
+                  background: "rgba(37, 64, 234, 0.26)",
+                  borderColor: "rgba(147, 197, 253, 0.4)",
+                  boxShadow: "0 0 12px var(--g-subtle, rgba(37, 64, 234, 0.3))",
+                }}
+              >
+                {s.step}
+              </div>
+
+              <h3
+                className="text-xl font-extrabold text-white tracking-tight"
+                style={{ fontFamily: "var(--font-heading, 'Outfit', sans-serif)" }}
+              >
+                {s.title}
+              </h3>
+
+              <p className="text-sm text-white/70 leading-relaxed font-normal">{s.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── FINAL CALL TO ACTION BOX ── */}
+      <section className="py-20 px-6 max-w-4xl mx-auto relative z-10 text-center">
+        <div
+          className="rounded-[32px] p-10 md:p-16 relative overflow-hidden shadow-2xl"
+          style={{
+            background:
+              "linear-gradient(155deg, rgba(28, 44, 148, 0.4) 0%, rgba(10, 14, 38, 0.9) 100%)",
+            border: "1px solid rgba(96, 165, 250, 0.45)",
+            boxShadow:
+              "0 28px 70px -15px rgba(0, 0, 0, 0.8), 0 0 40px var(--g-subtle, rgba(37, 64, 234, 0.2))",
+            backdropFilter: "blur(24px)",
+          }}
+        >
+          {/* Radial glow dome */}
+          <div
+            className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[260px] pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse, var(--g-glow, rgba(37, 64, 234, 0.6)) 0%, transparent 70%)",
+            }}
+          />
+
+          <div className="relative z-10 space-y-6">
+            <h2
+              className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight"
+              style={{ fontFamily: "var(--font-heading, 'Outfit', sans-serif)" }}
+            >
+              Prêt à lancer<br />votre boutique ?
+            </h2>
+
+            <p className="text-white/70 text-base md:text-lg max-w-lg mx-auto">
+              Rejoignez dès aujourd&apos;hui les marchands et créateurs qui développent leur commerce en Algérie.
+            </p>
+
+            <div>
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2.5 px-9 py-4 rounded-2xl font-bold text-base text-white shadow-2xl transition-all duration-200 hover:-translate-y-1 hover:brightness-110"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--g, #2540ea) 0%, var(--gd, #1a2ca3) 100%)",
+                  boxShadow: "0 14px 40px -8px var(--g-glow, rgba(37, 64, 234, 0.6))",
+                  border: "1px solid rgba(255, 255, 255, 0.25)",
+                }}
+              >
+                <span>Commencer maintenant</span>
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* BANDEAU DE STATISTIQUES */}
-      <div className="sbelt r">
-        <div className="sbelt-in">
-          <div>
-            <div className="bnum" data-t="99" data-s="%">0%</div>
-            <div className="blbl">Disponibilité garantie</div>
-          </div>
-          <div>
-            <div className="bnum" data-t="58" data-s="">0</div>
-            <div className="blbl">Wilayas couvertes</div>
-          </div>
-          <div>
-            <div className="bnum" data-t="5" data-s=" min">0 min</div>
-            <div className="blbl">Pour ouvrir sa boutique</div>
-          </div>
-          <div>
-            <div className="bnum" data-t="0" data-s=" DZD">0 DZD</div>
-            <div className="blbl">Pour commencer</div>
-          </div>
-        </div>
-      </div>
-
-      {/* CALL TO ACTION FINAL */}
-      <div className="ctaw r">
-        <div className="ctabox">
-          <h2>Prêt à lancer<br />votre boutique ?</h2>
-          <Link href="/register" className="btng">
-            Commencer →
+      {/* ── FOOTER ── */}
+      <footer
+        className="py-12 px-6 border-t text-center space-y-3 relative z-10"
+        style={{
+          borderColor: "var(--border, rgba(96, 165, 250, 0.28))",
+          background: "rgba(6, 6, 15, 0.95)",
+        }}
+      >
+        <div className="text-2xl">🇩🇿</div>
+        <p className="text-sm text-white/60">
+          © 2026 <strong style={{ color: "var(--gl, #93c5fd)" }}>easytrade</strong> · Fait avec fierté à Oran, Algérie
+        </p>
+        <div className="flex items-center justify-center gap-6 text-xs text-white/40 pt-2">
+          <Link href="/login" className="hover:text-white transition-colors">
+            Connexion
           </Link>
+          <Link href="/register" className="hover:text-white transition-colors">
+            Inscription
+          </Link>
+          <a href="#features" className="hover:text-white transition-colors">
+            Fonctionnalités
+          </a>
         </div>
-      </div>
-
-      {/* PIED DE PAGE */}
-      <footer className="landing-footer">
-        <p style={{ fontSize: "1.4rem", marginBottom: "8px" }}>🇩🇿</p>
-        <p>© 2026 <strong>EasyTrade</strong> · Fait avec fierté à Oran, Algérie</p>
       </footer>
 
-      {/* BOUTON FLOTTANT DU STUDIO */}
-      <button
-        className="studio-toggle"
-        onClick={() => setIsStudioOpen(!isStudioOpen)}
-        title="Tester palettes et polices"
-      >
-        <span>🎨</span>
-        <span>Palette & Polices</span>
-      </button>
-
-      {/* PANNEAU DU STUDIO INTERACTIF */}
-      {isStudioOpen && (
-        <div className="studio-panel">
-          <div className="studio-title">
-            <span>Studio de Style</span>
-            <button className="studio-close" onClick={() => setIsStudioOpen(false)}>✕</button>
-          </div>
-
-          <div className="studio-sec">
-            <div className="studio-sec-h">1. Palettes de Couleurs</div>
-            <div className="studio-grid">
-              {PALETTES.map((p, idx) => (
-                <button
-                  key={p.name}
-                  className={`studio-btn ${activePalette === idx ? "active" : ""}`}
-                  onClick={() => applyPalette(idx)}
-                >
-                  <span className="dot-c" style={{ background: p.dot, color: p.dotBorder }}></span>
-                  <span>{p.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="studio-sec">
-            <div className="studio-sec-h">2. Modèles de Typographies</div>
-            <div className="studio-grid">
-              {FONTS.map((f, idx) => (
-                <button
-                  key={f.name}
-                  className={`studio-btn ${activeFont === idx ? "active" : ""}`}
-                  onClick={() => applyFont(idx)}
-                >
-                  <span>{f.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ── INTERACTIVE FLOATING STYLE STUDIO ── */}
+      <StyleStudio />
     </div>
-  );;
+  );
 }
-

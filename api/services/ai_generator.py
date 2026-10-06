@@ -15,6 +15,7 @@ import asyncio
 import logging
 import time
 import html as html_module
+import urllib.parse
 from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timezone
 
@@ -34,6 +35,76 @@ from tenacity import (
 logger = logging.getLogger("storegen.ai")
 
 THEME_DESIGN_TOKENS: Dict[str, Dict[str, str]] = {
+    "crimson": {
+        "bg": "#faf7f6",
+        "card_bg": "#ffffff",
+        "text": "#181111",
+        "accent_style": "bold crimson accents (#9c1220), sharp edges, uppercase headings",
+        "vibe": "leather atelier, bold Anton display + Barlow body font, premium crafted character",
+    },
+    "energetic": {
+        "bg": "#f2f3f6",
+        "card_bg": "#ffffff",
+        "text": "#0f1116",
+        "accent_style": "electric blue (#2f4dff) + neon lime (#c4ff2e) highlights, pill badges",
+        "vibe": "high-energy sports & tech, Archivo bold italic headings, fitness audio performance",
+    },
+    "natural": {
+        "bg": "#f7f5ee",
+        "card_bg": "#fffdf7",
+        "text": "#232a1e",
+        "accent_style": "olive green (#4e6b39) and earthy soft hues, organic radius",
+        "vibe": "Kabylie terroir, artisanal olive oil and honey, Newsreader serif + Work Sans body",
+    },
+    "monochrome": {
+        "bg": "#ffffff",
+        "card_bg": "#ffffff",
+        "text": "#0d0d0d",
+        "accent_style": "pure black & white minimalism, 0px radius, clean hairline dividers",
+        "vibe": "Swiss watchmaking precision, Schibsted Grotesk typography, quiet luxury",
+    },
+    "luxe-noir": {
+        "bg": "#0b0b0c",
+        "card_bg": "#0f0f11",
+        "text": "#eae5dc",
+        "accent_style": "warm satin gold (#c6a76a), dark radial backdrop, gold borders",
+        "vibe": "haute perfumery, night in Oran, Cormorant Garamond serif + Jost sans-serif",
+    },
+    "tuareg-indigo": {
+        "bg": "#f6f1e5",
+        "card_bg": "#fffcf4",
+        "text": "#1e2350",
+        "accent_style": "deep indigo (#2c3b7d) + desert gold (#c8a24a), Saharan heritage",
+        "vibe": "Tamanrasset handmade silver jewelry, Amiri display + Cairo Arabic-friendly font",
+    },
+    "playful-pumpkin": {
+        "bg": "#fff8ef",
+        "card_bg": "#ffffff",
+        "text": "#34241a",
+        "accent_style": "pumpkin orange (#ef7b1c) with bold dark outlines and chunky pill buttons",
+        "vibe": "cheerful kids school backpacks, Fredoka playful display + Nunito rounded body",
+    },
+    "neo-brutalist": {
+        "bg": "#fffdf0",
+        "card_bg": "#ffffff",
+        "text": "#000000",
+        "accent_style": "hard 3px solid black borders, 10px solid black box-shadows, electric yellow (#ffd400)",
+        "vibe": "streetwear limited sneakers drop, Space Mono + DM Sans typography, unapologetic brutalism",
+    },
+    "phantom": {
+        "bg": "#08090d",
+        "card_bg": "#0e1016",
+        "text": "#e9edf5",
+        "accent_style": "neon cyan (#2fd9e8) cyber glow on stealth dark, glassmorphism badges",
+        "vibe": "e-sport competitive gaming headset, Space Grotesk + Inter Tight, ultra-low latency",
+    },
+    "blossom-lavender": {
+        "bg": "#fbf6fb",
+        "card_bg": "#ffffff",
+        "text": "#3a2a41",
+        "accent_style": "delicate lavender purple (#8b62c4), soft pill shapes, gentle glow",
+        "vibe": "Atlas rose skincare, soothing botanical beauty, Fraunces serif + Karla clean body",
+    },
     "modern": {
         "bg": "#f8fafc",
         "card_bg": "#ffffff",
@@ -90,6 +161,30 @@ EFFECTS_INSTRUCTIONS: Dict[str, str] = {
     "particles": "Ajoute un canvas de particules animées en arrière-plan du hero (implémente un système simple de particules en JS vanilla, pas de librairie externe).",
     "counter": "Ajoute des counters animés dans une section stats (nombre de produits, clients satisfaits, etc.) qui comptent de 0 à la valeur quand visibles.",
 }
+
+
+ALGERIA_WILAYAS_DATA = [
+    (1, "Adrar", 950, 600), (2, "Chlef", 550, 300), (3, "Laghouat", 700, 400),
+    (4, "Oum El Bouaghi", 700, 400), (5, "Batna", 700, 400), (6, "Béjaïa", 700, 400),
+    (7, "Biskra", 750, 450), (8, "Béchar", 950, 600), (9, "Blida", 500, 300),
+    (10, "Bouira", 550, 300), (11, "Tamanrasset", 1400, 900), (12, "Tébessa", 750, 450),
+    (13, "Tlemcen", 550, 300), (14, "Tiaret", 600, 350), (15, "Tizi Ouzou", 600, 350),
+    (16, "Alger", 500, 300), (17, "Djelfa", 700, 400), (18, "Jijel", 700, 400),
+    (19, "Sétif", 700, 400), (20, "Saïda", 550, 300), (21, "Skikda", 700, 400),
+    (22, "Sidi Bel Abbès", 500, 300), (23, "Annaba", 750, 450), (24, "Guelma", 750, 450),
+    (25, "Constantine", 700, 400), (26, "Médéa", 600, 350), (27, "Mostaganem", 450, 280),
+    (28, "M'Sila", 700, 400), (29, "Mascara", 500, 300), (30, "Ouargla", 900, 550),
+    (31, "Oran", 400, 250), (32, "El Bayadh", 800, 500), (33, "Illizi", 1400, 900),
+    (34, "Bordj Bou Arreridj", 650, 350), (35, "Boumerdès", 550, 300), (36, "El Tarf", 750, 450),
+    (37, "Tindouf", 1400, 900), (38, "Tissemsilt", 650, 350), (39, "El Oued", 850, 500),
+    (40, "Khenchela", 750, 450), (41, "Souk Ahras", 750, 450), (42, "Tipaza", 550, 300),
+    (43, "Mila", 700, 400), (44, "Aïn Defla", 600, 350), (45, "Naâma", 800, 500),
+    (46, "Aïn Témouchent", 450, 280), (47, "Ghardaïa", 850, 500), (48, "Relizane", 500, 300),
+    (49, "Timimoun", 1000, 650), (50, "Bordj Badji Mokhtar", 1500, 1000), (51, "Ouled Djellal", 800, 450),
+    (52, "Béni Abbès", 1000, 650), (53, "In Salah", 1300, 850), (54, "In Guezzam", 1500, 1000),
+    (55, "Touggourt", 900, 550), (56, "Djanet", 1400, 900), (57, "El M'Ghair", 850, 500),
+    (58, "El Meniaa", 950, 600),
+]
 
 
 class AIStoreGenerator:
@@ -228,6 +323,1081 @@ class AIStoreGenerator:
             stripped = stripped[:-3]
         return stripped.strip()
 
+    @staticmethod
+    def _format_money_da(amount: Any) -> str:
+        try:
+            val = int(float(amount))
+            return f"{val:,}".replace(",", " ") + " DA"
+        except Exception:
+            return f"{amount} DA"
+
+
+
+    def _render_ready_template(self, store_data: Dict[str, Any]) -> Optional[str]:
+        store = store_data.get("store", {})
+        store_id = str(store.get("id") or "")
+        products = store_data.get("products", [])
+        slogan_text = store_data.get("slogan", "")
+        store_type = store.get("type") or (store.get("seo_metadata") or {}).get("type") or "boutique"
+        is_funnel = store_type == "funnel"
+
+        raw_theme = store.get("theme", "crimson")
+        theme_aliases = {
+            "modern": "crimson",
+            "minimaliste": "monochrome",
+            "tech": "phantom",
+            "nature": "natural",
+            "luxe": "luxe-noir",
+            "colore": "playful-pumpkin",
+            "pantry-basics": "crimson",
+            "habitat-occasions": "luxe-noir",
+            "botanica-organic": "natural",
+            "circuit-performance": "phantom",
+            "atelier-editorial": "monochrome",
+        }
+        theme = theme_aliases.get(raw_theme, raw_theme)
+
+        templates_base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "store-template", "templates"))
+        subfolder = "funnels" if is_funnel else "boutiques"
+        tpl_path = os.path.join(templates_base, subfolder, f"{theme}.html")
+
+        if not os.path.isfile(tpl_path):
+            ref_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "docs", "reference-designs", "templates", subfolder, f"{theme}.html"))
+            if os.path.isfile(ref_path):
+                tpl_path = ref_path
+            else:
+                return None
+
+        try:
+            with open(tpl_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            store_name = html_module.escape(store.get("name") or "Ma Boutique")
+            desc = html_module.escape(store.get("description") or "Bienvenue dans notre boutique.")
+            slogan = html_module.escape(slogan_text or store.get("slogan") or desc)
+            phone = store.get("whatsapp_phone") or ""
+            clean_phone = re.sub(r"\D", "", phone)
+
+            if is_funnel:
+                if not products:
+                    logger.warning("Funnel deploy without products for store %s — returning None for fallback", store.get("id"))
+                    return None
+
+                star_product = products[0]
+                p_name = html_module.escape(star_product.get("name") or "Produit")
+                p_desc = html_module.escape(star_product.get("description") or desc)
+                p_price = int(float(star_product.get("price") or 0))
+                p_compare = star_product.get("compare_price") or star_product.get("original_price")
+                p_images = star_product.get("images") or []
+                if p_images and isinstance(p_images[0], dict):
+                    p_images = [img.get("url", "") for img in p_images if img.get("url")]
+                elif p_images and isinstance(p_images[0], str):
+                    p_images = [img for img in p_images if img]
+                p_img = p_images[0] if p_images else ""
+                formatted_price = self._format_money_da(p_price)
+
+                # Breadcrumbs
+                content = re.sub(
+                    r'<nav class="pd-crumbs".*?>.*?</nav>',
+                    f'<nav class="pd-crumbs" aria-label="Fil d\'ariane"><a href="#">Accueil</a> / <span>{p_name}</span></nav>',
+                    content,
+                    count=1,
+                    flags=re.DOTALL
+                )
+
+                content = re.sub(r"<title>.*?</title>", f"<title>{p_name} — {store_name}</title>", content, count=1)
+                content = re.sub(r'<meta name="description" content=".*?">', f'<meta name="description" content="{p_desc[:160]}">', content, count=1)
+
+                if store.get("logo_url"):
+                    brand_html = f'<a class="pd-brand" href="#"><img src="{store["logo_url"]}" alt="{store_name}" style="height:32px;object-fit:contain;" /></a>'
+                    content = re.sub(r'<a class="pd-brand" href="#">.*?</a>', brand_html, content, count=1)
+                else:
+                    content = re.sub(r'<a class="pd-brand" href="#">.*?</a>', f'<a class="pd-brand" href="#">{store_name}</a>', content, count=1)
+
+                content = re.sub(r'<p class="pd-top__note">.*?</p>', f'<p class="pd-top__note">{slogan}</p>', content, count=1)
+                content = re.sub(r'<h1 class="pd-title">.*?</h1>', f'<h1 class="pd-title">{p_name}</h1>', content, count=1)
+                content = re.sub(r'<p class="pd-vendor">.*?</p>', f'<p class="pd-vendor">{store_name}</p>', content, count=1)
+
+                # Prices
+                content = re.sub(
+                    r'<strong class="pd-price".*?>.*?</strong>',
+                    f'<strong class="pd-price" data-price="{p_price}">{formatted_price}</strong>',
+                    content,
+                    count=1
+                )
+                if p_compare and float(p_compare) > p_price:
+                    cmp_val = int(float(p_compare))
+                    pct = int(round((1 - p_price / cmp_val) * 100))
+                    content = re.sub(r'<s class="pd-was">.*?</s>', f'<s class="pd-was">{self._format_money_da(cmp_val)}</s>', content, count=1)
+                    content = re.sub(r'<span class="pd-off">.*?</span>', f'<span class="pd-off">-{pct}%</span>', content, count=1)
+                else:
+                    content = re.sub(r'<s class="pd-was">.*?</s>', '', content, count=1)
+                    content = re.sub(r'<span class="pd-off">.*?</span>', '', content, count=1)
+
+                # Subtotal, Total, Stickybar Price
+                content = re.sub(r'<span data-subtotal>.*?</span>', f'<span data-subtotal>{formatted_price}</span>', content, count=1)
+                content = re.sub(r'<span data-total>.*?</span>', f'<span data-total>{formatted_price}</span>', content, count=1)
+                content = re.sub(
+                    r'<p class="pd-stickybar__price">.*?</p>',
+                    f'<p class="pd-stickybar__price">{formatted_price}<small>paiement à la livraison</small></p>',
+                    content,
+                    count=1,
+                    flags=re.DOTALL
+                )
+
+                # Gallery & Images
+                if p_img:
+                    img_markup = f'<img src="{p_img}" alt="{p_name}" style="width:100%;height:100%;object-fit:cover;" />'
+                    content = re.sub(
+                        r'(<figure class="pd-stage"[^>]*>)(.*?)(</figure>)',
+                        rf'\1<span class="pd-stage__flag">Best-seller</span>{img_markup}\3',
+                        content,
+                        count=1,
+                        flags=re.DOTALL
+                    )
+                else:
+                    placeholder_markup = '<div style="display:grid;place-items:center;height:100%;font-size:56px;background:rgba(0,0,0,0.04);">🛍️</div>'
+                    content = re.sub(
+                        r'(<figure class="pd-stage"[^>]*>)(.*?)(</figure>)',
+                        rf'\1<span class="pd-stage__flag">Nouveau</span>{placeholder_markup}\3',
+                        content,
+                        count=1,
+                        flags=re.DOTALL
+                    )
+
+                # Normalize body class: never hide pd-thumbs with g-stack
+                content = re.sub(r'<body class="g-stack"', '<body class="g-side"', content)
+                content = re.sub(r'\.g-stack\s*\.pd-thumbs\{[^}]*\}', '', content)
+
+                if len(p_images) <= 1:
+                    content = re.sub(r'<ul class="pd-thumbs">.*?</ul>', '<ul class="pd-thumbs" style="display:none;"></ul>', content, count=1, flags=re.DOTALL)
+                    content = re.sub(r'<div class="pd-extra">.*?</div>', '<div class="pd-extra" style="display:none;"></div>', content, count=1, flags=re.DOTALL)
+                else:
+                    thumbs_items = "".join(
+                        f'<li><button type="button" class="pd-thumb" data-thumb="{i+1}" aria-current="{"true" if i == 0 else "false"}" aria-label="Vue {i+1}"><img src="{img_u}" alt="" style="width:100%;height:100%;object-fit:cover;" /></button></li>'
+                        for i, img_u in enumerate(p_images)
+                    )
+                    content = re.sub(r'<ul class="pd-thumbs">.*?</ul>', f'<ul class="pd-thumbs">{thumbs_items}</ul>', content, count=1, flags=re.DOTALL)
+                    content = re.sub(r'<div class="pd-extra">.*?</div>', '<div class="pd-extra" style="display:none;"></div>', content, count=1, flags=re.DOTALL)
+
+                    gallery_script = """
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  var thumbs = document.querySelectorAll(".pd-thumb");
+  thumbs.forEach(function(t) {
+    t.addEventListener("click", function(e) {
+      e.preventDefault();
+      thumbs.forEach(function(o) { o.setAttribute("aria-current", "false"); });
+      t.setAttribute("aria-current", "true");
+      var stage = document.querySelector(".pd-stage") || document.querySelector("[data-stage]");
+      var thumbImg = t.querySelector("img");
+      if (stage && thumbImg) {
+        var mainImg = stage.querySelector("img");
+        if (mainImg) {
+          mainImg.src = thumbImg.src;
+        }
+      }
+    });
+  });
+});
+</script>
+"""
+                    if "</body>" in content:
+                        content = content.replace("</body>", f"{gallery_script}</body>")
+                    else:
+                        content += gallery_script
+
+                # Variants & Options
+                p_opts = star_product.get("options") or []
+                if not p_opts:
+                    content = re.sub(r'<div class="pd-field">\s*<p class="pd-label">(?:Couleur|Taille|Format).*?</p>\s*<div class="pd-opts" data-variant-group="[^"]*">.*?</div>\s*</div>', '', content, flags=re.DOTALL)
+                    clean_spec = '<p style="padding:16px 0;opacity:0.8;font-size:14px;">Produit sélectionné avec soin. Conforme à la description et aux normes de qualité.</p>'
+                    content = re.sub(r'(<div class="pd-panel" data-panel="spec"[^>]*>)(.*?)(</div>)', rf'\1{clean_spec}\3', content, count=1, flags=re.DOTALL)
+                else:
+                    options_html_list = []
+                    for opt in p_opts:
+                        opt_name = html_module.escape(opt.get("name") or "Option")
+                        opt_type = opt.get("type", "chip")
+                        group_id = re.sub(r"\W+", "_", opt_name.lower())
+                        vals = opt.get("values") or []
+                        if not vals:
+                            continue
+                        first_avail = next((v for v in vals if v.get("available", True)), vals[0])
+                        active_val = html_module.escape(first_avail.get("label") or "")
+                        btns = []
+                        for v in vals:
+                            lbl = html_module.escape(v.get("label") or "")
+                            avail = v.get("available", True)
+                            pressed = "true" if lbl == active_val else "false"
+                            dis = "" if avail else "disabled"
+                            if opt_type == "swatch":
+                                hex_c = html_module.escape(v.get("hex") or "#3b82f6")
+                                btns.append(f'<button type="button" class="pd-swatch" data-variant="{lbl}" aria-pressed="{pressed}" aria-label="{lbl}" style="background:{hex_c}" title="{lbl}" {dis}></button>')
+                            else:
+                                btns.append(f'<button type="button" class="pd-chip" data-variant="{lbl}" aria-pressed="{pressed}" {dis}>{lbl}</button>')
+                        options_html_list.append(f'''<div class="pd-field">
+  <p class="pd-label">{opt_name} <span data-variant-out="{group_id}">{active_val}</span></p>
+  <div class="pd-opts" data-variant-group="{group_id}">
+    {"".join(btns)}
+  </div>
+</div>''')
+                    dynamic_opts = "\n".join(options_html_list)
+                    pattern = r'(<div class="pd-field">\s*<p class="pd-label">(?:Couleur|Taille|Format).*?</div>\s*</div>(?:\s*<div class="pd-field">\s*<p class="pd-label">(?:Couleur|Taille|Format).*?</div>\s*</div>)?)'
+                    if re.search(pattern, content, flags=re.DOTALL):
+                        content = re.sub(pattern, dynamic_opts, content, count=1, flags=re.DOTALL)
+                    else:
+                        content = re.sub(r'(<div class="pd-field">\s*<p class="pd-label">Quantité</p>)', f'{dynamic_opts}\n\\1', content, count=1)
+
+                # Description & Benefits Panel
+                desc_html = f'<p>{p_desc}</p>'
+                benefits = star_product.get("benefits") or []
+                if benefits and any(isinstance(b, str) and b.strip() for b in benefits):
+                    b_items = "".join(f'<li>{html_module.escape(b)}</li>' for b in benefits if isinstance(b, str) and b.strip())
+                    if b_items:
+                        desc_html += f'<h3>Points forts</h3><ul class="pd-list">{b_items}</ul>'
+
+                content = re.sub(
+                    r'(<div class="pd-panel" data-panel="desc"[^>]*>)(.*?)(</div>\s*<div class="pd-panel"|\s*</section>)',
+                    rf'\1{desc_html}</div>\3',
+                    content,
+                    count=1,
+                    flags=re.DOTALL
+                )
+
+                if clean_phone:
+                    content = re.sub(r'href="tel:[^"]*"', f'href="tel:{clean_phone}"', content)
+                else:
+                    content = re.sub(r'<a class="pd-btn pd-btn--call".*?</a>', '', content, count=1, flags=re.DOTALL)
+
+                foot_text = f'{store_name} — Algérie 🇩🇿 · Commandes 7j/7 · Paiement à la livraison'
+                content = re.sub(r'<footer class="pd-foot">.*?</footer>', f'<footer class="pd-foot"><div class="pd-shell">{foot_text}</div></footer>', content, count=1, flags=re.DOTALL)
+
+                # Injecter les champs clients (Nom, Téléphone, Adresse) dans la boîte de commande COD
+                star_id = str(star_product.get("id") or "")
+                cust_fields_html = '''
+        <div class="pd-field" style="margin-top:14px;margin-bottom:10px;">
+          <label class="pd-label" for="pd-cust-name" style="font-weight:600;font-size:13px;display:block;margin-bottom:4px;">Nom et Prénom *</label>
+          <input type="text" id="pd-cust-name" required placeholder="Votre nom complet" style="width:100%;height:44px;padding:8px 12px;border:1px solid var(--border, #ccc);border-radius:var(--radius-sm, 6px);background:var(--surface, #fff);color:var(--text, #111);font-size:14px;box-sizing:border-box;" />
+        </div>
+        <div class="pd-field" style="margin-bottom:10px;">
+          <label class="pd-label" for="pd-cust-phone" style="font-weight:600;font-size:13px;display:block;margin-bottom:4px;">Numéro de téléphone *</label>
+          <input type="tel" id="pd-cust-phone" required placeholder="0555 12 34 56" style="width:100%;height:44px;padding:8px 12px;border:1px solid var(--border, #ccc);border-radius:var(--radius-sm, 6px);background:var(--surface, #fff);color:var(--text, #111);font-size:14px;box-sizing:border-box;" />
+        </div>
+        <div class="pd-field" style="margin-bottom:16px;">
+          <label class="pd-label" for="pd-cust-address" style="font-weight:600;font-size:13px;display:block;margin-bottom:4px;">Adresse exacte de livraison (commune, quartier...)</label>
+          <input type="text" id="pd-cust-address" placeholder="Ex: Cité 500 logts, Bab Ezzouar" style="width:100%;height:44px;padding:8px 12px;border:1px solid var(--border, #ccc);border-radius:var(--radius-sm, 6px);background:var(--surface, #fff);color:var(--text, #111);font-size:14px;box-sizing:border-box;" />
+        </div>
+'''
+                if '<ul class="pd-sum">' in content:
+                    content = content.replace('<ul class="pd-sum">', f'{cust_fields_html}<ul class="pd-sum">')
+                elif '<div class="pd-actions">' in content:
+                    content = content.replace('<div class="pd-actions">', f'{cust_fields_html}<div class="pd-actions">')
+
+                # Script de soumission réelle de commande pour le funnel
+                funnel_script = f'''
+<script>
+(function() {{
+  var storeId = "{store_id}";
+  var productId = "{star_id}";
+  var productName = "{p_name}";
+  var productPrice = {p_price};
+  var supabaseUrl = "https://lyntwhvvnklmcprnnump.supabase.co";
+  var supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5bnR3aHZ2bmtsbWNwcm5udW1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NzUwOTksImV4cCI6MjEwNTM1MTA5OX0.-X3fmDagUiluvTDU6wY7UBwNll0-Bsu7gJ54uhL77PQ";
+
+  try {{
+    fetch(supabaseUrl + "/rest/v1/shipping_rates?store_id=eq." + storeId + "&select=wilaya_id,price_home,price_desk,wilayas(name)", {{
+      headers: {{ "apikey": supabaseAnonKey, "Authorization": "Bearer " + supabaseAnonKey }}
+    }})
+    .then(function(r) {{ return r.json(); }})
+    .then(function(customRates) {{
+      if (Array.isArray(customRates) && customRates.length > 0) {{
+        var wSel = document.querySelector('[data-wilaya]');
+        if (wSel) {{
+          customRates.forEach(function(cr) {{
+            var wName = cr.wilayas ? String(cr.wilayas.name).toLowerCase() : '';
+            for (var i = 0; i < wSel.options.length; i++) {{
+              var opt = wSel.options[i];
+              if (opt.value && (opt.value.toLowerCase() === wName || opt.text.toLowerCase().indexOf(wName) !== -1)) {{
+                opt.setAttribute('data-home', cr.price_home);
+                opt.setAttribute('data-desk', cr.price_desk);
+              }}
+            }}
+          }});
+        }}
+      }}
+    }})
+    .catch(function() {{}});
+  }} catch (e) {{}}
+
+  function handleFunnelOrder(btn) {{
+    var toast = document.querySelector('[data-toast]');
+    var timer;
+    function notify(msg) {{
+      if (!toast) {{ alert(msg); return; }}
+      toast.textContent = msg;
+      toast.dataset.open = 'true';
+      clearTimeout(timer);
+      timer = setTimeout(function() {{ toast.dataset.open = 'false'; }}, 4500);
+    }}
+
+    var wilaya = document.querySelector('[data-wilaya]');
+    if (wilaya && !wilaya.value) {{
+      wilaya.focus();
+      notify('Veuillez choisir votre wilaya de livraison.');
+      return;
+    }}
+
+    var nameInp = document.getElementById('pd-cust-name');
+    var nameVal = nameInp ? nameInp.value.trim() : '';
+    if (!nameVal || nameVal.length < 2) {{
+      if (nameInp) nameInp.focus();
+      notify('Veuillez renseigner votre nom complet.');
+      return;
+    }}
+
+    var phoneInp = document.getElementById('pd-cust-phone');
+    var phoneVal = phoneInp ? phoneInp.value.replace(/\\D/g, '') : '';
+    if (!phoneVal || phoneVal.length < 9) {{
+      if (phoneInp) phoneInp.focus();
+      notify('Veuillez renseigner un numéro de téléphone valide.');
+      return;
+    }}
+
+    var addrInp = document.getElementById('pd-cust-address');
+    var addrVal = addrInp ? addrInp.value.trim() : '';
+
+    var qtyInp = document.querySelector('[data-qty]');
+    var qty = qtyInp ? (parseInt(qtyInp.value, 10) || 1) : 1;
+
+    var modeRadio = document.querySelector('input[data-ship-mode]:checked');
+    var shipMode = modeRadio ? modeRadio.value : 'domicile';
+
+    var opt = wilaya ? wilaya.options[wilaya.selectedIndex] : null;
+    var shipCost = 0;
+    if (opt) {{
+      shipCost = parseInt(opt.getAttribute(shipMode === 'stopdesk' ? 'data-desk' : 'data-home'), 10) || 0;
+    }}
+    var totalAmount = (productPrice * qty) + shipCost;
+    var wilayaName = wilaya ? wilaya.value : '';
+    var fullAddress = 'Wilaya: ' + wilayaName + ' (' + (shipMode === 'stopdesk' ? 'Stop Desk' : 'À domicile') + ')' + (addrVal ? ' — ' + addrVal : '');
+
+    var options = {{}};
+    document.querySelectorAll('[data-variant-group]').forEach(function(grp) {{
+      var active = grp.querySelector('[aria-pressed="true"]');
+      if (active) {{
+        options[grp.dataset.variantGroup] = active.dataset.variant || active.textContent.trim();
+      }}
+    }});
+
+    var payload = {{
+      store_id: storeId,
+      customer_name: nameVal,
+      customer_phone: phoneVal,
+      customer_address: fullAddress,
+      total_amount: totalAmount,
+      status: 'pending',
+      payment_status: 'pending',
+      items: [{{
+        product_id: productId,
+        name: productName,
+        price: productPrice,
+        quantity: qty,
+        options_selected: options
+      }}],
+      notes: null
+    }};
+
+    var origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.style.opacity = '0.75';
+    btn.innerHTML = 'Enregistrement en cours...';
+
+    // 1. Direct Supabase insert via REST API
+    fetch(supabaseUrl + '/rest/v1/orders', {{
+      method: 'POST',
+      headers: {{
+        'apikey': supabaseAnonKey,
+        'Authorization': 'Bearer ' + supabaseAnonKey,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      }},
+      body: JSON.stringify(payload)
+    }})
+    .then(function(res) {{
+      if (res.ok) {{
+        notify('🎉 Commande enregistrée avec succès ! Notre équipe vous appellera pour confirmer.');
+        if (nameInp) nameInp.value = '';
+        if (phoneInp) phoneInp.value = '';
+        if (addrInp) addrInp.value = '';
+      }} else {{
+        throw new Error('Supabase status: ' + res.status);
+      }}
+    }})
+    .catch(function(err) {{
+      console.warn('Fallback to platform orders API...', err);
+      return fetch('/api/orders', {{
+        method: 'POST',
+        headers: {{ 'Content-Type': 'application/json' }},
+        body: JSON.stringify(payload)
+      }})
+      .then(function(fb) {{
+        if (fb.ok) {{
+          notify('🎉 Commande enregistrée avec succès ! Nous vous appellerons pour confirmer.');
+          if (nameInp) nameInp.value = '';
+          if (phoneInp) phoneInp.value = '';
+          if (addrInp) addrInp.value = '';
+        }} else {{
+          notify('Erreur lors de la validation. Veuillez vérifier vos données ou appeler directement.');
+        }}
+      }});
+    }})
+    .finally(function() {{
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.innerHTML = origHtml;
+    }});
+  }}
+
+  function attachFunnel() {{
+    document.querySelectorAll('[data-action="order"]').forEach(function(b) {{
+      b.onclick = function(e) {{
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        handleFunnelOrder(b);
+        return false;
+      }};
+    }});
+  }}
+
+  if (document.readyState === 'loading') {{
+    document.addEventListener('DOMContentLoaded', attachFunnel);
+  }} else {{
+    attachFunnel();
+  }}
+}})();
+</script>
+'''
+                if '</body>' in content:
+                    content = content.replace('</body>', f'{funnel_script}</body>')
+                else:
+                    content += funnel_script
+
+                return content
+            else:
+                # BOUTIQUE
+                content = re.sub(r"<title>.*?</title>", f"<title>{store_name} — Boutique officielle</title>", content, count=1)
+                content = re.sub(r'<meta name="description" content=".*?">', f'<meta name="description" content="{desc[:160]}">', content, count=1)
+
+                if store.get("logo_url"):
+                    brand_html = f'<a class="st-nav__brand" href="#"><img src="{store["logo_url"]}" alt="{store_name}" style="height:32px;object-fit:contain;" /></a>'
+                    content = re.sub(r'<a class="st-nav__brand" href=".*?">.*?</a>', brand_html, content, count=1)
+                else:
+                    content = re.sub(r'<a class="st-nav__brand" href=".*?">.*?</a>', f'<a class="st-nav__brand" href="#">{store_name}</a>', content, count=1)
+
+                content = re.sub(r'<h1 class="st-hero__title">.*?</h1>', f'<h1 class="st-hero__title">{slogan}</h1>', content, count=1)
+                content = re.sub(r'<p class="st-hero__sub">.*?</p>', f'<p class="st-hero__sub">{desc}</p>', content, count=1)
+
+                first_img = ""
+                for p in products:
+                    imgs = p.get("images") or []
+                    if imgs:
+                        first_img = imgs[0].get("url", imgs[0]) if isinstance(imgs[0], dict) else imgs[0]
+                        if first_img:
+                            break
+                if first_img:
+                    content = re.sub(
+                        r'(<div class="st-hero__art"[^>]*>)(.*?)(</div>)',
+                        rf'\1<img src="{first_img}" alt="{store_name}" style="width:100%;height:100%;object-fit:cover;" />\3',
+                        content,
+                        count=1,
+                        flags=re.DOTALL
+                    )
+
+                cats = list(dict.fromkeys(p.get("category") for p in products if p.get("category")))
+                if cats:
+                    links_html = "".join(f'<li><a href="#catalogue">{html_module.escape(c)}</a></li>' for c in cats[:5])
+                    content = re.sub(r'<ul class="st-nav__links">.*?</ul>', f'<ul class="st-nav__links">{links_html}</ul>', content, count=1, flags=re.DOTALL)
+                else:
+                    content = re.sub(r'<ul class="st-nav__links">.*?</ul>', '<ul class="st-nav__links"><li><a href="#catalogue">Catalogue</a></li></ul>', content, count=1, flags=re.DOTALL)
+
+                cards_html = []
+                for p in products:
+                    p_name = html_module.escape(p.get("name") or "Produit")
+                    p_price = int(float(p.get("price") or 0))
+                    p_cat = html_module.escape(p.get("category") or "Article")
+                    p_id = str(p.get("id") or "")
+                    imgs = p.get("images") or []
+                    img_url = imgs[0].get("url", imgs[0]) if (imgs and isinstance(imgs[0], dict)) else (imgs[0] if imgs else "")
+                    art_html = f'<img src="{img_url}" alt="{p_name}" style="width:100%;height:100%;object-fit:cover;" />' if img_url else '<div style="font-size:38px;display:grid;place-items:center;height:100%;">🛍️</div>'
+
+                    # Aperçu visuel des variantes sur la carte produit
+                    p_opts = p.get("options") or []
+                    opts_json_attr = html_module.escape(json.dumps(p_opts), quote=True)
+
+                    opts_preview_items = []
+                    for opt in p_opts:
+                        opt_type = opt.get("type", "chip")
+                        vals = opt.get("values") or []
+                        if opt_type == "swatch" and vals:
+                            swatches_dots = []
+                            for v in vals[:5]:
+                                hex_c = html_module.escape(v.get("hex") or "#3b82f6")
+                                lbl = html_module.escape(v.get("label") or "")
+                                swatches_dots.append(f'<span title="{lbl}" style="display:inline-block;width:13px;height:13px;border-radius:50%;background:{hex_c};border:1.5px solid rgba(0,0,0,0.15);box-shadow:0 1px 2px rgba(0,0,0,0.08);"></span>')
+                            if len(vals) > 5:
+                                swatches_dots.append(f'<span style="font-size:10px;color:var(--muted);line-height:1;">+{len(vals)-5}</span>')
+                            opts_preview_items.append(f'<div style="display:flex;align-items:center;gap:4px;">{"".join(swatches_dots)}</div>')
+                        elif opt_type == "chip" and vals:
+                            chip_labels = [html_module.escape(v.get("label") or "") for v in vals[:3] if v.get("label")]
+                            badge_text = ", ".join(chip_labels)
+                            if len(vals) > 3:
+                                badge_text += f" +{len(vals)-3}"
+                            opt_title = html_module.escape(opt.get("name") or "Option")
+                            opts_preview_items.append(f'<span style="font-size:11px;color:var(--muted);background:var(--stage, #f3f4f6);padding:2px 7px;border-radius:10px;line-height:1.3;">{opt_title}: {badge_text}</span>')
+
+                    opts_preview_html = f'<div class="st-card__opts" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:22px;margin:2px 0 4px 0;">{"".join(opts_preview_items)}</div>' if opts_preview_items else '<div class="st-card__opts" style="min-height:6px;"></div>'
+
+                    card = f'''<div class="st-card">
+  <span class="st-card__art">
+    <span class="st-card__cat">{p_cat}</span>
+    {art_html}
+  </span>
+  <span class="st-card__name">{p_name}</span>
+  <span class="st-card__price">{self._format_money_da(p_price)}</span>
+  {opts_preview_html}
+  <button type="button" class="pd-btn pd-btn--buy st-open-checkout" data-pid="{p_id}" data-pname="{p_name}" data-price="{p_price}" data-pimg="{img_url}" data-pcat="{p_cat}" data-popts="{opts_json_attr}" style="padding:9px 16px;font-size:13px;font-weight:700;text-align:center;cursor:pointer;border:none;width:100%;border-radius:var(--btn-radius, 8px);">Commander</button>
+</div>'''
+                    cards_html.append(card)
+
+                if cards_html:
+                    content = re.sub(
+                        r'(<div class="st-cards">)(.*?)(</div>\s*</div>\s*</section>)',
+                        rf'\1{"".join(cards_html)}\3',
+                        content,
+                        count=1,
+                        flags=re.DOTALL
+                    )
+                else:
+                    empty_notice = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;opacity:0.65;font-size:15px;color:currentColor;">Le catalogue est en cours d\'approvisionnement. Revenez très bientôt !</div>'
+                    content = re.sub(
+                        r'(<div class="st-cards">)(.*?)(</div>\s*</div>\s*</section>)',
+                        rf'\1{empty_notice}\3',
+                        content,
+                        count=1,
+                        flags=re.DOTALL
+                    )
+
+                foot_text = f'{store_name} — Algérie 🇩🇿 · Commandes 7j/7 · Paiement sécurisé à la livraison'
+                content = re.sub(r'<footer class="pd-foot">.*?</footer>', f'<footer class="pd-foot"><div class="pd-shell">{foot_text}</div></footer>', content, count=1, flags=re.DOTALL)
+
+                # Injecter la modale de commande COD pour boutique (pas de redirection WhatsApp)
+                wilayas_json_str = json.dumps(ALGERIA_WILAYAS_DATA)
+                boutique_modal_html = f'''
+<!-- COD Quick Checkout Modal -->
+<div id="st-checkout-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:16px;box-sizing:border-box;">
+  <div style="background:var(--surface, #ffffff);color:var(--text, #111827);border:1px solid var(--border, #e5e7eb);border-radius:var(--radius, 16px);width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);position:relative;padding:24px;box-sizing:border-box;font-family:var(--font-body, system-ui, sans-serif);">
+    
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border, #e5e7eb);padding-bottom:12px;margin-bottom:16px;">
+      <h3 style="margin:0;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px;">
+        <span>🛍️</span> Commander en direct
+      </h3>
+      <button type="button" id="st-close-modal" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--muted, #6b7280);padding:4px;">✕</button>
+    </div>
+
+    <!-- Selected Product Summary -->
+    <div style="display:flex;gap:14px;align-items:center;background:var(--ship-bg, rgba(0,0,0,0.03));padding:12px;border-radius:var(--radius-sm, 10px);margin-bottom:16px;border:1px solid var(--border, #e5e7eb);">
+      <div id="st-modal-img" style="width:68px;height:68px;border-radius:8px;overflow:hidden;background:var(--stage, #eee);flex-shrink:0;display:grid;place-items:center;"></div>
+      <div style="min-width:0;flex:1;">
+        <h4 id="st-modal-name" style="margin:0 0 4px;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></h4>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span id="st-modal-price" style="font-weight:700;color:var(--accent, #2563eb);font-size:15px;"></span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" id="st-qty-minus" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border, #ccc);background:var(--surface, #fff);cursor:pointer;font-weight:bold;color:var(--text, #111);">-</button>
+            <span id="st-modal-qty" style="font-weight:700;font-size:14px;min-width:20px;text-align:center;">1</span>
+            <button type="button" id="st-qty-plus" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border, #ccc);background:var(--surface, #fff);cursor:pointer;font-weight:bold;color:var(--text, #111);">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Options Selector (Couleurs, Tailles...) -->
+    <div id="st-modal-options" style="display:none;margin-bottom:16px;padding:12px;border-radius:var(--radius-sm, 10px);background:var(--ship-bg, rgba(0,0,0,0.02));border:1px solid var(--border, #e5e7eb);"></div>
+
+    <!-- Customer Form -->
+    <form id="st-checkout-form" style="display:grid;gap:12px;">
+      <div>
+        <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text, #111);">Nom et Prénom *</label>
+        <input type="text" id="st-cust-name" required placeholder="Votre nom complet" style="width:100%;height:42px;padding:8px 12px;border:1px solid var(--border, #ccc);border-radius:8px;background:var(--surface, #fff);color:var(--text, #111);font-size:14px;box-sizing:border-box;" />
+      </div>
+
+      <div>
+        <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text, #111);">Numéro de téléphone *</label>
+        <input type="tel" id="st-cust-phone" required placeholder="0555 12 34 56" style="width:100%;height:42px;padding:8px 12px;border:1px solid var(--border, #ccc);border-radius:8px;background:var(--surface, #fff);color:var(--text, #111);font-size:14px;box-sizing:border-box;" />
+      </div>
+
+      <div>
+        <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text, #111);">Wilaya de livraison *</label>
+        <select id="st-cust-wilaya" required style="width:100%;height:42px;padding:8px 12px;border:1px solid var(--border, #ccc);border-radius:8px;background:var(--surface, #fff);color:var(--text, #111);font-size:14px;box-sizing:border-box;">
+          <option value="">Sélectionnez votre wilaya</option>
+        </select>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:2px;">
+        <label style="flex:1;display:flex;align-items:center;gap:6px;font-size:13px;padding:8px 12px;border:1px solid var(--border, #ccc);border-radius:8px;cursor:pointer;background:var(--surface, #fff);color:var(--text, #111);">
+          <input type="radio" name="st_ship_mode" value="domicile" checked /> À domicile
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:6px;font-size:13px;padding:8px 12px;border:1px solid var(--border, #ccc);border-radius:8px;cursor:pointer;background:var(--surface, #fff);color:var(--text, #111);">
+          <input type="radio" name="st_ship_mode" value="stopdesk" /> Stop Desk (Bureau)
+        </label>
+      </div>
+
+      <div>
+        <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text, #111);">Adresse exacte (commune, quartier...)</label>
+        <input type="text" id="st-cust-addr" placeholder="Ex: Bab Ezzouar, Cité 500 logts" style="width:100%;height:42px;padding:8px 12px;border:1px solid var(--border, #ccc);border-radius:8px;background:var(--surface, #fff);color:var(--text, #111);font-size:14px;box-sizing:border-box;" />
+      </div>
+
+      <!-- Price Breakdown -->
+      <div style="border-top:1px dashed var(--border, #ccc);padding-top:10px;margin-top:4px;font-size:13px;display:grid;gap:4px;">
+        <div style="display:flex;justify-content:space-between;color:var(--muted, #666);">
+          <span>Sous-total</span><span id="st-breakdown-sub">0 DA</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;color:var(--muted, #666);">
+          <span>Livraison</span><span id="st-breakdown-ship">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;color:var(--text, #111);margin-top:4px;">
+          <span>Total à la livraison</span><span id="st-breakdown-total" style="color:var(--accent, #2563eb);">0 DA</span>
+        </div>
+      </div>
+
+      <div id="st-modal-alert" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-top:4px;text-align:center;"></div>
+
+      <button type="submit" id="st-submit-btn" class="pd-btn pd-btn--buy" style="margin-top:8px;padding:12px;font-size:15px;font-weight:700;border:none;cursor:pointer;width:100%;border-radius:var(--btn-radius, 8px);">
+        Confirmer la commande
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+(function() {{
+  var storeId = "{store_id}";
+  var rawWilayas = {wilayas_json_str};
+  var wilayasMap = {{}};
+  var selWilaya = document.getElementById("st-cust-wilaya");
+
+  if (selWilaya) {{
+    rawWilayas.forEach(function(w) {{
+      wilayasMap[w[1]] = {{ id: w[0], name: w[1], home: w[2], desk: w[3] }};
+      var opt = document.createElement("option");
+      opt.value = w[1];
+      opt.textContent = w[0] + ". " + w[1];
+      selWilaya.appendChild(opt);
+    }});
+  }}
+
+  try {{
+    fetch("https://lyntwhvvnklmcprnnump.supabase.co/rest/v1/shipping_rates?store_id=eq." + storeId + "&select=wilaya_id,price_home,price_desk", {{
+      headers: {{
+        "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5bnR3aHZ2bmtsbWNwcm5udW1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NzUwOTksImV4cCI6MjEwNTM1MTA5OX0.-X3fmDagUiluvTDU6wY7UBwNll0-Bsu7gJ54uhL77PQ",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5bnR3aHZ2bmtsbWNwcm5udW1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NzUwOTksImV4cCI6MjEwNTM1MTA5OX0.-X3fmDagUiluvTDU6wY7UBwNll0-Bsu7gJ54uhL77PQ"
+      }}
+    }})
+    .then(function(r) {{ return r.json(); }})
+    .then(function(customRates) {{
+      if (Array.isArray(customRates) && customRates.length > 0) {{
+        customRates.forEach(function(cr) {{
+          for (var k in wilayasMap) {{
+            if (wilayasMap[k].id === cr.wilaya_id) {{
+              wilayasMap[k].home = cr.price_home;
+              wilayasMap[k].desk = cr.price_desk;
+              break;
+            }}
+          }}
+        }});
+        updateTotals();
+      }}
+    }})
+    .catch(function() {{}});
+  }} catch (e) {{}}
+
+  var modal = document.getElementById("st-checkout-modal");
+  var closeBtn = document.getElementById("st-close-modal");
+  var currentProduct = null;
+  var currentQty = 1;
+
+  function formatMoney(n) {{
+    return new Intl.NumberFormat("fr-DZ").format(Math.round(n)) + " DA";
+  }}
+
+  function updateTotals() {{
+    if (!currentProduct) return;
+    var sub = currentProduct.price * currentQty;
+    document.getElementById("st-breakdown-sub").textContent = formatMoney(sub);
+
+    var wName = selWilaya ? selWilaya.value : "";
+    var mode = (document.querySelector('input[name="st_ship_mode"]:checked') || {{}}).value || "domicile";
+    var shipCost = 0;
+    if (wName && wilayasMap[wName]) {{
+      shipCost = mode === "stopdesk" ? wilayasMap[wName].desk : wilayasMap[wName].home;
+      document.getElementById("st-breakdown-ship").textContent = formatMoney(shipCost);
+    }} else {{
+      document.getElementById("st-breakdown-ship").textContent = "Sélectionnez wilaya";
+    }}
+
+    document.getElementById("st-breakdown-total").textContent = formatMoney(sub + shipCost);
+  }}
+
+  document.querySelectorAll(".st-open-checkout").forEach(function(btn) {{
+    btn.addEventListener("click", function(e) {{
+      e.preventDefault();
+      e.stopPropagation();
+      currentProduct = {{
+        id: btn.dataset.pid || "",
+        name: btn.dataset.pname || "Produit",
+        price: parseInt(btn.dataset.price, 10) || 0,
+        img: btn.dataset.pimg || "",
+        cat: btn.dataset.pcat || "",
+        options: [],
+        selectedOptions: {{}}
+      }};
+      try {{
+        currentProduct.options = JSON.parse(btn.dataset.popts || "[]");
+      }} catch (err) {{
+        currentProduct.options = [];
+      }}
+      currentQty = 1;
+
+      document.getElementById("st-modal-name").textContent = currentProduct.name;
+      document.getElementById("st-modal-price").textContent = formatMoney(currentProduct.price);
+      document.getElementById("st-modal-qty").textContent = "1";
+
+      var imgContainer = document.getElementById("st-modal-img");
+      if (currentProduct.img) {{
+        imgContainer.innerHTML = '<img src="' + currentProduct.img + '" style="width:100%;height:100%;object-fit:cover;" />';
+      }} else {{
+        imgContainer.innerHTML = '<span style="font-size:32px;">🛍️</span>';
+      }}
+
+      // Rendu dynamique des options de variantes (couleurs, tailles...)
+      var optsContainer = document.getElementById("st-modal-options");
+      if (optsContainer) {{
+        optsContainer.innerHTML = "";
+        if (Array.isArray(currentProduct.options) && currentProduct.options.length > 0) {{
+          optsContainer.style.display = "grid";
+          optsContainer.style.gap = "12px";
+
+          currentProduct.options.forEach(function(opt, optIdx) {{
+            var optName = opt.name || ("Option " + (optIdx + 1));
+            var optType = opt.type || "chip";
+            var vals = opt.values || [];
+            if (!vals || vals.length === 0) return;
+
+            var firstAvail = vals.find(function(v) {{ return v.available !== false; }}) || vals[0];
+            var currentVal = firstAvail ? firstAvail.label : "";
+            currentProduct.selectedOptions[optName] = currentVal;
+
+            var fieldDiv = document.createElement("div");
+            fieldDiv.className = "pd-field";
+            fieldDiv.style.margin = "0";
+
+            var labelP = document.createElement("p");
+            labelP.className = "pd-label";
+            labelP.style.display = "flex";
+            labelP.style.justifyContent = "space-between";
+            labelP.style.alignItems = "center";
+            labelP.style.fontSize = "13px";
+            labelP.style.fontWeight = "600";
+            labelP.style.margin = "0 0 7px 0";
+            labelP.style.color = "var(--text, #111)";
+
+            var titleSpan = document.createElement("span");
+            titleSpan.textContent = optName;
+
+            var valSpan = document.createElement("span");
+            valSpan.id = "st-val-" + optIdx;
+            valSpan.style.fontWeight = "600";
+            valSpan.style.color = "var(--accent, #2563eb)";
+            valSpan.style.fontSize = "12.5px";
+            valSpan.textContent = currentVal;
+
+            labelP.appendChild(titleSpan);
+            labelP.appendChild(valSpan);
+            fieldDiv.appendChild(labelP);
+
+            var optsDiv = document.createElement("div");
+            optsDiv.className = "pd-opts";
+            optsDiv.style.display = "flex";
+            optsDiv.style.gap = "8px";
+            optsDiv.style.flexWrap = "wrap";
+            optsDiv.style.alignItems = "center";
+
+            vals.forEach(function(v) {{
+              var isAvail = v.available !== false;
+              var isSelected = v.label === currentVal;
+
+              if (optType === "swatch") {{
+                var swatchBtn = document.createElement("button");
+                swatchBtn.type = "button";
+                swatchBtn.className = "pd-swatch";
+                swatchBtn.setAttribute("aria-pressed", isSelected ? "true" : "false");
+                swatchBtn.title = v.label;
+                swatchBtn.style.background = v.hex || "#3b82f6";
+                swatchBtn.style.width = "34px";
+                swatchBtn.style.height = "34px";
+                swatchBtn.style.borderRadius = "50%";
+                swatchBtn.style.cursor = isAvail ? "pointer" : "not-allowed";
+                swatchBtn.style.border = isSelected ? "2.5px solid var(--accent, #2563eb)" : "2px solid var(--border, #ccc)";
+                swatchBtn.style.boxShadow = isSelected ? "0 0 0 3px var(--accent-soft, rgba(37,99,235,0.2))" : "none";
+                swatchBtn.style.transition = "all 0.15s ease";
+                if (!isAvail) {{
+                  swatchBtn.disabled = true;
+                  swatchBtn.style.opacity = "0.35";
+                }}
+                swatchBtn.addEventListener("click", function(ev) {{
+                  ev.preventDefault();
+                  currentProduct.selectedOptions[optName] = v.label;
+                  valSpan.textContent = v.label;
+                  optsDiv.querySelectorAll(".pd-swatch").forEach(function(sb) {{
+                    sb.setAttribute("aria-pressed", "false");
+                    sb.style.border = "2px solid var(--border, #ccc)";
+                    sb.style.boxShadow = "none";
+                  }});
+                  swatchBtn.setAttribute("aria-pressed", "true");
+                  swatchBtn.style.border = "2.5px solid var(--accent, #2563eb)";
+                  swatchBtn.style.boxShadow = "0 0 0 3px var(--accent-soft, rgba(37,99,235,0.2))";
+                }});
+                optsDiv.appendChild(swatchBtn);
+              }} else {{
+                var chipBtn = document.createElement("button");
+                chipBtn.type = "button";
+                chipBtn.className = "pd-chip";
+                chipBtn.setAttribute("aria-pressed", isSelected ? "true" : "false");
+                chipBtn.textContent = v.label;
+                chipBtn.style.padding = "6px 14px";
+                chipBtn.style.fontSize = "13px";
+                chipBtn.style.fontWeight = "600";
+                chipBtn.style.borderRadius = "8px";
+                chipBtn.style.cursor = isAvail ? "pointer" : "not-allowed";
+                chipBtn.style.border = isSelected ? "1.5px solid var(--accent, #2563eb)" : "1.5px solid var(--border, #ccc)";
+                chipBtn.style.background = isSelected ? "var(--accent-soft, #eff6ff)" : "var(--surface, #fff)";
+                chipBtn.style.color = isSelected ? "var(--accent, #2563eb)" : "var(--text, #111)";
+                chipBtn.style.transition = "all 0.15s ease";
+                if (!isAvail) {{
+                  chipBtn.disabled = true;
+                  chipBtn.style.opacity = "0.35";
+                  chipBtn.style.textDecoration = "line-through";
+                }}
+                chipBtn.addEventListener("click", function(ev) {{
+                  ev.preventDefault();
+                  currentProduct.selectedOptions[optName] = v.label;
+                  valSpan.textContent = v.label;
+                  optsDiv.querySelectorAll(".pd-chip").forEach(function(cb) {{
+                    cb.setAttribute("aria-pressed", "false");
+                    cb.style.border = "1.5px solid var(--border, #ccc)";
+                    cb.style.background = "var(--surface, #fff)";
+                    cb.style.color = "var(--text, #111)";
+                  }});
+                  chipBtn.setAttribute("aria-pressed", "true");
+                  chipBtn.style.border = "1.5px solid var(--accent, #2563eb)";
+                  chipBtn.style.background = "var(--accent-soft, #eff6ff)";
+                  chipBtn.style.color = "var(--accent, #2563eb)";
+                }});
+                optsDiv.appendChild(chipBtn);
+              }}
+            }});
+            fieldDiv.appendChild(optsDiv);
+            optsContainer.appendChild(fieldDiv);
+          }});
+        }} else {{
+          optsContainer.style.display = "none";
+        }}
+      }}
+
+      var alertBox = document.getElementById("st-modal-alert");
+      if (alertBox) alertBox.style.display = "none";
+
+      updateTotals();
+      if (modal) modal.style.display = "flex";
+    }});
+  }});
+
+  if (closeBtn) {{
+    closeBtn.addEventListener("click", function() {{
+      if (modal) modal.style.display = "none";
+    }});
+  }}
+
+  if (modal) {{
+    modal.addEventListener("click", function(e) {{
+      if (e.target === modal) modal.style.display = "none";
+    }});
+  }}
+
+  var minusBtn = document.getElementById("st-qty-minus");
+  var plusBtn = document.getElementById("st-qty-plus");
+
+  if (minusBtn) {{
+    minusBtn.addEventListener("click", function() {{
+      if (currentQty > 1) {{
+        currentQty--;
+        document.getElementById("st-modal-qty").textContent = currentQty;
+        updateTotals();
+      }}
+    }});
+  }}
+
+  if (plusBtn) {{
+    plusBtn.addEventListener("click", function() {{
+      currentQty++;
+      document.getElementById("st-modal-qty").textContent = currentQty;
+      updateTotals();
+    }});
+  }}
+
+  if (selWilaya) selWilaya.addEventListener("change", updateTotals);
+  document.querySelectorAll('input[name="st_ship_mode"]').forEach(function(r) {{
+    r.addEventListener("change", updateTotals);
+  }});
+
+  var form = document.getElementById("st-checkout-form");
+  if (form) {{
+    form.addEventListener("submit", function(e) {{
+      e.preventDefault();
+      var alertBox = document.getElementById("st-modal-alert");
+      var submitBtn = document.getElementById("st-submit-btn");
+
+      var nameVal = (document.getElementById("st-cust-name").value || "").trim();
+      var phoneVal = (document.getElementById("st-cust-phone").value || "").replace(/\\D/g, "");
+      var wilayaVal = selWilaya ? selWilaya.value : "";
+      var addrVal = (document.getElementById("st-cust-addr").value || "").trim();
+      var mode = (document.querySelector('input[name="st_ship_mode"]:checked') || {{}}).value || "domicile";
+
+      if (!wilayaVal) {{
+        alertBox.style.display = "block";
+        alertBox.style.background = "#fee2e2";
+        alertBox.style.color = "#991b1b";
+        alertBox.textContent = "Veuillez sélectionner votre wilaya de livraison.";
+        return;
+      }}
+
+      if (!nameVal || nameVal.length < 2) {{
+        alertBox.style.display = "block";
+        alertBox.style.background = "#fee2e2";
+        alertBox.style.color = "#991b1b";
+        alertBox.textContent = "Veuillez entrer votre nom complet.";
+        return;
+      }}
+
+      if (!phoneVal || phoneVal.length < 9) {{
+        alertBox.style.display = "block";
+        alertBox.style.background = "#fee2e2";
+        alertBox.style.color = "#991b1b";
+        alertBox.textContent = "Veuillez entrer un numéro de téléphone valide (9 chiffres minimum).";
+        return;
+      }}
+
+      var shipCost = wilayasMap[wilayaVal] ? (mode === "stopdesk" ? wilayasMap[wilayaVal].desk : wilayasMap[wilayaVal].home) : 0;
+      var totalAmount = (currentProduct.price * currentQty) + shipCost;
+      var fullAddress = "Wilaya: " + wilayaVal + " (" + (mode === "stopdesk" ? "Stop Desk" : "À domicile") + ")" + (addrVal ? " — " + addrVal : "");
+
+      var selectedOpts = (currentProduct && currentProduct.selectedOptions) || {{}};
+
+      var payload = {{
+        store_id: storeId,
+        customer_name: nameVal,
+        customer_phone: phoneVal,
+        customer_address: fullAddress,
+        total_amount: totalAmount,
+        status: "pending",
+        payment_status: "pending",
+        items: [{{
+          product_id: currentProduct.id,
+          name: currentProduct.name,
+          price: currentProduct.price,
+          quantity: currentQty,
+          options_selected: selectedOpts
+        }}],
+        notes: null
+      }};
+
+      var origBtnText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = "0.75";
+      submitBtn.innerHTML = "Enregistrement en cours...";
+
+      var supabaseUrl = "https://lyntwhvvnklmcprnnump.supabase.co";
+      var supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5bnR3aHZ2bmtsbWNwcm5udW1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NzUwOTksImV4cCI6MjEwNTM1MTA5OX0.-X3fmDagUiluvTDU6wY7UBwNll0-Bsu7gJ54uhL77PQ";
+
+      // Direct Supabase insert
+      fetch(supabaseUrl + "/rest/v1/orders", {{
+        method: "POST",
+        headers: {{
+          "apikey": supabaseAnonKey,
+          "Authorization": "Bearer " + supabaseAnonKey,
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        }},
+        body: JSON.stringify(payload)
+      }})
+      .then(function(res) {{
+        if (res.ok) {{
+          alertBox.style.display = "block";
+          alertBox.style.background = "#dcfce7";
+          alertBox.style.color = "#166534";
+          alertBox.innerHTML = "🎉 <b>Commande validée avec succès !</b><br>Notre équipe vous appellera pour confirmer la livraison.";
+          form.reset();
+          setTimeout(function() {{
+            if (modal) modal.style.display = "none";
+          }}, 2800);
+        }} else {{
+          throw new Error("Erreur insertion Supabase");
+        }}
+      }})
+      .catch(function(err) {{
+        console.warn("Fallback to platform orders API...", err);
+        return fetch("/api/orders", {{
+          method: "POST",
+          headers: {{ "Content-Type": "application/json" }},
+          body: JSON.stringify(payload)
+        }})
+        .then(function(fb) {{
+          if (fb.ok) {{
+            alertBox.style.display = "block";
+            alertBox.style.background = "#dcfce7";
+            alertBox.style.color = "#166534";
+            alertBox.innerHTML = "🎉 <b>Commande validée avec succès !</b><br>Notre équipe vous appellera pour confirmer la livraison.";
+            form.reset();
+            setTimeout(function() {{
+              if (modal) modal.style.display = "none";
+            }}, 2800);
+          }} else {{
+            alertBox.style.display = "block";
+            alertBox.style.background = "#fee2e2";
+            alertBox.style.color = "#991b1b";
+            alertBox.textContent = "Erreur lors de l'envoi. Veuillez réessayer ou contacter la boutique.";
+          }}
+        }});
+      }})
+      .finally(function() {{
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = "1";
+        submitBtn.innerHTML = origBtnText;
+      }});
+    }});
+  }}
+}})();
+</script>
+'''
+                if '</body>' in content:
+                    content = content.replace('</body>', f'{boutique_modal_html}</body>')
+                else:
+                    content += boutique_modal_html
+
+                return content
+        except Exception as e:
+            logger.error(f"Error rendering ready template {theme}: {e}")
+            return None
+
     async def generate_store(self, store_data: Dict[str, Any]) -> Dict[str, Any]:
         store = store_data.get("store", {})
         products = store_data.get("products", [])
@@ -237,6 +1407,16 @@ class AIStoreGenerator:
         store_id = store.get("id")
 
         theme_key = store.get("theme", "modern")
+
+        # When creating stores or funnels from ready templates, render the exact chosen template
+        rendered_html = self._render_ready_template(store_data)
+        if rendered_html:
+            logger.info("Using pixel-perfect ready template for theme=%s type=%s", theme_key, store.get("type"))
+            return {
+                "success": True,
+                "html": rendered_html,
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+            }
         anim_key = store.get("animation_style", "soft")
         theme_tokens = THEME_DESIGN_TOKENS.get(theme_key, THEME_DESIGN_TOKENS["modern"])
         anim_desc = ANIMATION_STYLES.get(anim_key, ANIMATION_STYLES["soft"])
@@ -276,11 +1456,10 @@ ANIMATIONS :
 
 MONNAIE : Tous les prix sont en DZD (Dinar Algérien). Formater : "X DA" ou "X,XX DA".
 
-WHATSAPP :
-- Numéro : {store.get('whatsapp_phone', '')}
-- Le bouton Commander via WhatsApp doit générer un lien https://wa.me/NUMERO?text=MESSAGE
-- Le MESSAGE doit contenir : nom de la boutique, liste des articles du panier (nom × quantité = sous-total), et le TOTAL en DZD.
-- Encoder le message avec encodeURIComponent.
+COMMANDE & PAIEMENT À LA LIVRAISON (COD) :
+- Le bouton principal "Commander" ne doit PAS rediriger vers WhatsApp. Il doit ouvrir le formulaire ou la modale de commande Cash on Delivery.
+- Le formulaire collecte : Nom complet, Téléphone valide, Wilaya (liste déroulante 58 wilayas d'Algérie) et Adresse de livraison.
+- L'enregistrement se fait en direct. Un lien de contact WhatsApp ({store.get('whatsapp_phone', '')}) reste accessible en bas de page ou en contact direct.
 
 CONTRAINTES STRICTES :
 1. Réponds UNIQUEMENT avec le code HTML complet. Pas de commentaires, pas d'explications.
@@ -324,7 +1503,7 @@ Keywords : {seo.get('keywords', store.get('category', ''))}
 3. **CATALOGUE PRODUITS**
    - Grille responsive : 1 col mobile, 2 cols tablette, 3-4 cols desktop
    - Filtrage par catégorie (boutons de filtre en haut)
-   - Chaque card : image, nom, prix (ancien prix barré si promo), badge "Promo" si original_price, bouton "Ajouter au panier"
+   - Chaque card : image, nom, prix (ancien prix barré si promo), badge "Promo" si original_price, bouton "Commander" (ouvre le checkout) et "Ajouter au panier"
    - Produits featured en premier avec badge "Vedette"
    - Hover effects sur les cards
 
@@ -332,15 +1511,14 @@ Keywords : {seo.get('keywords', store.get('category', ''))}
    - S'ouvre au clic sur un produit
    - Image grande, nom, description longue, prix
    - Sélecteur de quantité (+/-)
-   - Bouton "Ajouter au panier"
+   - Bouton "Commander maintenant" et "Ajouter au panier"
    - Fermeture par X, clic extérieur, ou Escape
 
-5. **PANIER (SIDEBAR/DRAWER)**
-   - S'ouvre depuis l'icône panier du header
-   - Liste des articles avec quantité modifiable et suppression
-   - Sous-total par article, Total général en DZD
-   - Bouton "Commander via WhatsApp" (vert WhatsApp #25D366)
-   - Bouton "Vider le panier"
+5. **PANIER & COMMANDE (MODAL OU DRAWER)**
+   - S'ouvre depuis l'icône panier ou au clic sur Commander
+   - Récapitulatif des articles avec quantité et total en DZD
+   - Formulaire COD : Nom, Téléphone, Wilaya (58 wilayas), Adresse
+   - Bouton "Confirmer la commande"
    - Persistance localStorage (le panier survit au refresh)
 
 6. **FOOTER**
@@ -517,6 +1695,11 @@ Le slogan doit refléter l'identité de la boutique et donner envie d'acheter.""
     def _get_fallback_template(
         self, store: Dict[str, Any], products: List[Dict], style: Dict[str, Any] = None, seo: Dict[str, Any] = None, slogan: str = ""
     ) -> str:
+        # Try pixel-perfect ready template first
+        ready = self._render_ready_template({"store": store, "products": products, "seo": seo or {}, "slogan": slogan})
+        if ready:
+            return ready
+
         # ── None-safe extraction ──────────────────────────────────────────────────
         # Supabase returns NULL columns as Python `None`, and `dict.get(key, default)`
         # only returns `default` when the key is MISSING — not when the value is
@@ -689,7 +1872,7 @@ Le slogan doit refléter l'identité de la boutique et donner envie d'acheter.""
         if custom_tpl and os.path.isfile(custom_tpl):
             template_path = custom_tpl
         else:
-            template_path = os.path.join(os.path.dirname(__file__), "..", "..", "store-template", "template.html")
+            template_path = os.path.join(os.path.dirname(__file__), "..", "..", "docs", "reference-designs", "template.html")
 
         try:
             with open(template_path, "r", encoding="utf-8") as f:

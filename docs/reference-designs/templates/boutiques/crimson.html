@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="crimson">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CRIMSON — boutique</title>
+<meta name="description" content="Pièces en cuir, faites pour durer.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --maxw:1200px;
+  --gap:44px;
+  --cols:1.05fr .95fr;
+  --radius:3px;
+  --radius-sm:3px;
+  --radius-xs:2px;
+  --swatch-radius:3px;
+  --dot-radius:0;
+  --box-bg:transparent;
+  --box-border:0;
+  --box-pad:0 0 0 22px;
+  --box-shadow:none;
+  --font-btn:'Barlow',sans-serif;
+  --btn-ls:.04em;
+  --btn-tt:uppercase;
+  --btn-radius:2px;
+  --btn-shadow:none;
+  --brand-ls:.04em;
+  --brand-w:400;
+  --title-w:400;
+  --title-size:clamp(30px,4vw,44px);
+  --title-ls:.005em;
+  --title-tt:uppercase;
+  --price-size:34px;
+  --price-w:400;
+  --price-ink:var(--text);
+  --stage-border:1px solid var(--border);
+  --star:#9c1220;
+  --low:#b3261e;
+  --btn2-bg:transparent;
+  --btn2-ink:var(--text);
+  --btn2-border:1.5px solid var(--border);
+  --ship-bg:#ffffff;
+  --ship-border:1px solid var(--border);
+  --chip-bg:transparent;
+  --chip-on:var(--accent-soft);
+  --chip-on-ink:var(--text);
+  --off-bg:#9c1220;
+  --off-ink:#fff;
+  --flag-bg:var(--accent);
+  --flag-ink:var(--accent-ink);
+  --toast-bg:var(--text);
+  --toast-ink:var(--bg);
+  --focus:var(--accent);
+  --accent-text:#9c1220;
+  --font-display:'Anton',Impact,sans-serif;
+  --font-body:'Barlow',system-ui,sans-serif;
+  --bg:#faf7f6;
+  --surface:#ffffff;
+  --text:#181111;
+  --muted:#786868;
+  --border:#e4d9d8;
+  --accent:#9c1220;
+  --accent-ink:#ffffff;
+  --accent-soft:#f8e7e8;
+  --stage:#efe7e6;
+  --shot-1:#9c1220;
+  --shot-2:#2a1a1a;
+  --shot-3:#d9c6c3;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%;display:block}
+button,input,select{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- shell ---------- */
+.pd-shell{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+.pd-top{border-bottom:1px solid var(--border);background:var(--surface)}
+.pd-top__in{max-width:var(--maxw);margin:0 auto;padding:14px 20px;display:flex;
+  align-items:center;justify-content:space-between;gap:16px}
+.pd-brand{font-family:var(--font-display);font-size:19px;letter-spacing:var(--brand-ls);
+  font-weight:var(--brand-w);text-decoration:none}
+.pd-top__note{font-size:13px;color:var(--muted)}
+.pd-crumbs{font-size:13px;color:var(--muted);padding:18px 0 0}
+.pd-crumbs a{text-decoration:none}
+.pd-crumbs a:hover{text-decoration:underline}
+
+.pd-product{display:grid;gap:var(--gap);padding:26px 0 54px;align-items:start}
+@media (min-width:980px){.pd-product{grid-template-columns:var(--cols)}}
+
+/* ---------- gallery ---------- */
+.pd-gallery{display:grid;gap:12px}
+.pd-stage{position:relative;background:var(--stage);border-radius:var(--radius);
+  overflow:hidden;border:var(--stage-border);aspect-ratio:1/1;display:grid;place-items:center}
+.pd-stage svg{width:100%;height:100%}
+.pd-stage__flag{position:absolute;top:14px;left:14px;background:var(--flag-bg);color:var(--flag-ink);
+  font-size:12px;font-weight:700;padding:6px 11px;border-radius:var(--radius-xs);letter-spacing:.01em}
+.pd-thumbs{display:flex;gap:10px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
+.pd-thumb{width:70px;height:70px;border-radius:var(--radius-sm);border:2px solid var(--border);
+  background:var(--stage);padding:0;cursor:pointer;overflow:hidden;transition:border-color .16s}
+.pd-thumb svg{width:100%;height:100%}
+.pd-thumb[aria-current="true"]{border-color:var(--accent)}
+/* side thumbs variant */
+@media (min-width:980px){
+  .g-side .pd-gallery{grid-template-columns:78px 1fr}
+  .g-side .pd-stage{grid-column:2;grid-row:1}
+  .g-side .pd-thumbs{grid-column:1;grid-row:1;flex-direction:column;flex-wrap:nowrap}
+  .g-side .pd-thumb{width:78px;height:78px}
+}
+/* stacked variant */
+.g-stack .pd-thumbs{display:none}
+.g-stack .pd-extra{display:grid;gap:12px}
+.pd-extra{display:none}
+.g-stack .pd-extra .pd-stage{aspect-ratio:4/5}
+
+/* ---------- buy box ---------- */
+.pd-buybox{background:var(--box-bg);border:var(--box-border);border-radius:var(--radius);
+  padding:var(--box-pad);box-shadow:var(--box-shadow)}
+@media (min-width:980px){.pd-buybox{position:sticky;top:20px}}
+.pd-vendor{margin:0 0 6px;font-size:13px;color:var(--muted)}
+.pd-title{font-family:var(--font-display);font-weight:var(--title-w);font-size:var(--title-size);
+  line-height:1.12;letter-spacing:var(--title-ls);margin:0 0 10px;text-transform:var(--title-tt)}
+.pd-rating{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);margin-bottom:18px}
+.pd-stars{color:var(--star);letter-spacing:2px}
+.pd-pricing{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.pd-price{font-family:var(--font-display);font-size:var(--price-size);font-weight:var(--price-w);
+  letter-spacing:var(--title-ls);color:var(--price-ink)}
+.pd-was{color:var(--muted);text-decoration:line-through;font-size:16px}
+.pd-off{background:var(--off-bg);color:var(--off-ink);font-size:12.5px;font-weight:700;
+  padding:4px 9px;border-radius:var(--radius-xs)}
+.pd-taxnote{font-size:13px;color:var(--muted);margin:0 0 20px}
+
+.pd-field{margin-bottom:18px}
+.pd-label{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  font-size:13.5px;font-weight:600;margin-bottom:9px}
+.pd-label span{font-weight:400;color:var(--muted)}
+.pd-opts{display:flex;gap:9px;flex-wrap:wrap}
+.pd-chip{border:1.5px solid var(--border);background:var(--chip-bg);border-radius:var(--radius-sm);
+  padding:9px 15px;cursor:pointer;font-size:14px;transition:.16s}
+.pd-chip[aria-pressed="true"]{border-color:var(--accent);background:var(--chip-on);color:var(--chip-on-ink)}
+.pd-chip:disabled{opacity:.38;cursor:not-allowed;text-decoration:line-through}
+.pd-swatch{width:38px;height:38px;border-radius:var(--swatch-radius);border:2px solid var(--border);
+  cursor:pointer;padding:0;position:relative}
+.pd-swatch[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+.pd-qtyrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.pd-qty{display:inline-flex;align-items:center;border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);overflow:hidden;background:var(--chip-bg)}
+.pd-qty button{width:42px;height:44px;border:0;background:transparent;cursor:pointer;font-size:18px}
+.pd-qty button:hover{background:var(--accent-soft)}
+.pd-qty input{width:48px;height:44px;border:0;background:transparent;text-align:center;
+  font-weight:600;-moz-appearance:textfield}
+.pd-qty input::-webkit-outer-spin-button,.pd-qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.pd-stock{font-size:13px;color:var(--muted)}
+.pd-stock b{color:var(--low)}
+
+/* delivery block: the heart of the box for cash-on-delivery selling */
+.pd-ship{border:var(--ship-border);background:var(--ship-bg);border-radius:var(--radius-sm);
+  padding:15px;margin-bottom:18px}
+.pd-ship__head{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;margin-bottom:12px}
+.pd-ship__head svg{width:18px;height:18px;flex:none;color:var(--accent)}
+.pd-select{width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);background:var(--chip-bg);cursor:pointer}
+.pd-modes{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.pd-mode{display:flex;gap:9px;align-items:flex-start;border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 11px;cursor:pointer;background:var(--chip-bg);font-size:13.5px}
+.pd-mode input{margin:2px 0 0;accent-color:var(--accent)}
+.pd-mode:has(input:checked){border-color:var(--accent);background:var(--chip-on);color:var(--chip-on-ink)}
+.pd-mode small{display:block;color:var(--muted);font-size:12px}
+.pd-mode:has(input:checked) small{color:inherit;opacity:.75}
+
+.pd-sum{list-style:none;margin:14px 0 0;padding:13px 0 0;border-top:1px solid var(--border);
+  display:grid;gap:7px;font-size:14px}
+.pd-sum li{display:flex;justify-content:space-between;gap:12px}
+.pd-sum li span:first-child{color:var(--muted)}
+.pd-sum .pd-sum__total{font-weight:700;font-size:17px;padding-top:7px;border-top:1px dashed var(--border)}
+.pd-sum .pd-sum__total span:first-child{color:inherit}
+
+.pd-actions{display:grid;gap:10px;margin-bottom:16px}
+.pd-btn{border:0;border-radius:var(--btn-radius);padding:13px 20px;min-height:54px;font-size:15.5px;
+  line-height:1.25;text-align:center;
+  font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  transition:transform .12s,filter .16s,box-shadow .16s;font-family:var(--font-btn);
+  letter-spacing:var(--btn-ls);text-transform:var(--btn-tt)}
+.pd-btn--buy{background:var(--accent);color:var(--accent-ink);box-shadow:var(--btn-shadow)}
+.pd-btn--buy:hover{filter:brightness(1.06)}
+.pd-btn--buy:active{transform:translateY(1px)}
+.pd-btn--cart{background:var(--btn2-bg);color:var(--btn2-ink);border:var(--btn2-border)}
+.pd-btn--cart:hover{background:var(--accent-soft)}
+.pd-btn--call{background:transparent;color:var(--text);border:1.5px dashed var(--border);min-height:48px;font-size:14.5px}
+.pd-btn--call:hover{border-color:var(--accent);color:var(--accent-text)}
+
+.pd-trust{list-style:none;margin:0;padding:16px 0 0;border-top:1px solid var(--border);
+  display:grid;gap:11px;font-size:13.5px}
+.pd-trust li{display:flex;gap:10px;align-items:flex-start;color:var(--muted)}
+.pd-trust svg{width:17px;height:17px;flex:none;margin-top:2px;color:var(--accent)}
+.pd-trust b{color:var(--text);font-weight:600}
+
+/* ---------- details ---------- */
+.pd-details{padding:0 0 60px}
+.pd-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:26px;
+  overflow-x:auto;scrollbar-width:none}
+.pd-tabs::-webkit-scrollbar{display:none}
+.pd-tab{background:0;border:0;padding:13px 16px;cursor:pointer;font-size:14.5px;font-weight:600;
+  color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
+.pd-tab[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
+.pd-panel{max-width:68ch}
+.pd-panel p{margin:0 0 15px}
+.pd-panel h3{font-family:var(--font-display);font-size:19px;margin:26px 0 10px;font-weight:var(--title-w)}
+.pd-list{margin:0;padding:0;list-style:none;display:grid;gap:9px}
+.pd-list li{display:flex;gap:10px}
+.pd-list li::before{content:"";width:7px;height:7px;margin-top:9px;flex:none;
+  background:var(--accent);border-radius:var(--dot-radius)}
+.pd-specs{width:100%;border-collapse:collapse;font-size:14.5px;max-width:560px}
+.pd-specs th,.pd-specs td{text-align:left;padding:11px 0;border-bottom:1px solid var(--border);vertical-align:top}
+.pd-specs th{font-weight:600;width:42%;color:var(--muted)}
+
+/* ---------- sticky bar (mobile) ---------- */
+.pd-stickybar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);
+  border-top:1px solid var(--border);padding:11px 16px;display:flex;gap:12px;align-items:center;
+  transform:translateY(110%);transition:transform .22s ease;box-shadow:0 -8px 28px rgba(0,0,0,.09)}
+.pd-stickybar[data-open="true"]{transform:none}
+.pd-stickybar .pd-btn{min-height:46px;flex:1;font-size:14.5px;padding:10px 16px}
+.pd-stickybar__price{font-family:var(--font-display);font-weight:700;font-size:16px;white-space:nowrap}
+.pd-stickybar__price small{display:block;font-size:11.5px;color:var(--muted);font-weight:400;font-family:var(--font-body)}
+@media (min-width:980px){.pd-stickybar{display:none}}
+
+.pd-toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,140%);z-index:60;
+  background:var(--toast-bg);color:var(--toast-ink);padding:13px 20px;border-radius:var(--radius-sm);
+  font-size:14.5px;box-shadow:0 14px 34px rgba(0,0,0,.24);transition:transform .24s;max-width:90vw}
+.pd-toast[data-open="true"]{transform:translate(-50%,0)}
+@media (min-width:980px){.pd-toast{bottom:32px}}
+
+.pd-foot{border-top:1px solid var(--border);padding:22px 0 90px;font-size:13px;color:var(--muted)}
+@media (min-width:980px){.pd-foot{padding-bottom:30px}}
+
+
+/* ================= storefront ================= */
+.st-nav{border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:30}
+.st-nav__in{max-width:var(--maxw);margin:0 auto;padding:16px 20px;display:flex;align-items:center;
+  justify-content:space-between;gap:20px}
+.st-nav__brand{font-family:var(--font-display);font-size:19px;letter-spacing:var(--brand-ls);
+  font-weight:var(--brand-w);text-decoration:none}
+.st-nav__links{display:none;list-style:none;margin:0;padding:0;gap:26px;font-size:14px;font-weight:500}
+.st-nav__links a{text-decoration:none;color:var(--muted)}
+.st-nav__links a:hover{color:var(--text)}
+@media (min-width:860px){.st-nav__links{display:flex}}
+.st-nav__actions{display:flex;align-items:center;gap:14px}
+.st-nav__cart{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;
+  border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 13px;background:transparent;cursor:pointer}
+.st-nav__cart svg{width:16px;height:16px}
+
+.st-hero{padding:66px 0 54px}
+.st-hero__in{max-width:var(--maxw);margin:0 auto;padding:0 20px;display:grid;gap:26px}
+@media (min-width:860px){.st-hero__in{grid-template-columns:1.05fr .95fr;align-items:center;gap:48px}}
+.st-hero__kicker{font-size:13px;font-weight:600;color:var(--accent-text);margin:0 0 12px}
+.st-hero__title{font-family:var(--font-display);font-weight:var(--title-w);letter-spacing:var(--title-ls);
+  text-transform:var(--title-tt);font-size:clamp(30px,4.6vw,52px);line-height:1.06;margin:0 0 16px;max-width:15ch}
+.st-hero__sub{color:var(--muted);max-width:46ch;margin:0 0 26px;font-size:16px;line-height:1.6}
+.st-hero__cta{display:inline-flex;align-items:center;gap:9px;border:0;border-radius:var(--btn-radius);
+  background:var(--accent);color:var(--accent-ink);padding:14px 24px;font-weight:700;font-size:15px;
+  text-decoration:none;box-shadow:var(--btn-shadow);font-family:var(--font-btn);letter-spacing:var(--btn-ls);
+  text-transform:var(--btn-tt)}
+.st-hero__cta:hover{filter:brightness(1.06)}
+.st-hero__art{aspect-ratio:4/3;background:var(--stage);border-radius:var(--radius);
+  border:var(--stage-border);display:grid;place-items:center;overflow:hidden}
+.st-hero__art svg{width:78%;height:78%}
+
+.st-cats{padding:0 0 54px}
+.st-cats__in{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+.st-cats h2,.st-grid h2{font-family:var(--font-display);font-weight:var(--title-w);
+  font-size:22px;letter-spacing:var(--title-ls);margin:0 0 20px}
+.st-cat-row{display:grid;gap:14px;grid-template-columns:repeat(2,1fr)}
+@media (min-width:640px){.st-cat-row{grid-template-columns:repeat(4,1fr)}}
+.st-cat{display:grid;gap:12px;text-decoration:none;color:inherit}
+.st-cat__art{aspect-ratio:1/1;background:var(--stage);border-radius:var(--radius-sm);
+  border:var(--stage-border);display:grid;place-items:center;overflow:hidden;transition:transform .15s}
+.st-cat__art svg{width:62%;height:62%}
+.st-cat:hover .st-cat__art{transform:translateY(-3px)}
+.st-cat__label{font-size:14px;font-weight:600;text-align:center}
+
+.st-grid{padding:0 0 60px}
+.st-grid__in{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+.st-grid__head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:20px}
+.st-grid__head a{font-size:13.5px;font-weight:600;color:var(--accent-text);text-decoration:none}
+.st-cards{display:grid;gap:18px;grid-template-columns:repeat(2,1fr)}
+@media (min-width:640px){.st-cards{grid-template-columns:repeat(3,1fr)}}
+@media (min-width:980px){.st-cards{grid-template-columns:repeat(4,1fr)}}
+.st-card{text-decoration:none;color:inherit;display:grid;gap:10px}
+.st-card__art{aspect-ratio:1/1;background:var(--stage);border-radius:var(--radius-sm);
+  border:var(--stage-border);position:relative;overflow:hidden;display:grid;place-items:center}
+.st-card__art svg{width:76%;height:76%}
+.st-card__cat{position:absolute;top:10px;left:10px;font-size:11px;font-weight:700;
+  background:var(--flag-bg);color:var(--flag-ink);padding:4px 8px;border-radius:var(--radius-xs)}
+.st-card__name{font-size:14.5px;font-weight:600;line-height:1.3}
+.st-card__price{font-family:var(--font-display);font-weight:var(--price-w);font-size:16px}
+
+.st-band{background:var(--ship-bg);border-top:var(--ship-border);border-bottom:var(--ship-border);padding:30px 0}
+.st-band__in{max-width:var(--maxw);margin:0 auto;padding:0 20px;display:grid;gap:20px;
+  grid-template-columns:repeat(2,1fr);font-size:13.5px}
+@media (min-width:760px){.st-band__in{grid-template-columns:repeat(3,1fr)}}
+.st-band li{display:flex;gap:10px;align-items:flex-start;list-style:none;color:var(--muted)}
+.st-band svg{width:18px;height:18px;flex:none;color:var(--accent)}
+.st-band b{color:var(--text);font-weight:600}
+
+/* ---------- theme: Crimson ---------- */
+
+.pd-brand{font-family:'Anton',sans-serif;letter-spacing:.06em}
+.pd-buybox{border-left:3px solid var(--accent)}
+@media (max-width:979px){.pd-buybox{padding-left:16px}}
+.pd-title{line-height:.98}
+.pd-stage{border:0}
+.pd-stage__flag{border-radius:0;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.pd-thumb{border-radius:0}
+.pd-chip{border-radius:2px;font-weight:600;letter-spacing:.02em}
+.pd-btn{font-weight:700}
+.pd-btn--cart{border-width:2px;border-color:var(--text)}
+.pd-tabs{border-bottom-width:2px}
+.pd-tab{letter-spacing:.02em}
+.pd-tab[aria-selected="true"]{border-bottom-width:3px}
+.pd-specs th{text-transform:uppercase;font-size:12.5px;letter-spacing:.04em}
+
+</style>
+</head>
+<body>
+
+<nav class="st-nav">
+  <div class="st-nav__in">
+    <a class="st-nav__brand" href="./crimson.html">CRIMSON</a>
+    <ul class="st-nav__links">
+      <li><a href="#">Vestes</a></li>
+      <li><a href="#">Sacs</a></li>
+      <li><a href="#">Ceintures</a></li>
+      <li><a href="#">Chaussures</a></li>
+    </ul>
+    <div class="st-nav__actions">
+      <button class="st-nav__cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3h2.4l2.2 12.2a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L21.5 7H6"/></svg> Panier · 0</button>
+    </div>
+  </div>
+</nav>
+
+<header class="st-hero">
+  <div class="st-hero__in">
+    <div>
+      <p class="st-hero__kicker">Édition limitée</p>
+      <h1 class="st-hero__title">Le cuir se patine. Le style reste.</h1>
+      <p class="st-hero__sub">Vestes, sacs et ceintures en cuir pleine fleur, tannage végétal.</p>
+      <a class="st-hero__cta" href="./crimson.html">Voir la boutique</a>
+    </div>
+    <div class="st-hero__art"><svg viewBox="0 0 400 400" role="img" aria-label="Le cuir se patine. Le style reste."><defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--shot-1)"/><stop offset="1" stop-color="var(--shot-2)"/></linearGradient></defs><rect width="400" height="400" fill="var(--stage)"/><circle cx="200" cy="196" r="131" fill="url(#g3)"/><rect x="152" y="142" width="96" height="120" rx="10" fill="var(--shot-3)"/></svg></div>
+  </div>
+</header>
+
+<section class="st-cats">
+  <div class="st-cats__in">
+    <h2>Catégories</h2>
+    <div class="st-cat-row">
+      <a class="st-cat" href="#"><span class="st-cat__art"><svg viewBox="0 0 400 400" role="img" aria-label="Vestes"><defs><linearGradient id="g0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--shot-1)"/><stop offset="1" stop-color="var(--shot-2)"/></linearGradient></defs><rect width="400" height="400" fill="var(--stage)"/><circle cx="200" cy="196" r="104" fill="url(#g0)"/><rect x="152" y="118" width="96" height="150" rx="8" fill="var(--shot-3)"/></svg></span><span class="st-cat__label">Vestes</span></a>
+      <a class="st-cat" href="#"><span class="st-cat__art"><svg viewBox="0 0 400 400" role="img" aria-label="Sacs"><rect width="400" height="400" fill="var(--stage)"/><rect x="100" y="86" width="206" height="228" rx="8" fill="var(--shot-1)"/><rect x="182" y="130" width="70" height="140" rx="8" fill="var(--shot-2)"/><circle cx="200" cy="162" r="26" fill="var(--shot-3)"/></svg></span><span class="st-cat__label">Sacs</span></a>
+      <a class="st-cat" href="#"><span class="st-cat__art"><svg viewBox="0 0 400 400" role="img" aria-label="Ceintures"><rect width="400" height="400" fill="var(--stage)"/><path d="M60 182 Q200 132 340 182 L340 330 Q200 300 60 330 Z" fill="var(--shot-1)"/><circle cx="200" cy="212" r="72" fill="var(--shot-2)"/><rect x="176" y="70" width="48" height="48" rx="8" fill="var(--shot-3)"/></svg></span><span class="st-cat__label">Ceintures</span></a>
+      <a class="st-cat" href="#"><span class="st-cat__art"><svg viewBox="0 0 400 400" role="img" aria-label="Chaussures"><defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--shot-1)"/><stop offset="1" stop-color="var(--shot-2)"/></linearGradient></defs><rect width="400" height="400" fill="var(--stage)"/><circle cx="200" cy="196" r="131" fill="url(#g3)"/><rect x="152" y="142" width="96" height="120" rx="8" fill="var(--shot-3)"/></svg></span><span class="st-cat__label">Chaussures</span></a>
+    </div>
+  </div>
+</section>
+
+<section class="st-grid">
+  <div class="st-grid__in">
+    <div class="st-grid__head">
+      <h2>Nouveautés</h2>
+      <a href="#">Tout voir →</a>
+    </div>
+    <div class="st-cards">
+      <a class="st-card" href="./crimson.html"><span class="st-card__art"><span class="st-card__cat">Montres</span><svg viewBox="0 0 400 400" role="img" aria-label="Montre Kairos 38"><defs><linearGradient id="g0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--shot-1)"/><stop offset="1" stop-color="var(--shot-2)"/></linearGradient></defs><rect width="400" height="400" fill="var(--stage)"/><circle cx="200" cy="196" r="104" fill="url(#g0)"/><rect x="152" y="118" width="96" height="150" rx="8" fill="var(--shot-3)"/></svg></span><span class="st-card__name">Montre Kairos 38</span><span class="st-card__price">18 900 DA</span></a>
+      <a class="st-card" href="./crimson.html"><span class="st-card__art"><span class="st-card__cat">Cosmétique</span><svg viewBox="0 0 400 400" role="img" aria-label="Coffret Rose d'Atlas"><rect width="400" height="400" fill="var(--stage)"/><path d="M60 166 Q200 112 340 166 L340 330 Q200 300 60 330 Z" fill="var(--shot-1)"/><circle cx="200" cy="204" r="65" fill="var(--shot-2)"/><rect x="176" y="70" width="48" height="48" rx="8" fill="var(--shot-3)"/></svg></span><span class="st-card__name">Coffret Rose d'Atlas</span><span class="st-card__price">7 400 DA</span></a>
+      <a class="st-card" href="./crimson.html"><span class="st-card__art"><span class="st-card__cat">Électronique</span><svg viewBox="0 0 400 400" role="img" aria-label="Casque Phantom X7"><rect width="400" height="400" fill="var(--stage)"/><rect x="114" y="86" width="184" height="228" rx="8" fill="var(--shot-1)"/><rect x="188" y="130" width="70" height="140" rx="8" fill="var(--shot-2)"/><circle cx="200" cy="184" r="26" fill="var(--shot-3)"/></svg></span><span class="st-card__name">Casque Phantom X7</span><span class="st-card__price">23 500 DA</span></a>
+      <a class="st-card" href="./crimson.html"><span class="st-card__art"><span class="st-card__cat">Enfant</span><svg viewBox="0 0 400 400" role="img" aria-label="Sac à dos Yalla 18 L"><defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--shot-1)"/><stop offset="1" stop-color="var(--shot-2)"/></linearGradient></defs><rect width="400" height="400" fill="var(--stage)"/><circle cx="200" cy="196" r="131" fill="url(#g3)"/><rect x="152" y="142" width="96" height="120" rx="8" fill="var(--shot-3)"/></svg></span><span class="st-card__name">Sac à dos Yalla 18 L</span><span class="st-card__price">4 200 DA</span></a>
+      <a class="st-card" href="./crimson.html"><span class="st-card__art"><span class="st-card__cat">Vêtements</span><svg viewBox="0 0 400 400" role="img" aria-label="Veste en cuir Bab El Oued"><rect width="400" height="400" fill="var(--stage)"/><rect x="142" y="86" width="140" height="228" rx="8" fill="var(--shot-1)"/><rect x="200" y="130" width="70" height="140" rx="8" fill="var(--shot-2)"/><circle cx="200" cy="228" r="26" fill="var(--shot-3)"/></svg></span><span class="st-card__name">Veste en cuir Bab El Oued</span><span class="st-card__price">42 000 DA</span></a>
+      <a class="st-card" href="./crimson.html"><span class="st-card__art"><span class="st-card__cat">Épicerie</span><svg viewBox="0 0 400 400" role="img" aria-label="Huile d'olive 1 L"><rect width="400" height="400" fill="var(--stage)"/><path d="M60 230 Q200 192 340 230 L340 330 Q200 300 60 330 Z" fill="var(--shot-1)"/><circle cx="200" cy="236" r="93" fill="var(--shot-2)"/><rect x="176" y="70" width="48" height="48" rx="8" fill="var(--shot-3)"/></svg></span><span class="st-card__name">Huile d'olive 1 L</span><span class="st-card__price">2 300 DA</span></a>
+      <a class="st-card" href="./crimson.html"><span class="st-card__art"><span class="st-card__cat">Sport</span><svg viewBox="0 0 400 400" role="img" aria-label="Écouteurs Pulse Air"><rect width="400" height="400" fill="var(--stage)"/><rect x="170" y="86" width="96" height="228" rx="8" fill="var(--shot-1)"/><rect x="212" y="130" width="70" height="140" rx="8" fill="var(--shot-2)"/><circle cx="200" cy="272" r="26" fill="var(--shot-3)"/></svg></span><span class="st-card__name">Écouteurs Pulse Air</span><span class="st-card__price">9 900 DA</span></a>
+      <a class="st-card" href="./crimson.html"><span class="st-card__art"><span class="st-card__cat">Bijoux</span><svg viewBox="0 0 400 400" role="img" aria-label="Collier touareg argent"><defs><linearGradient id="g7" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--shot-1)"/><stop offset="1" stop-color="var(--shot-2)"/></linearGradient></defs><rect width="400" height="400" fill="var(--stage)"/><circle cx="200" cy="196" r="167" fill="url(#g7)"/><rect x="152" y="174" width="96" height="80" rx="8" fill="var(--shot-3)"/></svg></span><span class="st-card__name">Collier touareg argent</span><span class="st-card__price">16 500 DA</span></a>
+    </div>
+  </div>
+</section>
+
+<div class="st-band">
+  <ul class="st-band__in">
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/></svg><span><b>Paiement à la livraison.</b> Aucun acompte, aucune carte.</span></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3z"/><path d="M14 9h4l3 3v4h-7z"/><circle cx="7" cy="18.5" r="1.7"/><circle cx="17.5" cy="18.5" r="1.7"/></svg><span><b>58 wilayas livrées</b> par Yalidine et ZR Express.</span></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4.5V9h4.5"/></svg><span><b>Retour sous 7 jours</b> si l'article ne convient pas.</span></li>
+  </ul>
+</div>
+
+<footer class="pd-foot">
+  <div class="pd-shell">CRIMSON — Oran, Algérie · Commandes 7j/7 de 9h à 19h · 0555 00 00 00</div>
+</footer>
+
+</body>
+</html>

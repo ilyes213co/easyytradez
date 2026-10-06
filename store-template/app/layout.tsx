@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Boutique en ligne",
-  description: "Boutique e-commerce propulsée par EasyTrade",
+  description: "Boutique e-commerce générée par StoreGen",
 };
 
 export default function StoreLayout({ children }: { children: React.ReactNode }) {

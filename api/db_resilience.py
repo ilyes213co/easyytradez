@@ -45,7 +45,11 @@ def safe_insert(table_name: str, data: dict[str, Any], supabase_client: Any) -> 
             return supabase_client.table(table_name).insert(payload).execute()
         except Exception as exc:
             msg = str(exc)
-            m = re.search(r"Could not find the '([^']+)' column", msg)
+            m = (
+                re.search(r"Could not find the '([^']+)' column", msg)
+                or re.search(r"column [\"']?([a-zA-Z0-9_]+)[\"']? of relation .* does not exist", msg)
+                or re.search(r"column [a-zA-Z0-9_]+\.([a-zA-Z0-9_]+) does not exist", msg)
+            )
             if m:
                 missing_col = m.group(1)
                 record_unsupported_column(table_name, missing_col)
@@ -70,7 +74,7 @@ def safe_update(
 ) -> Any:
     """
     Met à jour des données dans une table Supabase.
-    Si Supabase signale une colonne inexistante (erreur PGRST204),
+    Si Supabase signale une colonne inexistante (erreur PGRST204 ou PG 42703),
     la colonne est retirée et la mise à jour est re-tentée automatiquement.
     """
     payload = data.copy()
@@ -93,7 +97,11 @@ def safe_update(
             )
         except Exception as exc:
             msg = str(exc)
-            m = re.search(r"Could not find the '([^']+)' column", msg)
+            m = (
+                re.search(r"Could not find the '([^']+)' column", msg)
+                or re.search(r"column [\"']?([a-zA-Z0-9_]+)[\"']? of relation .* does not exist", msg)
+                or re.search(r"column [a-zA-Z0-9_]+\.([a-zA-Z0-9_]+) does not exist", msg)
+            )
             if m:
                 missing_col = m.group(1)
                 record_unsupported_column(table_name, missing_col)

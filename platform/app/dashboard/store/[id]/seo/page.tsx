@@ -143,7 +143,7 @@ export default function SeoSettingsPage() {
                 {seoTitle || store?.name || "Ma Boutique"}
               </div>
               <div className="text-green-700 text-sm truncate">
-                {store?.published_url || `https://${store?.slug}.easytrade.dz`}
+                {store?.published_url || (store?.slug ? `https://store-${store.slug}.vercel.app` : "https://mon-site.vercel.app")}
               </div>
               <div className="text-gray-600 text-sm line-clamp-2">
                 {seoDescription || "Découvrez nos produits exceptionnels et profitez de nos offres exclusives. Livraison rapide partout en Algérie."}

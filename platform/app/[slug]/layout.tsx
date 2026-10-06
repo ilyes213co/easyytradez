@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
     .from("stores")
     .select("name, description, logo_url, cover_url")
     .eq("slug", slug)
-    .in("status", ["published", "active"])
+    .eq("status", "active")
     .single();
 
   if (!store) return { title: "Boutique introuvable" };
@@ -33,21 +33,32 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
   };
 }
 
+import BrandInjector from "@/components/BrandInjector";
+
 export default async function StoreLayout({ children, params }: LayoutProps) {
   const { slug } = await params;
   const supabase  = await getSupabaseServerClient();
 
   const { data: store } = await supabase
     .from("stores")
-    .select("status")
+    .select("status, theme, brand_accent, logo_url")
     .eq("slug", slug)
     .single();
 
   if (!store || store.status === "suspended") notFound();
 
+  const theme = store.theme || "monochrome";
+
   return (
-    <div className="min-h-screen bg-[#fafaf9]">
-      {children}
-    </div>
+    <>
+      <BrandInjector
+        theme={theme as any}
+        brandAccent={store.brand_accent}
+        logoUrl={store.logo_url}
+      />
+      <div data-theme={theme} className="min-h-screen">
+        {children}
+      </div>
+    </>
   );
 }

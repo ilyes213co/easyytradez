@@ -1,7 +1,10 @@
-"use client";
+import AuthCard from "@/components/auth/AuthCard";
 
-import EasyTradeAuth from "@/components/auth/EasyTradeAuth";
+export const metadata = {
+  title: "Connexion",
+  description: "Connectez-vous à votre espace marchand easytrade.",
+};
 
 export default function LoginPage() {
-  return <EasyTradeAuth initialMode="login" />;
+  return <AuthCard initialMode="login" />;
 }

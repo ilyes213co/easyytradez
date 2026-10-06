@@ -43,12 +43,12 @@ export function PushSetup({ storeId }: { storeId: string }) {
     if (perm === "denied") { setState("denied"); return; }
 
     // Check if already subscribed
-    navigator.serviceWorker.getRegistration().then(async (reg) => {
+    navigator.serviceWorker.getRegistration("/sw.js").then(async (reg) => {
       if (!reg) { setState("unsubscribed"); return; }
       const sub = await reg.pushManager.getSubscription();
       setState(sub ? "subscribed" : "unsubscribed");
     });
-  }, []);
+  }, [getPushPermission]);
 
   // ── Subscribe ────────────────────────────────────────────────────────────
   const handleSubscribe = useCallback(async () => {
@@ -84,7 +84,7 @@ export function PushSetup({ storeId }: { storeId: string }) {
     }
 
     setState("subscribed");
-  }, [user, storeId]);
+  }, [user, storeId, getPushPermission]);
 
   // ── Unsubscribe ──────────────────────────────────────────────────────────
   const handleUnsubscribe = useCallback(async () => {
@@ -92,7 +92,7 @@ export function PushSetup({ storeId }: { storeId: string }) {
     setError(null);
 
     // Get endpoint before unsubscribing
-    const reg = await navigator.serviceWorker.getRegistration();
+    const reg = await navigator.serviceWorker.getRegistration("/sw.js");
     const sub = await reg?.pushManager.getSubscription();
     const endpoint = sub?.endpoint;
 
@@ -109,7 +109,7 @@ export function PushSetup({ storeId }: { storeId: string }) {
     }
 
     setState("unsubscribed");
-  }, []);
+  }, [getPushPermission]);
 
   // ── Render ───────────────────────────────────────────────────────────────
 

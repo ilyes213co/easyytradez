@@ -80,6 +80,7 @@ from routes.deploy import router as deploy_router
 from routes.seo import router as seo_router
 from routes.orders import router as orders_router
 from routes.team import router as team_router
+from routes.payment import router as payment_router
 
 try:
     from routes.upload import router as upload_router
@@ -94,12 +95,17 @@ except Exception as e:
     logger.warning(f"analytics router not loaded: {e}")
 
 app.include_router(stores_router, prefix="/stores", tags=["stores"])
+app.include_router(stores_router, prefix="/api/stores", tags=["stores"])
 app.include_router(products_router, prefix="/products", tags=["products"])
+app.include_router(products_router, prefix="/api/products", tags=["products"])
 app.include_router(generate_router)
 app.include_router(deploy_router, prefix="/deploy", tags=["deploy"])
 app.include_router(seo_router, prefix="/seo", tags=["seo"])
 app.include_router(orders_router, prefix="/orders", tags=["orders"])
+app.include_router(orders_router, prefix="/api/orders", tags=["orders"])
 app.include_router(team_router, prefix="/team", tags=["team"])
+app.include_router(payment_router, prefix="/payment", tags=["payment"])
+app.include_router(payment_router, prefix="/api/payment", tags=["payment"])
 
 @app.get("/")
 async def root():

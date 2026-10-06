@@ -1,19 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
 
-// ─── Configure VAPID ──────────────────────────────────────────────────────────
-// Generate keys once with: npx web-push generate-vapid-keys
-// Then add to .env.local:
-//   VAPID_PUBLIC_KEY=...
-//   VAPID_PRIVATE_KEY=...
-//   NEXT_PUBLIC_VAPID_PUBLIC_KEY=...  (same as VAPID_PUBLIC_KEY)
-//   VAPID_MAILTO=mailto:vous@exemple.com
+export const dynamic = "force-dynamic";
 
-webpush.setVapidDetails(
-  process.env.VAPID_MAILTO     ?? "mailto:admin@marchand.app",
-  process.env.VAPID_PUBLIC_KEY  ?? "",
-  process.env.VAPID_PRIVATE_KEY ?? ""
-);
+// ─── Configure VAPID ──────────────────────────────────────────────────────────
+function ensureVapidDetails(): boolean {
+  const mailto = process.env.VAPID_MAILTO ?? "mailto:admin@marchand.app";
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+
+  if (!publicKey || !privateKey) {
+    return false;
+  }
+
+  try {
+    webpush.setVapidDetails(mailto, publicKey, privateKey);
+    return true;
+  } catch (err) {
+    console.error("[push/send] Failed to set VAPID details:", err);
+    return false;
+  }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,13 +42,9 @@ interface PushSubscriptionRow {
 import { createClient } from "@supabase/supabase-js";
 
 function getAdminClient() {
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    "";
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceKey,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false } }
   );
 }
@@ -53,7 +56,7 @@ function buildPayload(table: string, record: Record<string, unknown>, type: stri
   if (table === "orders" && type === "INSERT") {
     return {
       title: "🛒 Nouvelle commande !",
-      body:  `${record.customer_name} vient de commander — ${Number(record.total ?? record.total_amount ?? 0).toLocaleString("fr-DZ")} DZD`,
+      body:  `${record.customer_name} vient de commander — ${Number(record.total).toLocaleString("fr-DZ")} DZD`,
       type:  "new_order",
       url:   "/dashboard/orders",
     };
@@ -112,6 +115,11 @@ export async function POST(req: NextRequest) {
 
   if (!subs || subs.length === 0) {
     return NextResponse.json({ ok: true, sent: 0 });
+  }
+
+  if (!ensureVapidDetails()) {
+    console.warn("[push/send] Missing VAPID_PUBLIC_KEY or VAPID_PRIVATE_KEY");
+    return NextResponse.json({ ok: false, error: "VAPID keys not configured" }, { status: 500 });
   }
 
   const payloadStr = JSON.stringify(payload);
