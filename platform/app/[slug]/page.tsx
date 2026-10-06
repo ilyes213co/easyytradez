@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getAdminClient } from "@/lib/api-auth";
 import { notFound } from "next/navigation";
 import type { Store as DbStore, Product as DbProduct } from "@/lib/supabase";
 import ProductPage, { DEFAULT_WILAYAS } from "@/components/ProductPage";
@@ -7,21 +7,25 @@ import type { Product as GenericProduct, Store as GenericStore, Wilaya } from "@
 import Link from "next/link";
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ category?: string }>;
+  params: Promise<{ slug: string }> | { slug: string };
+  searchParams: Promise<{ category?: string }> | { category?: string };
 }
 
 export default async function StoreOrFunnelPage({ params, searchParams }: PageProps) {
-  const { slug } = await params;
-  const { category } = await searchParams;
-  const supabase = await getSupabaseServerClient();
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  const slug = resolvedParams?.slug;
+  const category = resolvedSearchParams?.category;
+  if (!slug) notFound();
+
+  const supabase = getAdminClient();
 
   // Load store
   const { data: rawStore } = await supabase
     .from("stores")
     .select("*")
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
 
   const store = rawStore as unknown as (DbStore & { type?: string }) | null;
   if (!store || store.status === "suspended") notFound();
@@ -36,7 +40,7 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
     .from("products")
     .select("*")
     .eq("store_id", store.id)
-    .eq("status", "active")
+    .in("status", ["active", "published"])
     .order("position", { ascending: true })
     .order("created_at", { ascending: false });
 

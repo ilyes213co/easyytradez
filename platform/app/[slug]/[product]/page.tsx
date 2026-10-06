@@ -1,22 +1,27 @@
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getAdminClient } from "@/lib/api-auth";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ProductPage, { DEFAULT_WILAYAS } from "@/components/ProductPage";
 import type { Product as GenericProduct, Store as GenericStore, Wilaya } from "@/types/product";
 
 interface PageProps {
-  params: Promise<{ slug: string; product: string }>;
+  params: Promise<{ slug: string; product: string }> | { slug: string; product: string };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug, product: productSlug } = await params;
-  const supabase = await getSupabaseServerClient();
+  const resolvedParams = await params;
+  const slug = resolvedParams?.slug;
+  const productSlug = resolvedParams?.product;
+  if (!slug || !productSlug) return { title: "Produit introuvable" };
+
+  const supabase = getAdminClient();
 
   const { data: store } = await supabase
     .from("stores")
     .select("id, name")
     .eq("slug", slug)
-    .single();
+    .in("status", ["published", "active", "draft"])
+    .maybeSingle();
 
   const s = store as any;
   if (!s) return { title: "Produit introuvable" };
@@ -26,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     .select("name, description, images, price")
     .eq("store_id", s.id)
     .eq("slug", productSlug)
-    .single();
+    .maybeSingle();
 
   const p = product as any;
   if (!p) return { title: "Produit introuvable" };
@@ -47,15 +52,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ProductDetailsPage({ params }: PageProps) {
-  const { slug, product: productSlug } = await params;
-  const supabase = await getSupabaseServerClient();
+  const resolvedParams = await params;
+  const slug = resolvedParams?.slug;
+  const productSlug = resolvedParams?.product;
+  if (!slug || !productSlug) notFound();
+
+  const supabase = getAdminClient();
 
   // 1. Charger la boutique
   const { data: storeData } = await supabase
     .from("stores")
     .select("*")
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
 
   const storeRaw = storeData as any;
   if (!storeRaw || storeRaw.status === "suspended") notFound();
@@ -66,7 +75,7 @@ export default async function ProductDetailsPage({ params }: PageProps) {
     .select("*")
     .eq("store_id", storeRaw.id)
     .eq("slug", productSlug)
-    .single();
+    .maybeSingle();
 
   const productRaw = productData as any;
   if (!productRaw || productRaw.status === "archived") notFound();

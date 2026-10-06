@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getAdminClient } from "@/lib/api-auth";
 import { notFound } from "next/navigation";
 
 interface LayoutProps {
   children: React.ReactNode;
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string }> | { slug: string };
 }
 
 export async function generateMetadata({ params }: LayoutProps): Promise<Metadata> {
-  const { slug } = await params;
-  const supabase  = await getSupabaseServerClient();
+  const resolvedParams = await params;
+  const slug = resolvedParams?.slug;
+  if (!slug) return { title: "Boutique introuvable" };
+
+  const supabase = getAdminClient();
 
   const { data: store } = await supabase
     .from("stores")
-    .select("name, description, logo_url, cover_url")
+    .select("name, description, logo_url, cover_url, status")
     .eq("slug", slug)
-    .eq("status", "active")
-    .single();
+    .in("status", ["published", "active", "draft"])
+    .maybeSingle();
 
   if (!store) return { title: "Boutique introuvable" };
 
@@ -36,14 +39,17 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
 import BrandInjector from "@/components/BrandInjector";
 
 export default async function StoreLayout({ children, params }: LayoutProps) {
-  const { slug } = await params;
-  const supabase  = await getSupabaseServerClient();
+  const resolvedParams = await params;
+  const slug = resolvedParams?.slug;
+  if (!slug) notFound();
+
+  const supabase = getAdminClient();
 
   const { data: store } = await supabase
     .from("stores")
     .select("status, theme, brand_accent, logo_url")
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
 
   if (!store || store.status === "suspended") notFound();
 
