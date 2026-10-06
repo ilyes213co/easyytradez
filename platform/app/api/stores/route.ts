@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient, getAuthUser, getUniqueStoreSlug } from "@/lib/api-auth";
+import { getAdminClient, getAuthUser, getUniqueStoreSlug, safeInsert } from "@/lib/api-auth";
 
 export async function GET(req: NextRequest) {
   try {
@@ -71,15 +71,19 @@ export async function POST(req: NextRequest) {
       ? { ...body.seo_metadata, type: storeType }
       : { type: storeType };
 
-    const paymentSettings = body.payment_settings || {
-      cod_enabled: true,
-      baridimob_enabled: false,
-      baridimob_rip: "",
-      baridimob_name: "",
-      stripe_enabled: false,
-    };
+    if (body.custom_domain) seoMetadata.custom_domain = body.custom_domain;
+    if (body.facebook_pixel_id) seoMetadata.facebook_pixel_id = body.facebook_pixel_id;
+    if (body.tiktok_pixel_id) seoMetadata.tiktok_pixel_id = body.tiktok_pixel_id;
 
-    const storeData = {
+    const contentOverrides = typeof body.content_overrides === "object" && body.content_overrides !== null
+      ? { ...body.content_overrides }
+      : {};
+
+    if (body.payment_settings) {
+      contentOverrides.payment_settings = body.payment_settings;
+    }
+
+    const storeData: Record<string, any> = {
       owner_id: user.id,
       name,
       slug,
@@ -93,18 +97,11 @@ export async function POST(req: NextRequest) {
       category: body.category || null,
       font_family: body.font_family || "modern",
       logo_url: body.logo_url || null,
-      custom_domain: body.custom_domain || null,
-      facebook_pixel_id: body.facebook_pixel_id || null,
-      tiktok_pixel_id: body.tiktok_pixel_id || null,
       seo_metadata: seoMetadata,
-      payment_settings: paymentSettings,
+      content_overrides: contentOverrides,
     };
 
-    const { data: created, error } = await admin
-      .from("stores")
-      .insert(storeData)
-      .select()
-      .single();
+    const { data: created, error } = await safeInsert("stores", storeData, admin);
 
     if (error) {
       console.error("Supabase insert store error:", error);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient, getAuthUser, verifyStoreOwner } from "@/lib/api-auth";
+import { getAdminClient, getAuthUser, verifyStoreOwner, safeInsert } from "@/lib/api-auth";
 
 export async function GET(req: NextRequest) {
   try {
@@ -107,11 +107,7 @@ export async function POST(req: NextRequest) {
       position,
     };
 
-    const { data: created, error } = await admin
-      .from("products")
-      .insert(productData)
-      .select()
-      .single();
+    const { data: created, error } = await safeInsert("products", productData, admin);
 
     if (error) {
       console.error("Create product error:", error);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient, getAuthUser, verifyStoreOwner } from "@/lib/api-auth";
+import { getAdminClient, getAuthUser, verifyStoreOwner, safeUpdate } from "@/lib/api-auth";
 
 export async function GET(
   req: NextRequest,
@@ -57,12 +57,7 @@ export async function PATCH(
       body.seo_metadata = body.seo_metadata ? { ...body.seo_metadata, type: body.type } : currentMeta;
     }
 
-    const { data: updated, error } = await admin
-      .from("stores")
-      .update(body)
-      .eq("id", id)
-      .select()
-      .single();
+    const { data: updated, error } = await safeUpdate("stores", body, "id", id, admin);
 
     if (error) {
       console.error("Update store error:", error);

@@ -103,3 +103,78 @@ export async function verifyStoreOwner(storeId: string, userId: string, adminCli
 
   return { ok: true as const, status: 200, message: "OK", store };
 }
+
+export async function safeInsert(table: string, data: Record<string, any>, adminClient = getAdminClient()) {
+  const payload = { ...data };
+  const maxAttempts = 10;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const { data: result, error } = await adminClient
+      .from(table)
+      .insert(payload)
+      .select()
+      .single();
+
+    if (!error) {
+      return { data: result, error: null };
+    }
+
+    const msg = error.message || "";
+    const match =
+      msg.match(/Could not find the '([^']+)' column/i) ||
+      msg.match(/column ["']?([a-zA-Z0-9_]+)["']? of relation .* does not exist/i) ||
+      msg.match(/column [a-zA-Z0-9_]+\.([a-zA-Z0-9_]+) does not exist/i);
+
+    if (match && match[1]) {
+      const missingCol = match[1];
+      console.warn(`safeInsert: Column '${missingCol}' does not exist on table '${table}'. Retrying without it.`);
+      delete payload[missingCol];
+      continue;
+    }
+
+    return { data: null, error };
+  }
+
+  return { data: null, error: { message: `Échec d'insertion dans ${table} après ${maxAttempts} tentatives.` } };
+}
+
+export async function safeUpdate(
+  table: string,
+  data: Record<string, any>,
+  matchCol: string,
+  matchVal: any,
+  adminClient = getAdminClient()
+) {
+  const payload = { ...data };
+  const maxAttempts = 10;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const { data: result, error } = await adminClient
+      .from(table)
+      .update(payload)
+      .eq(matchCol, matchVal)
+      .select()
+      .single();
+
+    if (!error) {
+      return { data: result, error: null };
+    }
+
+    const msg = error.message || "";
+    const match =
+      msg.match(/Could not find the '([^']+)' column/i) ||
+      msg.match(/column ["']?([a-zA-Z0-9_]+)["']? of relation .* does not exist/i) ||
+      msg.match(/column [a-zA-Z0-9_]+\.([a-zA-Z0-9_]+) does not exist/i);
+
+    if (match && match[1]) {
+      const missingCol = match[1];
+      console.warn(`safeUpdate: Column '${missingCol}' does not exist on table '${table}'. Retrying without it.`);
+      delete payload[missingCol];
+      continue;
+    }
+
+    return { data: null, error };
+  }
+
+  return { data: null, error: { message: `Échec de mise à jour dans ${table} après ${maxAttempts} tentatives.` } };
+}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient, getAuthUser } from "@/lib/api-auth";
+import { getAdminClient, getAuthUser, safeUpdate } from "@/lib/api-auth";
 
 async function verifyProductOwner(productId: string, userId: string, admin: any) {
   const { data: product, error } = await admin
@@ -50,12 +50,7 @@ export async function PATCH(
       });
     }
 
-    const { data: updated, error } = await admin
-      .from("products")
-      .update(body)
-      .eq("id", id)
-      .select()
-      .single();
+    const { data: updated, error } = await safeUpdate("products", body, "id", id, admin);
 
     if (error) {
       console.error("Update product error:", error);
