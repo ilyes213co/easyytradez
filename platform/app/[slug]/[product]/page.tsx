@@ -26,12 +26,30 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const s = store as any;
   if (!s) return { title: "Produit introuvable" };
 
-  const { data: product } = await supabase
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productSlug);
+
+  let productQuery = supabase
     .from("products")
     .select("name, description, images, price")
-    .eq("store_id", s.id)
-    .eq("slug", productSlug)
-    .maybeSingle();
+    .eq("store_id", s.id);
+
+  if (isUuid) {
+    productQuery = productQuery.eq("id", productSlug);
+  } else {
+    productQuery = productQuery.eq("slug", productSlug);
+  }
+
+  let { data: product } = await productQuery.maybeSingle();
+
+  if (!product && isUuid) {
+    const { data: fallback } = await supabase
+      .from("products")
+      .select("name, description, images, price")
+      .eq("store_id", s.id)
+      .eq("slug", productSlug)
+      .maybeSingle();
+    product = fallback;
+  }
 
   const p = product as any;
   if (!p) return { title: "Produit introuvable" };
@@ -69,13 +87,31 @@ export default async function ProductDetailsPage({ params }: PageProps) {
   const storeRaw = storeData as any;
   if (!storeRaw || storeRaw.status === "suspended") notFound();
 
-  // 2. Charger le produit
-  const { data: productData } = await supabase
+  // 2. Charger le produit (supporte ID UUID ou slug textuel)
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productSlug);
+
+  let productQuery = supabase
     .from("products")
     .select("*")
-    .eq("store_id", storeRaw.id)
-    .eq("slug", productSlug)
-    .maybeSingle();
+    .eq("store_id", storeRaw.id);
+
+  if (isUuid) {
+    productQuery = productQuery.eq("id", productSlug);
+  } else {
+    productQuery = productQuery.eq("slug", productSlug);
+  }
+
+  let { data: productData } = await productQuery.maybeSingle();
+
+  if (!productData && isUuid) {
+    const { data: fallback } = await supabase
+      .from("products")
+      .select("*")
+      .eq("store_id", storeRaw.id)
+      .eq("slug", productSlug)
+      .maybeSingle();
+    productData = fallback;
+  }
 
   const productRaw = productData as any;
   if (!productRaw || productRaw.status === "archived") notFound();
@@ -129,6 +165,7 @@ export default async function ProductDetailsPage({ params }: PageProps) {
     city: storeRaw.city,
     logo_url: storeRaw.logo_url,
     cover_url: storeRaw.cover_url,
+    brand_accent: storeRaw.primary_color || storeRaw.brand_accent,
   };
 
   return <ProductPage product={genericProduct} store={genericStore} wilayas={wilayas} />;

@@ -92,9 +92,27 @@ export async function POST(req: NextRequest) {
       return null;
     }).filter(Boolean);
 
+    const rawSlug = (body.slug || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    const nameSlug = name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    const slug = rawSlug || nameSlug || `prod-${Date.now().toString(36)}`;
+
     const productData = {
       store_id: storeId,
       name,
+      slug,
       price,
       original_price: body.original_price ? Number(body.original_price) : null,
       description: body.description || "",
