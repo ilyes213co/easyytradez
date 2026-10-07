@@ -90,7 +90,7 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
       slug: store.slug,
       description: store.description,
       theme: (store.theme as any) || "crimson",
-      brand_accent: store.brand_accent,
+      brand_accent: (store as any).primary_color || store.brand_accent,
       logo_url: store.logo_url,
       cover_url: store.cover_url,
       slogan: store.slogan,

@@ -47,7 +47,7 @@ export default async function StoreLayout({ children, params }: LayoutProps) {
 
   const { data: store } = await supabase
     .from("stores")
-    .select("status, theme, brand_accent, logo_url")
+    .select("status, theme, primary_color, logo_url")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -59,7 +59,7 @@ export default async function StoreLayout({ children, params }: LayoutProps) {
     <>
       <BrandInjector
         theme={theme as any}
-        brandAccent={store.brand_accent}
+        brandAccent={store.primary_color}
         logoUrl={store.logo_url}
       />
       <div data-theme={theme} className="min-h-screen">
