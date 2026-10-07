@@ -22,11 +22,11 @@ export default function EasyTradeLogo({
       style={{ textDecoration: "none" }}
     >
       <svg
-        className="transition-transform duration-300 ease-out group-hover:scale-105 group-hover:-translate-y-0.5"
+        className="transition-transform duration-300 ease-out group-hover:scale-105 group-hover:-translate-y-0.5 text-slate-900 dark:text-white"
         style={{
           width: size,
           height: height,
-          filter: "drop-shadow(0 4px 12px rgba(37, 64, 234, 0.45))",
+          filter: "drop-shadow(0 4px 12px rgba(37, 64, 234, 0.35))",
           flexShrink: 0,
         }}
         viewBox="210 310 575 370"
@@ -43,7 +43,7 @@ export default function EasyTradeLogo({
 
         {/* Left branch: stylized 'E' */}
         <path
-          fill="#ffffff"
+          fill="currentColor"
           fillRule="evenodd"
           clipRule="evenodd"
           d="
@@ -83,7 +83,7 @@ export default function EasyTradeLogo({
 
         {/* Right branch: valley and ascending 'trade' arrow */}
         <path
-          fill="#ffffff"
+          fill="currentColor"
           d="
             M 464 516
             L 544 648
@@ -103,15 +103,15 @@ export default function EasyTradeLogo({
 
       {showText && (
         <span
-          className="text-xl font-black tracking-tight text-white leading-none"
+          className="text-xl font-black tracking-tight text-slate-900 dark:text-white leading-none transition-colors"
           style={{ fontFamily: "var(--font-heading, 'Outfit', sans-serif)" }}
         >
           easy
           <em
+            className="text-accent dark:text-[#93c5fd]"
             style={{
-              color: "var(--gl, #93c5fd)",
               fontStyle: "normal",
-              textShadow: "0 0 16px var(--g-glow, rgba(37, 64, 234, 0.6))",
+              textShadow: "0 0 16px rgba(37, 64, 234, 0.35)",
             }}
           >
             trade
