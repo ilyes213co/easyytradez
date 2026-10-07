@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATLAS MINIMAL - Boutique Officielle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fbfbfa;
+      --surface: #ffffff;
+      --text: #18181b;
+      --text-muted: #71717a;
+      --accent: #1c1917;
+      --accent-text: #ffffff;
+      --accent-soft: #f4f4f5;
+      --border: #e4e4e7;
+      --font-heading: 'Playfair Display', serif;
+      --font-body: 'Inter', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3, h4 {
+      font-family: var(--font-heading);
+      letter-spacing: -0.02em;
+    }
+    img { max-width: 100%; height: auto; display: block; }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    .top-bar {
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 9px 16px;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+
+    .site-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .logo {
+      font-family: var(--font-heading);
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .cart-badge-btn {
+      background: var(--accent-soft);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .hero-section { padding: 64px 0; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 48px;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 32px; }
+    }
+    .hero-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .hero-h1 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.15;
+      font-weight: 900;
+      margin-bottom: 18px;
+    }
+    .hero-sub {
+      font-size: 16px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 28px;
+      max-width: 52ch;
+    }
+    .hero-btns {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .btn-main {
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .btn-main:hover { transform: translateY(-2px); opacity: 0.95; }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 13px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .hero-trust-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      flex-wrap: wrap;
+    }
+    .hero-media-wrap {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.06);
+      background: var(--surface);
+    }
+    .hero-media-wrap img {
+      width: 100%;
+      height: 460px;
+      object-fit: cover;
+    }
+    .hero-floating-card {
+      position: absolute;
+      bottom: 18px;
+      left: 18px;
+      right: 18px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.08);
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-pad { padding: 64px 0; }
+    .section-header {
+      text-align: center;
+      max-width: 650px;
+      margin: 0 auto 44px;
+    }
+    .section-eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .section-desc {
+      font-size: 14.5px;
+      color: var(--text-muted);
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+    }
+    .product-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    }
+    .p-img-box {
+      height: 240px;
+      position: relative;
+      overflow: hidden;
+      background: #f4f4f5;
+    }
+    .p-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s;
+    }
+    .product-card:hover .p-img-box img { transform: scale(1.04); }
+    .p-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 5px;
+    }
+    .p-details {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+    .p-cat { font-size: 11px; color: var(--text-muted); }
+    .p-name { font-size: 15px; font-weight: 800; }
+    .p-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+    .p-price { font-size: 16px; font-weight: 900; color: var(--accent); }
+    .p-was-price { font-size: 12px; color: var(--text-muted); text-decoration: line-through; }
+    .p-add-btn {
+      margin-top: 10px;
+      width: 100%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      transition: all 0.15s;
+    }
+    .p-add-btn:hover {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .benefit-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .benefit-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .benefit-h3 { font-size: 1.1rem; font-weight: 800; }
+    .benefit-p { font-size: 13.5px; color: var(--text-muted); line-height: 1.55; }
+
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .review-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .stars { color: #f59e0b; display: flex; gap: 3px; font-size: 14px; }
+    .review-text { font-size: 13.5px; line-height: 1.6; }
+    .reviewer-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+    .reviewer-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--accent-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .reviewer-name { font-size: 13px; font-weight: 800; }
+    .reviewer-loc { font-size: 11px; color: var(--text-muted); }
+
+    .site-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 48px 0 32px;
+      margin-top: 60px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 768px) {
+      .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .footer-col h5 {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    Livraison 58 Wilayas en 24-48h · Paiement Cash à la Réception · Support WhatsApp 7j/7
+  </div>
+
+  <header class="site-header">
+    <div class="logo">ATLAS MINIMAL</div>
+    <nav class="nav-links">
+      <a href="#hero">Accueil</a>
+      <a href="#catalogue">Nouveautés</a>
+      <a href="#catalogue">Collections</a>
+      <a href="#valeurs">Notre Histoire</a>
+      <a href="#avis">Avis Clients</a>
+    </nav>
+    <div class="header-actions">
+      <button class="cart-badge-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        Panier (2)
+      </button>
+    </div>
+  </header>
+
+  <section class="hero-section" id="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div>
+          <span class="hero-tag">Permanent Collection</span>
+          <h1 class="hero-h1">L'élégance du minimalisme, coupée pour durer.</h1>
+          <p class="hero-sub">Vestiaire intemporel en lin lavé et coton peigné lourd. Pensé pour un confort thermique supérieur en toute saison.</p>
+
+          <div class="hero-btns">
+            <a href="#catalogue" class="btn-main">Découvrir la Collection</a>
+            <a href="#valeurs" class="btn-secondary">L'Atelier de Fabrication</a>
+          </div>
+
+          <div class="hero-trust-row">
+            <span>✓ Expédition 58 Wilayas</span>
+            <span>✓ Paiement Main à Main</span>
+            <span>✓ 4.9/5 (1 200+ avis)</span>
+          </div>
+        </div>
+
+        <div class="hero-media-wrap">
+          <img src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80" alt="Chemise Lin Écru">
+          <div class="hero-floating-card">
+            <div>
+              <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b;">Pièce Maîtresse</div>
+              <div style="font-weight: 800; font-size: 13.5px;">Chemise Lin Tunisien Écru</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 16px; font-weight: 900; color: #1c1917;">6 400 DA</div>
+              <div style="font-size: 11px; text-decoration: line-through; color: #94a3b8;">8 900 DA</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" id="catalogue" style="background: var(--surface);">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-eyebrow">Catalogue Permanent</div>
+        <h2 class="section-title">Les Essentiels de la Saison</h2>
+        <p class="section-desc">Chaque création est coupée dans nos ateliers partenaires selon des critères de finition exigeants.</p>
+      </div>
+
+      <div class="products-grid">
+        <div class="product-card">
+          <div class="p-img-box">
+            <img src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80" alt="Chemise Lin Tunisien">
+            <span class="p-badge">Coup de cœur</span>
+          </div>
+          <div class="p-details">
+            <span class="p-cat">Prêt-à-porter Masculin</span>
+            <h4 class="p-name">Chemise Lin Tunisien Écru</h4>
+            <div class="p-price-row">
+              <span class="p-price">6 400 DA</span>
+              <span class="p-was-price">8 900 DA</span>
+            </div>
+            <button class="p-add-btn">Ajouter au Panier</button>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <div class="p-img-box">
+            <img src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80" alt="T-Shirt Coton Lourd">
+            <span class="p-badge">Nouveau</span>
+          </div>
+          <div class="p-details">
+            <span class="p-cat">T-Shirts</span>
+            <h4 class="p-name">T-Shirt Coton Peigné 280 GSM</h4>
+            <div class="p-price-row">
+              <span class="p-price">3 400 DA</span>
+              <span class="p-was-price">4 500 DA</span>
+            </div>
+            <button class="p-add-btn">Ajouter au Panier</button>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <div class="p-img-box">
+            <img src="https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=600&q=80" alt="Pantalon Tailored Lin">
+          </div>
+          <div class="p-details">
+            <span class="p-cat">Pantalons</span>
+            <h4 class="p-name">Pantalon Coupe Droite Chino Lin</h4>
+            <div class="p-price-row">
+              <span class="p-price">7 200 DA</span>
+              <span class="p-was-price">9 500 DA</span>
+            </div>
+            <button class="p-add-btn">Ajouter au Panier</button>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <div class="p-img-box">
+            <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80" alt="Veste de Travail">
+            <span class="p-badge">-25%</span>
+          </div>
+          <div class="p-details">
+            <span class="p-cat">Vestes</span>
+            <h4 class="p-name">Surchemise Travailleur Coton Serge</h4>
+            <div class="p-price-row">
+              <span class="p-price">8 900 DA</span>
+              <span class="p-was-price">11 800 DA</span>
+            </div>
+            <button class="p-add-btn">Ajouter au Panier</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" id="valeurs">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-eyebrow">Nos Engagements</div>
+        <h2 class="section-title">L'Expérience d'Achat en Ligne Réinventée</h2>
+        <p class="section-desc">Nous simplifions chaque étape pour garantir votre entière satisfaction.</p>
+      </div>
+
+      <div class="benefits-grid">
+        <div class="benefit-item">
+          <div class="benefit-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3 class="benefit-h3">Matières Nobles Certifiées</h3>
+          <p class="benefit-p">Zéro fibre synthétique étouffante. Des tissages naturels respirants pensés pour traverser les années.</p>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
+          <h3 class="benefit-h3">Livraison Express 58 Wilayas</h3>
+          <p class="benefit-p">Remise en main propre sous 24h à Alger, Oran et Constantine, et sous 48h sur le reste des wilayas.</p>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <h3 class="benefit-h3">Paiement à la Livraison</h3>
+          <p class="benefit-p">Réglez le livreur en espèces lors de la réception. Possibilité d'inspecter le colis avant paiement.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" id="avis" style="background: var(--surface);">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-eyebrow">Avis Vérifiés</div>
+        <h2 class="section-title">La Voix de Nos Clients</h2>
+        <p class="section-desc">Des retours authentiques de clients livrés à travers l'Algérie.</p>
+      </div>
+
+      <div class="reviews-grid">
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <p class="review-text">« La qualité du lin est remarquable. La chemise tombe parfaitement et le tissu ne gratte pas. Livraison à Alger en 24h chrono. Bravo ! »</p>
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">RA</div>
+            <div>
+              <div class="reviewer-name">Riad A.</div>
+              <div class="reviewer-loc">Alger · Achat vérifié</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <p class="review-text">« Coupe sobre et élégante, tout ce que je cherchais. Rien à envier aux marques étrangères importées. C'est du travail soigné. »</p>
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">MS</div>
+            <div>
+              <div class="reviewer-name">Mehdi S.</div>
+              <div class="reviewer-loc">Oran · Achat vérifié</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <p class="review-text">« Emballage carton épuré et livraison sans aucun retard à Sétif. Le service client a confirmé ma taille par téléphone avec gentillesse. »</p>
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">FB</div>
+            <div>
+              <div class="reviewer-name">Farid B.</div>
+              <div class="reviewer-loc">Sétif · Achat vérifié</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="logo" style="margin-bottom: 12px;">ATLAS MINIMAL</div>
+          <p style="line-height: 1.6; max-width: 38ch;">Maison de prêt-à-porter éco-responsable alliant tradition textile et coupes contemporaines.</p>
+        </div>
+        <div class="footer-col">
+          <h5>Navigation</h5>
+          <ul>
+            <li><a href="#hero">Accueil</a></li>
+            <li><a href="#catalogue">Catalogue</a></li>
+            <li><a href="#valeurs">L'Atelier</a></li>
+            <li><a href="#avis">Avis</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Garanties</h5>
+          <ul>
+            <li>Livraison 58 Wilayas</li>
+            <li>Paiement Cash à l'Arrivée</li>
+            <li>Échange de taille sous 7 jours</li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Support Dédié</h5>
+          <ul>
+            <li>WhatsApp : +213 (0) 550 12 34 56</li>
+            <li>contact@atlasminimal.dz</li>
+            <li>Ouvert du Dimanche au Jeudi</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 ATLAS MINIMAL · Propulsé par EasyTrade Commerce</div>
+        <div>Paiement Sécurisé Cash On Delivery · Tous droits réservés</div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
