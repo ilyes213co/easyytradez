@@ -44,7 +44,11 @@ const BOUTIQUE_ITEMS: NavItemConfig[] = [
   { label: "Analytiques",  href: "/dashboard/analytics?section=boutique", icon: BarChart2 },
 ];
 
-export default function SidebarNav() {
+interface SidebarNavProps {
+  onNavigate?: () => void;
+}
+
+export default function SidebarNav({ onNavigate }: SidebarNavProps = {}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -151,6 +155,7 @@ export default function SidebarNav() {
       <Link
         key={item.label}
         href={item.href}
+        onClick={() => onNavigate?.()}
         className={`group relative flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 ${
           isActive
             ? "bg-accent/10 dark:bg-accent/20 text-accent dark:text-white font-semibold border border-accent/25 dark:border-sky/30 shadow-sm"
@@ -236,6 +241,7 @@ export default function SidebarNav() {
           {/* Upgrade button */}
           <Link
             href="/dashboard/upgrade"
+            onClick={() => onNavigate?.()}
             className="flex items-center justify-between w-full px-3 py-2 rounded-xl bg-white dark:bg-white/[0.06] hover:bg-slate-50 dark:hover:bg-white/[0.1] border border-slate-200/80 dark:border-white/10 transition-all text-xs font-semibold text-slate-800 dark:text-white group shadow-sm"
           >
             <span className="truncate">Mettre à niveau vers</span>
@@ -259,6 +265,7 @@ export default function SidebarNav() {
             <div className="flex items-center gap-1 shrink-0">
               <Link
                 href="/dashboard/settings"
+                onClick={() => onNavigate?.()}
                 title="Paramètres"
                 className="text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white p-1 rounded-md transition-colors"
               >

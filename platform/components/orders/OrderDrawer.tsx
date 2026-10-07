@@ -346,7 +346,7 @@ export function OrderDrawer({ open, onClose, order, onUpdated }: OrderDrawerProp
       <div className={`fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-[#0f0f18] border-l border-white/[0.08] shadow-2xl flex flex-col transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}>
 
         {/* Header avec Référence & Heure relative avec tooltip */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.07] shrink-0 bg-white/[0.01]">
+        <div className="flex items-center justify-between px-4 py-3.5 sm:px-6 sm:py-4 border-b border-white/[0.07] shrink-0 bg-white/[0.01]">
           <div>
             <div className="flex items-center gap-2">
               <p className="text-xs text-white/40 font-mono tracking-wider">
@@ -378,7 +378,7 @@ export function OrderDrawer({ open, onClose, order, onUpdated }: OrderDrawerProp
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 space-y-5 custom-scrollbar">
 
           {/* Stepper de progression (Point 1) */}
           <section>

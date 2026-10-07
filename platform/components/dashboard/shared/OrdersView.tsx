@@ -403,157 +403,274 @@ export default function OrdersView({ type }: OrdersViewProps) {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/[0.06] text-slate-400 dark:text-white/40 uppercase font-mono tracking-wider text-[10px]">
-                <tr>
-                  {/* Checkbox Tout sélectionner (Point 5) */}
-                  <th className="py-3 px-3 text-center w-9">
-                    <input
-                      type="checkbox"
-                      aria-label="Tout sélectionner"
-                      checked={filtered.length > 0 && selectedIds.size === filtered.length}
-                      onChange={toggleSelectAll}
-                      className="w-4 h-4 rounded border-slate-300 dark:border-white/20 text-accent focus:ring-accent accent-indigo-600 cursor-pointer"
-                    />
-                  </th>
-                  <th className="py-3 px-4">Commande & Client</th>
-                  <th className="py-3 px-4">Téléphone / Wilaya</th>
-                  <th className="py-3 px-4">Date de réception</th>
-                  <th className="py-3 px-4">Statut</th>
-                  <th className="py-3 px-4 text-right">Montant</th>
-                  <th className="py-3 px-4 text-center">Actions rapides</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
-                {filtered.map((order) => {
-                  const isSelected = selectedIds.has(order.id);
-                  const isPending = order.status === "pending";
+          <>
+            {/* 1. Vue Mobile (Cartes optimisées pour smartphone < md) */}
+            <div className="md:hidden divide-y divide-slate-100 dark:divide-white/[0.04]">
+              {filtered.map((order) => {
+                const isSelected = selectedIds.has(order.id);
+                const isPending = order.status === "pending";
 
-                  return (
-                    <tr
-                      key={order.id}
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        setDrawerOpen(true);
-                      }}
-                      className={`transition-colors cursor-pointer group ${
-                        isSelected
-                          ? "bg-indigo-500/[0.06] dark:bg-indigo-500/10"
-                          : "hover:bg-slate-50/80 dark:hover:bg-white/[0.02]"
-                      }`}
-                    >
-                      {/* Checkbox de ligne (Point 5) */}
-                      <td
-                        className="py-3.5 px-3 text-center"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleSelectRow(order.id);
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          aria-label={`Sélectionner commande ${order.id}`}
-                          checked={isSelected}
-                          onChange={() => toggleSelectRow(order.id)}
-                          className="w-4 h-4 rounded border-slate-300 dark:border-white/20 text-accent focus:ring-accent accent-indigo-600 cursor-pointer"
-                        />
-                      </td>
-
-                      {/* Customer & ID */}
-                      <td className="py-3.5 px-4 min-w-[180px]">
-                        <p className="font-bold text-slate-900 dark:text-white group-hover:text-accent transition-colors">
-                          {order.customer_name || "Client sans nom"}
-                        </p>
-                        <p className="font-mono text-[10px] text-slate-400 dark:text-white/40 mt-0.5">
-                          #{order.id.slice(0, 8).toUpperCase()}
-                        </p>
-                      </td>
-
-                      {/* Phone & Wilaya */}
-                      <td className="py-3.5 px-4 min-w-[140px]">
-                        <p className="text-slate-700 dark:text-white/80 font-medium">
-                          {order.customer_phone || "—"}
-                        </p>
-                        <p className="text-[11px] text-slate-400 dark:text-white/40">
-                          {order.wilaya || "Algérie"}
-                        </p>
-                      </td>
-
-                      {/* Date de réception relative avec tooltip au survol (Point 2) */}
-                      <td className="py-3.5 px-4 min-w-[130px]">
+                return (
+                  <div
+                    key={order.id}
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      setDrawerOpen(true);
+                    }}
+                    className={`p-3.5 transition-colors cursor-pointer space-y-2.5 ${
+                      isSelected
+                        ? "bg-indigo-500/[0.06] dark:bg-indigo-500/10"
+                        : "hover:bg-slate-50/80 dark:hover:bg-white/[0.02]"
+                    }`}
+                  >
+                    {/* Ligne du haut : Sélection, Client & Statut */}
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div className="flex items-start gap-2.5 min-w-0">
                         <div
-                          title={`Reçue le ${formatFullDateTime(order.created_at)}`}
-                          className="cursor-help group/date"
+                          className="pt-0.5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSelectRow(order.id);
+                          }}
                         >
-                          <p className="font-semibold text-slate-800 dark:text-white/90 group-hover/date:text-accent transition-colors flex items-center gap-1.5">
-                            <Clock className="w-3 h-3 text-slate-400 dark:text-white/40" />
-                            {timeAgo(order.created_at)}
+                          <input
+                            type="checkbox"
+                            aria-label={`Sélectionner commande ${order.id}`}
+                            checked={isSelected}
+                            onChange={() => toggleSelectRow(order.id)}
+                            className="w-4 h-4 rounded border-slate-300 dark:border-white/20 text-accent focus:ring-accent accent-indigo-600 cursor-pointer"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900 dark:text-white truncate text-xs sm:text-sm">
+                            {order.customer_name || "Client sans nom"}
                           </p>
-                          <p className="text-[10px] text-slate-400 dark:text-white/40 font-mono mt-0.5">
-                            {formatShortDate(order.created_at)}
+                          <p className="font-mono text-[10px] text-slate-400 dark:text-white/40">
+                            #{order.id.slice(0, 8).toUpperCase()}
                           </p>
                         </div>
-                      </td>
+                      </div>
+                      <StatusBadge status={order.status} />
+                    </div>
 
-                      {/* Statut avec Badge coloré (Point 4) */}
-                      <td className="py-3.5 px-4 min-w-[120px]">
-                        <StatusBadge status={order.status} />
-                      </td>
+                    {/* Ligne médiane : Téléphone, Wilaya & Date */}
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-white/60 bg-slate-50/80 dark:bg-white/[0.02] p-2 rounded-xl border border-slate-100 dark:border-white/[0.04]">
+                      <div className="flex items-center gap-1.5 min-w-0 truncate">
+                        {order.customer_phone ? (
+                          <a
+                            href={`tel:${order.customer_phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-accent dark:text-sky font-semibold hover:underline flex items-center gap-1"
+                          >
+                            <Phone className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{order.customer_phone}</span>
+                          </a>
+                        ) : (
+                          <span className="text-[11px]">—</span>
+                        )}
+                        <span className="text-slate-300 dark:text-white/20">•</span>
+                        <span className="truncate font-medium text-slate-700 dark:text-white/80 text-[11px]">
+                          {order.wilaya || "Algérie"}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 dark:text-white/40 shrink-0 font-mono">
+                        {timeAgo(order.created_at)}
+                      </div>
+                    </div>
 
-                      {/* Total Amount */}
-                      <td className="py-3.5 px-4 text-right min-w-[120px]">
+                    {/* Ligne du bas : Montant & Actions rapides */}
+                    <div className="flex items-center justify-between pt-0.5">
+                      <div>
+                        <span className="text-[9px] text-slate-400 dark:text-white/40 uppercase font-mono block">Montant</span>
                         <span className="font-black text-slate-900 dark:text-white text-sm font-mono">
                           {formatAmount(order.total ?? order.total_amount)}
                         </span>
-                      </td>
+                      </div>
 
-                      {/* Action Rapide Ligne par Ligne + Détail (Point 5) */}
-                      <td className="py-3.5 px-4 min-w-[140px]">
-                        <div className="flex items-center justify-center gap-2">
-                          {isPending && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleQuickConfirm(order.id);
-                              }}
-                              disabled={quickUpdatingId === order.id}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all shadow-xs active:scale-95 disabled:opacity-50"
-                              title="Confirmer cette commande directement"
-                            >
-                              {quickUpdatingId === order.id ? (
-                                <span className="w-3 h-3 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                              ) : (
-                                <>
-                                  <Check className="w-3 h-3" />
-                                  <span>Confirmer</span>
-                                </>
-                              )}
-                            </button>
-                          )}
-
+                      <div className="flex items-center gap-2">
+                        {isPending && (
                           <button
                             type="button"
-                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/[0.04] text-slate-500 dark:text-white/50 group-hover:text-accent dark:group-hover:text-white group-hover:bg-accent/10 dark:group-hover:bg-accent/20 transition-colors"
-                            title="Ouvrir le détail de la commande"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuickConfirm(order.id);
+                            }}
+                            disabled={quickUpdatingId === order.id}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all shadow-xs active:scale-95 disabled:opacity-50"
                           >
-                            <ChevronRight className="w-4 h-4" />
+                            {quickUpdatingId === order.id ? (
+                              <span className="w-3 h-3 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <>
+                                <Check className="w-3 h-3" />
+                                <span>Confirmer</span>
+                              </>
+                            )}
                           </button>
+                        )}
+                        <div className="p-1 rounded-lg bg-slate-100 dark:bg-white/[0.04] text-slate-400">
+                          <ChevronRight className="w-4 h-4" />
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 2. Vue Desktop (Table complète visible sur md+) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/[0.06] text-slate-400 dark:text-white/40 uppercase font-mono tracking-wider text-[10px]">
+                  <tr>
+                    {/* Checkbox Tout sélectionner (Point 5) */}
+                    <th className="py-3 px-3 text-center w-9">
+                      <input
+                        type="checkbox"
+                        aria-label="Tout sélectionner"
+                        checked={filtered.length > 0 && selectedIds.size === filtered.length}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4 rounded border-slate-300 dark:border-white/20 text-accent focus:ring-accent accent-indigo-600 cursor-pointer"
+                      />
+                    </th>
+                    <th className="py-3 px-4">Commande & Client</th>
+                    <th className="py-3 px-4">Téléphone / Wilaya</th>
+                    <th className="py-3 px-4">Date de réception</th>
+                    <th className="py-3 px-4">Statut</th>
+                    <th className="py-3 px-4 text-right">Montant</th>
+                    <th className="py-3 px-4 text-center">Actions rapides</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
+                  {filtered.map((order) => {
+                    const isSelected = selectedIds.has(order.id);
+                    const isPending = order.status === "pending";
+
+                    return (
+                      <tr
+                        key={order.id}
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setDrawerOpen(true);
+                        }}
+                        className={`transition-colors cursor-pointer group ${
+                          isSelected
+                            ? "bg-indigo-500/[0.06] dark:bg-indigo-500/10"
+                            : "hover:bg-slate-50/80 dark:hover:bg-white/[0.02]"
+                        }`}
+                      >
+                        {/* Checkbox de ligne (Point 5) */}
+                        <td
+                          className="py-3.5 px-3 text-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSelectRow(order.id);
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            aria-label={`Sélectionner commande ${order.id}`}
+                            checked={isSelected}
+                            onChange={() => toggleSelectRow(order.id)}
+                            className="w-4 h-4 rounded border-slate-300 dark:border-white/20 text-accent focus:ring-accent accent-indigo-600 cursor-pointer"
+                          />
+                        </td>
+
+                        {/* Customer & ID */}
+                        <td className="py-3.5 px-4 min-w-[180px]">
+                          <p className="font-bold text-slate-900 dark:text-white group-hover:text-accent transition-colors">
+                            {order.customer_name || "Client sans nom"}
+                          </p>
+                          <p className="font-mono text-[10px] text-slate-400 dark:text-white/40 mt-0.5">
+                            #{order.id.slice(0, 8).toUpperCase()}
+                          </p>
+                        </td>
+
+                        {/* Phone & Wilaya */}
+                        <td className="py-3.5 px-4 min-w-[140px]">
+                          <p className="text-slate-700 dark:text-white/80 font-medium">
+                            {order.customer_phone || "—"}
+                          </p>
+                          <p className="text-[11px] text-slate-400 dark:text-white/40">
+                            {order.wilaya || "Algérie"}
+                          </p>
+                        </td>
+
+                        {/* Date de réception relative avec tooltip au survol (Point 2) */}
+                        <td className="py-3.5 px-4 min-w-[130px]">
+                          <div
+                            title={`Reçue le ${formatFullDateTime(order.created_at)}`}
+                            className="cursor-help group/date"
+                          >
+                            <p className="font-semibold text-slate-800 dark:text-white/90 group-hover/date:text-accent transition-colors flex items-center gap-1.5">
+                              <Clock className="w-3 h-3 text-slate-400 dark:text-white/40" />
+                              {timeAgo(order.created_at)}
+                            </p>
+                            <p className="text-[10px] text-slate-400 dark:text-white/40 font-mono mt-0.5">
+                              {formatShortDate(order.created_at)}
+                            </p>
+                          </div>
+                        </td>
+
+                        {/* Statut avec Badge coloré (Point 4) */}
+                        <td className="py-3.5 px-4 min-w-[120px]">
+                          <StatusBadge status={order.status} />
+                        </td>
+
+                        {/* Total Amount */}
+                        <td className="py-3.5 px-4 text-right min-w-[120px]">
+                          <span className="font-black text-slate-900 dark:text-white text-sm font-mono">
+                            {formatAmount(order.total ?? order.total_amount)}
+                          </span>
+                        </td>
+
+                        {/* Action Rapide Ligne par Ligne + Détail (Point 5) */}
+                        <td className="py-3.5 px-4 min-w-[140px]">
+                          <div className="flex items-center justify-center gap-2">
+                            {isPending && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuickConfirm(order.id);
+                                }}
+                                disabled={quickUpdatingId === order.id}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all shadow-xs active:scale-95 disabled:opacity-50"
+                                title="Confirmer cette commande directement"
+                              >
+                                {quickUpdatingId === order.id ? (
+                                  <span className="w-3 h-3 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <>
+                                    <Check className="w-3 h-3" />
+                                    <span>Confirmer</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/[0.04] text-slate-500 dark:text-white/50 group-hover:text-accent dark:group-hover:text-white group-hover:bg-accent/10 dark:group-hover:bg-accent/20 transition-colors"
+                              title="Ouvrir le détail de la commande"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
       {/* Barre d'action groupée flottante (Point 5) */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3.5 bg-slate-900/95 dark:bg-[#121324]/95 text-white px-5 py-3 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center justify-between gap-3 bg-slate-900/95 dark:bg-[#121324]/95 text-white px-4 py-3 sm:px-5 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 w-[calc(100%-2rem)] max-w-md">
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold text-xs">
               {selectedIds.size}
