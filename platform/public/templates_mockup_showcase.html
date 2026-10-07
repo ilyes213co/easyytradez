@@ -3,22 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EasyTrade — Maquettes des 20 Nouveaux Templates (Boutique & Funnel)</title>
+  <title>EasyTrade - Maquettes des 20 Nouveaux Templates (Anti-Slop Taste Skill)</title>
   
-  <!-- Google Fonts used by the 20 templates -->
+  <!-- Google Fonts: Calibrated pairings according to Taste-Skill directives -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Bebas+Neue&family=Bodoni+Moda:ital,wght@0,600;0,800;1,400&family=Chakra+Petch:wght@600;700&family=Cinzel:wght@600;800&family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@500;700&family=Exo+2:wght@600;800&family=Fredoka:wght@600;700&family=Inter:wght@400;500;600;700;800&family=Italiana&family=Marcellus&family=Mulish:wght@500;700&family=Orbitron:wght@700;900&family=Outfit:wght@500;700;800;900&family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Poppins:wght@500;600;700&family=Prata&family=Quicksand:wght@600;700&family=Rajdhani:wght@600;700&family=Rubik:wght@600;800&family=Space+Grotesk:wght@600;700&family=Space+Mono:wght@700&family=Syne:wght@700;800&family=Teko:wght@600;700&family=Tenor+Sans&family=Urbanist:wght@600;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg: #070814;
-      --surface: #0f1225;
+      --bg: #090a14;
+      --surface: #101224;
       --surface-border: rgba(255, 255, 255, 0.08);
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --accent: #2540ea;
-      --accent-glow: rgba(37, 64, 234, 0.4);
+      --accent-glow: rgba(37, 64, 234, 0.35);
     }
     html.light {
       --bg: #f8fafc;
@@ -27,12 +27,12 @@
       --text: #0f172a;
       --text-muted: #64748b;
       --accent: #2540ea;
-      --accent-glow: rgba(37, 64, 234, 0.2);
+      --accent-glow: rgba(37, 64, 234, 0.15);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
@@ -45,37 +45,42 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(15, 18, 37, 0.85);
-      backdrop-filter: blur(16px);
+      background: rgba(16, 18, 36, 0.9);
+      backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--surface-border);
-      padding: 16px 24px;
+      padding: 14px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
     }
-    html.light .topbar { background: rgba(255, 255, 255, 0.9); }
+    html.light .topbar { background: rgba(255, 255, 255, 0.92); }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       font-weight: 900;
-      font-size: 1.25rem;
-      letter-spacing: -0.5px;
+      font-size: 1.15rem;
+      letter-spacing: -0.3px;
     }
-    .brand-logo {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #2540ea, #60a5fa);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 16px;
-      box-shadow: 0 4px 14px var(--accent-glow);
+    .brand-svg {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      color: var(--accent);
     }
+    .skill-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(37, 64, 234, 0.15);
+      border: 1px solid rgba(37, 64, 234, 0.3);
+      color: #93c5fd;
+      font-family: monospace;
+      font-weight: 700;
+    }
+    html.light .skill-badge { color: #2540ea; }
 
     .top-actions {
       display: flex;
@@ -86,10 +91,10 @@
       background: var(--surface);
       border: 1px solid var(--surface-border);
       color: var(--text);
-      padding: 8px 14px;
-      border-radius: 12px;
+      padding: 7px 14px;
+      border-radius: 10px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -102,38 +107,39 @@
     .hero {
       max-width: 1300px;
       margin: 0 auto;
-      padding: 48px 24px 32px;
+      padding: 40px 24px 28px;
       text-align: center;
     }
-    .hero-badge {
+    .hero-eyebrow {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      background: rgba(37, 64, 234, 0.12);
-      border: 1px solid rgba(37, 64, 234, 0.3);
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(37, 64, 234, 0.1);
+      border: 1px solid rgba(37, 64, 234, 0.25);
       color: #60a5fa;
       border-radius: 999px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.5px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
+      text-transform: uppercase;
     }
-    html.light .hero-badge { color: #2540ea; }
+    html.light .hero-eyebrow { color: #2540ea; }
     .hero h1 {
-      font-size: clamp(2rem, 4vw, 3rem);
+      font-size: clamp(1.8rem, 3.5vw, 2.75rem);
       font-weight: 900;
-      letter-spacing: -1px;
-      margin-bottom: 12px;
+      letter-spacing: -0.8px;
+      margin-bottom: 10px;
       background: linear-gradient(135deg, var(--text) 40%, #60a5fa 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
     .hero p {
       color: var(--text-muted);
-      font-size: 1.05rem;
-      max-width: 700px;
-      margin: 0 auto 32px;
+      font-size: 0.98rem;
+      max-width: 720px;
+      margin: 0 auto 28px;
     }
 
     /* Filter tabs */
@@ -142,12 +148,12 @@
       background: var(--surface);
       border: 1px solid var(--surface-border);
       padding: 4px;
-      border-radius: 16px;
-      gap: 6px;
+      border-radius: 14px;
+      gap: 4px;
     }
     .filter-tab {
-      padding: 10px 20px;
-      border-radius: 12px;
+      padding: 8px 18px;
+      border-radius: 10px;
       font-size: 13px;
       font-weight: 700;
       border: none;
@@ -162,44 +168,43 @@
       box-shadow: 0 4px 14px var(--accent-glow);
     }
 
-    /* Templates Grid */
+    /* Catalog Grid */
     .catalog {
       max-width: 1300px;
       margin: 0 auto;
       padding: 24px;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(370px, 1fr));
       gap: 28px;
     }
 
-    /* Template Card */
+    /* Card */
     .card {
       background: var(--surface);
       border: 1px solid var(--surface-border);
-      border-radius: 24px;
+      border-radius: 22px;
       overflow: hidden;
       display: flex;
-      flex-col: column;
       flex-direction: column;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
       transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
       position: relative;
     }
     .card:hover {
       transform: translateY(-4px);
-      border-color: rgba(37, 64, 234, 0.4);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+      border-color: rgba(37, 64, 234, 0.45);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
     }
 
     .card-header {
-      padding: 18px 20px 14px;
+      padding: 16px 20px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--surface-border);
     }
     .card-title-group h3 {
-      font-size: 1.15rem;
+      font-size: 1.12rem;
       font-weight: 900;
       letter-spacing: -0.3px;
     }
@@ -209,155 +214,178 @@
       font-weight: 600;
     }
     .scope-pill {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      padding: 3px 9px;
+      border-radius: 6px;
+      letter-spacing: 0.3px;
     }
     .scope-boutique {
-      background: rgba(14, 165, 233, 0.15);
+      background: rgba(14, 165, 233, 0.12);
       color: #38bdf8;
-      border: 1px solid rgba(14, 165, 233, 0.3);
+      border: 1px solid rgba(14, 165, 233, 0.25);
     }
     .scope-funnel {
-      background: rgba(245, 158, 11, 0.15);
+      background: rgba(245, 158, 11, 0.12);
       color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.3);
+      border: 1px solid rgba(245, 158, 11, 0.25);
     }
 
-    /* Realistic Mini Mockup Canvas */
+    /* Mockup Canvas Container */
     .mockup-canvas {
-      padding: 16px;
+      padding: 14px;
       border-bottom: 1px solid var(--surface-border);
-      transition: background 0.2s;
     }
     .mockup-frame {
-      border-radius: 16px;
+      border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
       border: 1px solid;
       display: flex;
       flex-direction: column;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
     }
 
-    /* Mini Mock Header */
+    /* Mock Nav */
     .mock-nav {
       padding: 8px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid;
-      font-size: 10px;
+      font-size: 10.5px;
       font-weight: 700;
     }
     .mock-nav-links {
       display: flex;
-      gap: 8px;
-      opacity: 0.6;
+      gap: 10px;
+      font-size: 9.5px;
+      opacity: 0.7;
     }
 
-    /* Mini Mock Hero */
-    .mock-hero {
-      padding: 16px 12px;
-      text-align: left;
+    /* Mock Content Area */
+    .mock-content {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-    .mock-badge {
-      display: inline-block;
+
+    /* Image Banner with Badge */
+    .mock-img-banner {
+      width: 100%;
+      height: 120px;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .mock-badge-tag {
+      position: absolute;
+      top: 8px;
+      left: 8px;
       font-size: 9px;
       font-weight: 800;
-      padding: 2px 7px;
-      border-radius: 4px;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-    }
-    .mock-heading {
-      font-size: 14px;
-      line-height: 1.25;
-      font-weight: 800;
-      margin-bottom: 4px;
-    }
-    .mock-sub {
-      font-size: 10px;
-      opacity: 0.7;
-      margin-bottom: 10px;
-      line-height: 1.35;
+      padding: 3px 8px;
+      border-radius: 5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
     }
 
-    /* Mini Mock Product / Offer */
-    .mock-product-row {
-      display: flex;
-      gap: 10px;
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      align-items: center;
-    }
-    .mock-product-img {
-      width: 44px;
-      height: 44px;
-      border-radius: 8px;
-      background: rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-    .mock-product-info {
-      flex: 1;
-      min-width: 0;
-    }
-    .mock-product-name {
-      font-size: 11px;
+    /* Headings */
+    .mock-h4 {
+      font-size: 13.5px;
+      line-height: 1.25;
       font-weight: 800;
+    }
+    .mock-copy {
+      font-size: 10px;
+      line-height: 1.4;
+      opacity: 0.75;
+    }
+
+    /* Product or Bundle Element */
+    .mock-product-box {
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid;
+      gap: 8px;
+    }
+    .mock-p-title {
+      font-size: 10.5px;
+      font-weight: 700;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      max-width: 170px;
     }
-    .mock-product-price {
-      font-size: 12px;
+    .mock-p-price {
+      font-size: 11.5px;
       font-weight: 900;
-      margin-top: 2px;
+      white-space: nowrap;
     }
-    .mock-was-price {
-      font-size: 9px;
+    .mock-p-was {
+      font-size: 8.5px;
       text-decoration: line-through;
       opacity: 0.5;
-      margin-left: 4px;
+      margin-left: 3px;
     }
 
-    /* Mock CTA */
-    .mock-cta {
-      display: block;
+    /* Bundle Selector for Funnels */
+    .mock-bundle-options {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .mock-bundle-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 9.5px;
+      border: 1px solid;
+    }
+    .mock-bundle-selected {
+      border-width: 1.5px;
+      font-weight: 700;
+    }
+
+    /* CTA Button */
+    .mock-btn {
       width: 100%;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 11px;
+      padding: 7px 12px;
+      border-radius: 7px;
+      font-size: 10.5px;
       font-weight: 800;
       text-align: center;
       border: none;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      letter-spacing: 0.2px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+      transition: opacity 0.15s;
     }
-    .mock-guarantee {
-      margin-top: 6px;
-      font-size: 9px;
-      text-align: center;
-      opacity: 0.7;
+    .mock-btn:hover { opacity: 0.92; }
+
+    /* Trust Footer */
+    .mock-trust {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 8px;
+      font-size: 8.5px;
+      opacity: 0.7;
     }
 
     /* Card Details Footer */
     .card-footer {
-      padding: 16px 20px;
+      padding: 14px 20px 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       flex: 1;
       justify-content: space-between;
     }
@@ -370,34 +398,32 @@
     }
     .fonts-tag {
       font-family: monospace;
-      font-size: 10.5px;
+      font-size: 10px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--surface-border);
-      padding: 3px 8px;
-      border-radius: 6px;
+      padding: 2px 7px;
+      border-radius: 5px;
       color: var(--text-muted);
     }
     html.light .fonts-tag { background: #f1f5f9; }
 
-    /* Swatches */
     .swatches {
       display: flex;
       align-items: center;
       gap: 5px;
     }
     .swatch {
-      width: 16px;
-      height: 16px;
+      width: 15px;
+      height: 15px;
       border-radius: 999px;
       border: 1px solid rgba(0, 0, 0, 0.25);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       cursor: pointer;
       position: relative;
     }
     .swatch:hover::after {
       content: attr(data-hex);
       position: absolute;
-      bottom: 22px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       background: #000;
@@ -410,50 +436,9 @@
     }
 
     .card-desc {
-      font-size: 11.5px;
+      font-size: 11px;
       color: var(--text-muted);
       line-height: 1.45;
-    }
-
-    /* Modal for Fullscreen Mockup */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(8px);
-      z-index: 999;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal-content {
-      background: var(--surface);
-      border: 1px solid var(--surface-border);
-      border-radius: 24px;
-      max-width: 900px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      padding: 28px;
-      position: relative;
-    }
-    .modal-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      color: var(--text);
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
   </style>
 </head>
@@ -462,33 +447,36 @@
   <!-- Top bar -->
   <header class="topbar">
     <div class="brand">
-      <div class="brand-logo">⚡</div>
-      <span>EasyTrade <span style="font-weight: 400; opacity: 0.6;">· Design System</span></span>
+      <svg class="brand-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      </svg>
+      <span>EasyTrade</span>
+      <span class="skill-badge">ANTI-SLOP TASTE SKILL v2</span>
     </div>
 
     <div class="top-actions">
       <button class="theme-btn" onclick="toggleTheme()">
-        <span id="theme-icon">🌙</span> <span id="theme-label">Mode Clair</span>
+        <span id="theme-icon" style="display: flex; align-items: center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span> <span id="theme-label">Mode Clair</span>
       </button>
     </div>
   </header>
 
   <!-- Hero Header -->
   <section class="hero">
-    <div class="hero-badge">🎨 CATALOGUE DES 20 NOUVEAUX TEMPLATES</div>
-    <h1>Aperçu & Maquettes des Thèmes</h1>
-    <p>10 Thèmes conçus pour les Boutiques Multi-produits & Rayons + 10 Thèmes pour les Funnels de Vente Directe COD. Chacun possède sa typographie, ses contrastes calibrés et sa palette unique.</p>
+    <div class="hero-eyebrow">Design Read : 20 Directions Visuelles Non-Clichées</div>
+    <h1>Catalogue des Nouveaux Templates</h1>
+    <p>Chaque template applique les règles strictes anti-slop : vraies photographies de catalogue, typographies de caractère, palettes calibrées avec zéro gradient IA cliché, et structures adaptées au commerce COD en Algérie.</p>
 
     <div class="filter-tabs">
       <button class="filter-tab active" onclick="filterTemplates('all', this)">Tous (20)</button>
-      <button class="filter-tab" onclick="filterTemplates('boutique', this)">🏬 Boutiques (10)</button>
-      <button class="filter-tab" onclick="filterTemplates('funnel', this)">🎯 Funnels COD (10)</button>
+      <button class="filter-tab" onclick="filterTemplates('boutique', this)">Boutiques Multi-Produits (10)</button>
+      <button class="filter-tab" onclick="filterTemplates('funnel', this)">Funnels Vente COD (10)</button>
     </div>
   </section>
 
   <!-- Catalog Grid -->
   <main class="catalog" id="templates-grid">
-    <!-- Populated by JavaScript below -->
+    <!-- Populated by JavaScript -->
   </main>
 
   <script>
@@ -499,13 +487,13 @@
         name: "ATLAS MINIMAL",
         scope: "boutique",
         category: "Mode & Prêt-à-porter",
-        badge: "Collection Intemporelle",
+        badge: "Permanent Collection",
         headline: "L'élégance du minimalisme, coupée pour durer.",
-        sub: "Vestiaires essentiels en lin et coton d'exception, design scandinave épuré.",
+        sub: "Vestiaire intemporel en lin lavé et coton peigné lourd.",
         fonts: "Playfair Display & Inter",
         headingFont: "'Playfair Display', serif",
         bodyFont: "'Inter', sans-serif",
-        demoEmoji: "👔",
+        image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80",
         demoProduct: "Chemise Lin Tunisien Écru",
         demoPrice: "6 400 DA",
         demoWasPrice: "8 900 DA",
@@ -519,24 +507,24 @@
           accentSoft: "#f4f4f5",
           border: "#e4e4e7"
         },
-        desc: "Style éditorial de magazine de mode. Grand espace blanc respirant, photos soignées et typographie serif noble."
+        desc: "Direction éditoriale épurée. Pas d'artifice, grand espace respirant et typographie haute couture."
       },
       {
         id: "kasbah-heritage",
         name: "KASBAH HERITAGE",
         scope: "boutique",
-        category: "Artisanat & Terroir 🇩🇿",
-        badge: "Fait Main en Algérie",
-        headline: "L'art ancestral algérien livré chez vous.",
-        sub: "Tapis berbères de Ghardaïa, poteries artisanales et bijoux kabyles en argent pur.",
+        category: "Artisanat d'Art & Terroir",
+        badge: "Artisanat Fait Main",
+        headline: "L'art ancestral algérien directement chez vous.",
+        sub: "Poteries de Sejnane, tapis berbères noués main et argenterie kabyle.",
         fonts: "Cinzel & Plus Jakarta Sans",
         headingFont: "'Cinzel', serif",
         bodyFont: "'Plus Jakarta Sans', sans-serif",
-        demoEmoji: "🏺",
-        demoProduct: "Vase Terre Cuite Sejnane",
+        image: "https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Vase Céramique Cuite Ocre",
         demoPrice: "4 800 DA",
         demoWasPrice: "6 500 DA",
-        ctaText: "Explorer l'artisanat",
+        ctaText: "Explorer le catalogue",
         colors: {
           bg: "#f7f3ee",
           surface: "#ffffff",
@@ -546,24 +534,24 @@
           accentSoft: "#fbeee6",
           border: "#e7ded5"
         },
-        desc: "Chaleur de la terre cuite et du sable d'Algérie. Parfait pour les créateurs locaux, artisans et trésors du patrimoine."
+        desc: "Chaleur de la terre cuite et texture minérale. Conçu pour honorer le patrimoine d'Algérie."
       },
       {
         id: "sahara-noir",
         name: "SAHARA NOIR",
         scope: "boutique",
-        category: "Haute Parfumerie & Luxe",
+        category: "Haute Parfumerie & Horlogerie",
         badge: "Édition Prestige",
         headline: "Des essences rares, un sillage inoubliable.",
-        sub: "Extraits de parfum aux bois d'oud, ambre gris et maroquinerie prestige numérotée.",
+        sub: "Oud précieux du Cambodge, ambre gris et maroquinerie pleine fleur numérotée.",
         fonts: "Cormorant Garamond & Outfit",
         headingFont: "'Cormorant Garamond', serif",
         bodyFont: "'Outfit', sans-serif",
-        demoEmoji: "✨",
+        image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80",
         demoProduct: "Extrait de Parfum Oud Royal 100ml",
         demoPrice: "18 500 DA",
         demoWasPrice: "24 000 DA",
-        ctaText: "Commander le coffret",
+        ctaText: "Commander le flacon",
         colors: {
           bg: "#0b0c10",
           surface: "#13151b",
@@ -573,7 +561,7 @@
           accentSoft: "rgba(212, 175, 55, 0.15)",
           border: "#2a2e3d"
         },
-        desc: "Dark luxury impérial. Noir velouté profond et or champagne brossé pour marques de haute renommée."
+        desc: "Dark luxury souverain. Noir obsidienne profond et or champagne brossé sans éclat clinquant."
       },
       {
         id: "medina-beauty",
@@ -582,11 +570,11 @@
         category: "Cosmétique & Soins Bio",
         badge: "100% Ingrédients Végétaux",
         headline: "Le meilleur de la botanique pour votre peau.",
-        sub: "Sérums purs à la figue de barbarie, huiles d'argan et rituels de beauté naturels.",
+        sub: "Sérums purs à la figue de barbarie, huiles d'argan et hydrolats frais.",
         fonts: "Marcellus & DM Sans",
         headingFont: "'Marcellus', serif",
         bodyFont: "'DM Sans', sans-serif",
-        demoEmoji: "🌿",
+        image: "https://images.unsplash.com/photo-1608248597359-21b6d2133271?auto=format&fit=crop&w=600&q=80",
         demoProduct: "Élixir Figue de Barbarie 30ml",
         demoPrice: "3 900 DA",
         demoWasPrice: "5 200 DA",
@@ -600,21 +588,21 @@
           accentSoft: "#e8f5e9",
           border: "#eedcd4"
         },
-        desc: "Clean aesthetic apaisante. Nuances de vert sauge bio et rose opalin soyeux pour les soins et cosmétiques."
+        desc: "Esthétique botanique apaisante. Vert sauge herboriste et rose poudré soyeux."
       },
       {
         id: "cyber-tech",
         name: "CYBER DZ TECH",
         scope: "boutique",
-        category: "Gaming & High-Tech",
+        category: "Gaming & Composants PC",
         badge: "Garantie 12 Mois & Testé",
-        headline: "La tech de pointe livrée en 24h chrono.",
-        sub: "Composants PC Gamer, smartphones nouvelle génération, casques audio lossless et consoles.",
+        headline: "La haute performance livrée en 24h.",
+        sub: "Cartes graphiques, casques haute fidélité et périphériques mécaniques pour joueurs exigeants.",
         fonts: "Orbitron & Space Grotesk",
         headingFont: "'Orbitron', sans-serif",
         bodyFont: "'Space Grotesk', sans-serif",
-        demoEmoji: "🎧",
-        demoProduct: "Casque Spatial 7.1 RGB Pro",
+        image: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Casque Audio Spatial Pro 7.1",
         demoPrice: "11 900 DA",
         demoWasPrice: "16 500 DA",
         ctaText: "Voir les configurations",
@@ -627,24 +615,24 @@
           accentSoft: "rgba(0, 229, 255, 0.15)",
           border: "#1e2646"
         },
-        desc: "Atmosphère futuriste cyberpunk. Bleu nuit spatial et cyan laser néon taillé pour l'informatique et le gaming."
+        desc: "Ambiance technique tranchante. Bleu spatial et cyan laser précis pour l'informatique."
       },
       {
         id: "babeled-street",
         name: "BAB EL STREET",
         scope: "boutique",
         category: "Streetwear & Sneakers",
-        badge: "Drop Limité 50 Ex.",
-        headline: "Style brut. Fait pour ceux qui osent.",
-        sub: "Hoodies oversize 450 GSM, t-shirts graphiques sérigraphiés et sneakers rares.",
+        badge: "Drop 50 Pièces Seules",
+        headline: "Coupe brute. Pensé pour la rue.",
+        sub: "Hoodies boxy 480 GSM, t-shirts sérigraphiés épais et accessoires utilitaires.",
         fonts: "Syne & Archivo",
         headingFont: "'Syne', sans-serif",
         bodyFont: "'Archivo', sans-serif",
-        demoEmoji: "👟",
+        image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=600&q=80",
         demoProduct: "Hoodie Boxy Casbah Heavyweight",
         demoPrice: "7 200 DA",
         demoWasPrice: "9 500 DA",
-        ctaText: "Shopper le Drop",
+        ctaText: "Acheter le Drop",
         colors: {
           bg: "#f4f4f0",
           surface: "#ffffff",
@@ -654,24 +642,24 @@
           accentSoft: "#ffe600",
           border: "#0a0a0a"
         },
-        desc: "Néo-brutalisme percutant. Typographie extra-heavy, bordures nettes et orange flamme pour les marques urbaines."
+        desc: "Néo-brutalisme sans filtre. Typographie monumentale, bordures noires denses et orange signalétique."
       },
       {
         id: "yalla-kids",
         name: "YALLA KIDS",
         scope: "boutique",
-        category: "Bébé, Jouets & Éveil",
-        badge: "Approuvé par les Mamans",
-        headline: "Le confort et l'éveil pour vos trésors.",
-        sub: "Jeux Montessori en bois naturel, vêtements tout doux en coton peigné et puériculture.",
+        category: "Bébé, Jouets & Montessori",
+        badge: "Approuvé par les Pédiatres",
+        headline: "Le confort et l'éveil pour vos petits.",
+        sub: "Jouets éducatifs en bois certifié, gigoteuses respirantes et indispensables naissance.",
         fonts: "Fredoka & Quicksand",
         headingFont: "'Fredoka', cursive",
         bodyFont: "'Quicksand', sans-serif",
-        demoEmoji: "🧸",
-        demoProduct: "Tour d'Éveil Montessori Bois",
+        image: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Tour d'Éveil Évolutive en Bois",
         demoPrice: "8 900 DA",
         demoWasPrice: "12 000 DA",
-        ctaText: "Découvrir pour bébé",
+        ctaText: "Découvrir la sélection",
         colors: {
           bg: "#fefcf6",
           surface: "#ffffff",
@@ -681,24 +669,24 @@
           accentSoft: "#fef3c7",
           border: "#fde68a"
         },
-        desc: "Douceur, sécurité et formes tout en rondeur. Tons miel doré ambré et crème rassurant pour les familles."
+        desc: "Courbes douces et rassurance familiale. Teintes miel ambré et vanille apaisante."
       },
       {
         id: "dar-deco",
         name: "DAR DECO",
         scope: "boutique",
-        category: "Maison & Ameublement",
-        badge: "Nouveautés Saison",
-        headline: "Un intérieur harmonieux et apaisant.",
-        sub: "Luminaires scandinaves, vaisselle céramique faite main et textiles de lin lavé.",
+        category: "Maison & Céramique",
+        badge: "Nouvelle Collection",
+        headline: "Un intérieur harmonieux et organique.",
+        sub: "Luminaires wabi-sabi, vaisselle d'atelier artisanale et textiles de lin brut.",
         fonts: "Tenor Sans & Mulish",
         headingFont: "'Tenor Sans', sans-serif",
         bodyFont: "'Mulish', sans-serif",
-        demoEmoji: "🛋️",
+        image: "https://images.unsplash.com/photo-1579656381226-5fc0f0100c3b?auto=format&fit=crop&w=600&q=80",
         demoProduct: "Lampe de Table Céramique Ocre",
         demoPrice: "5 700 DA",
         demoWasPrice: "7 800 DA",
-        ctaText: "Aménager ma pièce",
+        ctaText: "Sublimer mon salon",
         colors: {
           bg: "#f5f4ef",
           surface: "#ffffff",
@@ -708,24 +696,24 @@
           accentSoft: "#e8e6df",
           border: "#ded9cf"
         },
-        desc: "Esprit méditerranéen wabi-sabi. Chaux naturelle et vert olive pour les amoureux de déco intérieure chaleureuse."
+        desc: "Inspiration méditerranéenne wabi-sabi. Enduit de chaux naturelle et vert olive végétal."
       },
       {
         id: "titan-sport",
         name: "TITAN SPORT",
         scope: "boutique",
-        category: "Fitness & Nutrition",
-        badge: "Performance Maximale",
-        headline: "Dépassez vos records à chaque séance.",
-        sub: "Whey isolate pure, tenues de compression respirantes et accessoires de musculation.",
+        category: "Fitness & Nutrition Athlétique",
+        badge: "Pureté Testée en Labo",
+        headline: "Dépassez vos limites à chaque série.",
+        sub: "Protéines isolat natives, vêtements de compression sans coutures et équipement de force.",
         fonts: "Teko & Barlow Condensed",
         headingFont: "'Teko', sans-serif",
         bodyFont: "'Barlow Condensed', sans-serif",
-        demoEmoji: "⚡",
-        demoProduct: "Whey Isolate Native 2kg Choco",
+        image: "https://images.unsplash.com/photo-1584863265045-f9d10ca7fa61?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Whey Isolate Native 2kg",
         demoPrice: "13 500 DA",
         demoWasPrice: "17 000 DA",
-        ctaText: "Booster mes gains",
+        ctaText: "Commander mon pack",
         colors: {
           bg: "#0e1015",
           surface: "#161922",
@@ -735,24 +723,24 @@
           accentSoft: "rgba(204, 255, 0, 0.15)",
           border: "#242938"
         },
-        desc: "Énergie pure et motivation. Noir carbone mat et jaune volt ultra-puissant pour marques de sport et compléments."
+        desc: "Graphisme athlétique sans compromis. Noir carbone et jaune volt haute visibilité."
       },
       {
         id: "gourmet-el-bahia",
         name: "GOURMET EL BAHIA",
         scope: "boutique",
-        category: "Épicerie Fine & Délices",
-        badge: "Récolte d'Exception",
-        headline: "Les trésors gourmands d'Algérie.",
-        sub: "Dattes Deglet Nour de Tolga royales, miels sauvages de cèdre et huiles d'olive médaillées.",
+        category: "Épicerie Fine & Récoltes Rares",
+        badge: "Terroir 100% Certifié",
+        headline: "Les joyaux gustatifs d'Algérie.",
+        sub: "Dattes Deglet Nour de Tolga première cueillette, miels de cèdre et huiles médaillées.",
         fonts: "Bodoni Moda & Spectral",
         headingFont: "'Bodoni Moda', serif",
         bodyFont: "'Spectral', serif",
-        demoEmoji: "🍯",
-        demoProduct: "Coffret Dattes Fourrées Prestige 1kg",
+        image: "https://images.unsplash.com/photo-1509358271058-acd22cc93898?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Dattes Fourrées Tolga Prestige 1kg",
         demoPrice: "4 200 DA",
         demoWasPrice: "5 500 DA",
-        ctaText: "Commander les délices",
+        ctaText: "Découvrir les récoltes",
         colors: {
           bg: "#fcf9f2",
           surface: "#ffffff",
@@ -762,7 +750,7 @@
           accentSoft: "#fef08a",
           border: "#e6dfd1"
         },
-        desc: "Gastronomie raffinée. Ivoire vanille et vert émeraude forêt royal pour l'agroalimentaire premium et les cadeaux."
+        desc: "Souveraineté gastronomique. Ivoire lin noble et vert émeraude des oasis."
       },
 
       // ──────────────── FUNNELS COD (10) ────────────────
@@ -770,15 +758,15 @@
         id: "flash-convert",
         name: "FLASH-CONVERT",
         scope: "funnel",
-        category: "Gadgets Viraux & TikTok",
-        badge: "Offre Flash 48H",
+        category: "Gadgets Viraux & Utilitaires",
+        badge: "Offre Spéciale 48H",
         headline: "La solution efficace que tout le monde s'arrache.",
-        sub: "Résolvez vos corvées quotidiennes en 2 minutes. Plus de 2 500 clients satisfaits en Algérie.",
+        sub: "Résout vos tracas du quotidien en quelques secondes. Plus de 2 500 utilisateurs en Algérie.",
         fonts: "Rubik & Inter",
         headingFont: "'Rubik', sans-serif",
         bodyFont: "'Inter', sans-serif",
-        demoEmoji: "🚀",
-        demoProduct: "Aspirateur Sans Fil Cyclonique Voiture",
+        image: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Aspirateur Cyclonique Portable Voiture",
         demoPrice: "3 900 DA",
         demoWasPrice: "6 500 DA",
         ctaText: "COMMANDER - PAIEMENT À LA LIVRAISON",
@@ -791,20 +779,22 @@
           accentSoft: "#eff6ff",
           border: "#e2e8f0"
         },
-        desc: "Conversion directe ultra-agressive. Formulaire COD 1-clic direct sous le hero, compte à rebours et badges Wilayas."
+        isBundle: true,
+        bundleOption: "Pack 2 Appareils : 6 500 DA (-20%)",
+        desc: "Architecture COD taillée pour TikTok Ads. Formulaire express, pack dégressif et réassurance."
       },
       {
         id: "velvet-elixir",
         name: "VELVET ELIXIR",
         scope: "funnel",
-        category: "Sérum & Soin Anti-Âge",
-        badge: "98% Satisfaction Clinique",
-        headline: "Retrouvez une peau lisse et éclatante.",
-        sub: "Formule concentrée enrichie en peptides et acide hyaluronique. Résultats visibles dès 7 jours.",
+        category: "Sérum Anti-Imperfections",
+        badge: "98% Satisfaction Testée",
+        headline: "Retrouvez un teint net et rayonnant dès 7 jours.",
+        sub: "Formulation concentrée en acide hyaluronique pur et peptides régénérants.",
         fonts: "Prata & Plus Jakarta Sans",
         headingFont: "'Prata', serif",
         bodyFont: "'Plus Jakarta Sans', sans-serif",
-        demoEmoji: "💧",
+        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=600&q=80",
         demoProduct: "Sérum Rajeunissant Bio-Actif 30ml",
         demoPrice: "4 400 DA",
         demoWasPrice: "7 200 DA",
@@ -818,24 +808,26 @@
           accentSoft: "#fae8e0",
           border: "#ebdcd0"
         },
-        desc: "Dermatologie de luxe. Slider avant/après interactif, témoignages photos et rassurance médicale pour soins star."
+        isBundle: true,
+        bundleOption: "Duo Flacons : 7 500 DA (-25% + Livraison Gratuite)",
+        desc: "Cosméceutique haut de gamme. Avis cliniques vérifiés et formulation en gros plan."
       },
       {
         id: "hydra-pulse",
         name: "HYDRA-PULSE",
         scope: "funnel",
-        category: "Santé, Dos & Kiné",
-        badge: "Recommandé par les Kinés",
-        headline: "Éliminez vos douleurs musculaires en 5 min.",
-        sub: "Thérapie par percussion profonde à 3200 tours/min. Idéal pour dos, nuque et jambes lourdes.",
+        category: "Soulagement Musculaire & Kiné",
+        badge: "Recommandé par les Praticiens",
+        headline: "Dénouez vos tensions musculaires en 5 minutes.",
+        sub: "Percussion profonde 3 200 tr/min. Soulagement ciblé pour le dos, les trapèzes et les jambes.",
         fonts: "Chakra Petch & Inter",
         headingFont: "'Chakra Petch', sans-serif",
         bodyFont: "'Inter', sans-serif",
-        demoEmoji: "🩺",
-        demoProduct: "Pistolet de Massage Thérapeutique Pro",
+        image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Pistolet Thérapeutique Haute Fréquence",
         demoPrice: "6 900 DA",
         demoWasPrice: "11 000 DA",
-        ctaText: "COMMANDER AVEC REMISE -35%",
+        ctaText: "PROFITER DE LA REMISE -35%",
         colors: {
           bg: "#0b0f19",
           surface: "#111827",
@@ -845,21 +837,23 @@
           accentSoft: "rgba(2, 132, 199, 0.15)",
           border: "#1f2937"
         },
-        desc: "Technologie santé & bien-être. Vues éclatées du mécanisme, démos d'utilisation et packs 1 pièce vs 2 pièces."
+        isBundle: true,
+        bundleOption: "Pack Complet + 6 Embouts : 8 500 DA",
+        desc: "Rassurance technologique médicale. Schémas d'impact et sélecteur de pack clair."
       },
       {
         id: "solar-pro",
         name: "SOLAR PRO",
         scope: "funnel",
-        category: "Énergie & Sécurité Maison",
+        category: "Éclairage Solaire & Sécurité",
         badge: "0 DA sur votre Facture",
-        headline: "Éclairez votre cour et villa sans fil.",
-        sub: "Projecteur LED solaire 200W avec détecteur de mouvement. Batterie lithium 12 heures autonomie.",
+        headline: "Éclairez votre extérieur sans fil ni câble.",
+        sub: "Projecteur solaire 200W avec cellule photovoltaïque haute capacité et détecteur crépusculaire.",
         fonts: "Rajdhani & Roboto",
         headingFont: "'Rajdhani', sans-serif",
         bodyFont: "'Roboto', sans-serif",
-        demoEmoji: "☀️",
-        demoProduct: "Projecteur Solaire 200W + Télécommande",
+        image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Projecteur Solaire 200W Télécommandé",
         demoPrice: "7 800 DA",
         demoWasPrice: "12 500 DA",
         ctaText: "COMMANDER LE PACK SOLAIRE",
@@ -872,21 +866,23 @@
           accentSoft: "rgba(245, 158, 11, 0.15)",
           border: "#334155"
         },
-        desc: "Robustesse et preuves techniques. Démonstrations vidéo de nuit, rassurance étanchéité IP67 et garantie 2 ans."
+        isBundle: true,
+        bundleOption: "Pack Villa (2 Projecteurs) : 13 900 DA",
+        desc: "Efficacité pratique et preuves de puissance lumineuse. Teintes industrielles fiables."
       },
       {
         id: "bloc-brutal",
         name: "BLOC BRUTAL",
         scope: "funnel",
-        category: "Tactique & Survie",
-        badge: "Norme Militaire IP68",
+        category: "Tactique & Baroudeur",
+        badge: "Norme Militaire Certifiée",
         headline: "Indestructible. Conçue pour l'extrême.",
-        sub: "Boîtier en titane blindé résistant aux chocs, étanche 50 mètres avec autonomie 21 jours.",
+        sub: "Boîtier renforcé en titane et verre saphir. Étanche 50 mètres et résistante aux chocs thermiques.",
         fonts: "Bebas Neue & Space Mono",
         headingFont: "'Bebas Neue', sans-serif",
         bodyFont: "'Space Mono', monospace",
-        demoEmoji: "🛡️",
-        demoProduct: "Montre Tactique Commando Sahara",
+        image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Montre Commando Tactique Saharienne",
         demoPrice: "8 400 DA",
         demoWasPrice: "13 000 DA",
         ctaText: "COMMANDER AVANT RUPTURE",
@@ -899,21 +895,23 @@
           accentSoft: "#d9d3c5",
           border: "#111111"
         },
-        desc: "Brutalisme industriel sans fioriture. Bordures épaisses, typographie d'affiche et crash-tests vidéo."
+        isBundle: true,
+        bundleOption: "Avec 2 Bracelets Tactiques Offerts",
+        desc: "Graphisme brut militaire sans fard. Lignes dures, typographie pochoir et crash-tests."
       },
       {
         id: "aurora-silk",
         name: "AURORA SILK",
         scope: "funnel",
-        category: "Épilation & Beauté Féminine",
-        badge: "Résultat Salon à Domicile",
-        headline: "Dites adieu aux poils sans douleur.",
-        sub: "Technologie lumière pulsée IPL dernière génération. 999 900 flashs avec capteur de peau sécurisé.",
+        category: "Épilation Lumière Pulsée",
+        badge: "Résultats Institut à Domicile",
+        headline: "Une peau douce et soyeuse sans douleur.",
+        sub: "Flashs de précision IPL sécurisés. Réduction de 92% de la repousse en 8 séances.",
         fonts: "Italiana & Urbanist",
         headingFont: "'Italiana', serif",
         bodyFont: "'Urbanist', sans-serif",
-        demoEmoji: "🌸",
-        demoProduct: "Épilateur Laser IPL Aurora Glow",
+        image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Épilateur IPL Compact Pro Glow",
         demoPrice: "9 500 DA",
         demoWasPrice: "15 000 DA",
         ctaText: "RECEVOIR MON APPAREIL (COD)",
@@ -926,20 +924,22 @@
           accentSoft: "#fae8ff",
           border: "#f3e8ff"
         },
-        desc: "Douceur et élégance féminine. Lilas nacré, comparatif des économies réalisées vs instituts et avis vidéo."
+        isBundle: true,
+        bundleOption: "Appareil + Lunettes UV + Tondeuse Précision",
+        desc: "Douceur nacrée lilas. Mise en valeur des économies réalisées par rapport aux salons."
       },
       {
         id: "kitchen-hero",
         name: "KITCHEN HERO",
         scope: "funnel",
-        category: "Cuisine & Électroménager",
-        badge: "Gain de Temps x10",
-        headline: "Cuisinez vos plats et gâteaux en 1 clin d'œil.",
-        sub: "Hachoir express multifonctions 3L inox. Viandes, oignons, amandes et sauces prêts en 6 secondes.",
+        category: "Robot Cuisine & Pâtisserie",
+        badge: "Gain de Temps Multiplié par 10",
+        headline: "Préparez vos plats et pâtes en quelques secondes.",
+        sub: "Hachoir multifonction 3L en acier inoxydable. Idéal pour viandes, amandes, légumes et sauces.",
         fonts: "Outfit & Poppins",
         headingFont: "'Outfit', sans-serif",
         bodyFont: "'Poppins', sans-serif",
-        demoEmoji: "🍲",
+        image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80",
         demoProduct: "Hachoir Express Multifonction 3L Inox",
         demoPrice: "4 600 DA",
         demoWasPrice: "7 000 DA",
@@ -953,21 +953,23 @@
           accentSoft: "#ffe4e6",
           border: "#fecdd3"
         },
-        desc: "Chaleur de la cuisine algérienne. Recettes rapides en vidéo, avis WhatsApp enthousiastes et kit lames offert."
+        isBundle: true,
+        bundleOption: "Pack Duo Couteaux Titane Offert",
+        desc: "Générosité culinaire. Avis de mamans algériennes, démonstrations concrètes de hachage express."
       },
       {
         id: "royal-oud",
         name: "ROYAL OUD",
         scope: "funnel",
         category: "Parfum Unique & Coffret Cadeau",
-        badge: "Coffret Cadeau Offert",
-        headline: "Le parfum qui attire les compliments.",
-        sub: "Flaconnage lourd 100ml avec fiole de voyage concentrée offerte. Tenue garantie plus de 24h sur vos vêtements.",
+        badge: "Coffret Prestige Offert",
+        headline: "Une présence magnétique et raffinée.",
+        sub: "Flaconnage massif 100ml avec fiole de voyage concentrée. Tenue certifiée 24h sur les textiles.",
         fonts: "Cinzel & Lora",
         headingFont: "'Cinzel', serif",
         bodyFont: "'Lora', serif",
-        demoEmoji: "👑",
-        demoProduct: "Coffret Prestige Oud Al Sultan 100ml",
+        image: "https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Coffret Oud Al Sultan 100ml + Fiole",
         demoPrice: "5 900 DA",
         demoWasPrice: "9 500 DA",
         ctaText: "RÉSERVER MON COFFRET CADEAU",
@@ -980,24 +982,26 @@
           accentSoft: "rgba(197, 155, 39, 0.15)",
           border: "#2d2b1f"
         },
-        desc: "Magnificence orientale. Flacon sur piédestal marbré, pyramide olfactive détaillée et boîte rigide luxe."
+        isBundle: true,
+        bundleOption: "2 Coffrets (Pour Couple) : 9 900 DA",
+        desc: "Mise en scène statutaire. Flacon sur piédestal et rassurance de sillage longue durée."
       },
       {
         id: "car-shield",
         name: "CAR AUTO-SHIELD",
         scope: "funnel",
-        category: "Auto & Sécurité Conduite",
-        badge: "Compatible 100% Voitures",
-        headline: "Roulez protégé avec la dashcam 4K.",
-        sub: "Double caméra avant/arrière avec vision nocturne infrarouge et capteur G-sensor anti-choc.",
+        category: "Sécurité & Conduite Automobile",
+        badge: "Compatible Toutes Voitures",
+        headline: "Roulez en toute sérénité avec la dashcam 4K.",
+        sub: "Enregistrement en boucle continu avant et arrière avec capteur nocturne Sony et vision grand angle.",
         fonts: "Exo 2 & Inter",
         headingFont: "'Exo 2', sans-serif",
         bodyFont: "'Inter', sans-serif",
-        demoEmoji: "🚗",
-        demoProduct: "Dashcam 4K Ultra Night Vision + Carte 64Go",
+        image: "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Dashcam 4K Ultra Night + Carte 64Go",
         demoPrice: "8 200 DA",
         demoWasPrice: "12 900 DA",
-        ctaText: "COMMANDER MON PACK DASHCAM",
+        ctaText: "COMMANDER MON PACK AUTO",
         colors: {
           bg: "#0d1117",
           surface: "#161b22",
@@ -1007,21 +1011,23 @@
           accentSoft: "rgba(239, 68, 68, 0.15)",
           border: "#30363d"
         },
-        desc: "Rassurance automobile masculine. Preuves vidéo de jour et de nuit, installation simple en 5 minutes allume-cigare."
+        isBundle: true,
+        bundleOption: "Avec Carte Mémoire 64Go Ultra Offerte",
+        desc: "Rassurance automobile. Preuves vidéo de jour et de nuit, montage express 5 minutes."
       },
       {
         id: "zenith-sleep",
         name: "ZENITH SLEEP",
         scope: "funnel",
-        category: "Sommeil & Ergonomie",
+        category: "Sommeil & Soulagement Cervical",
         badge: "30 Nuits d'Essai COD",
-        headline: "Fini les réveils avec un mal de cou.",
-        sub: "Oreiller ergonomique à mémoire de forme haute densité. Aligne parfaitement les cervicales pendant le sommeil.",
+        headline: "Réveillez-vous enfin sans raideur au cou.",
+        sub: "Mousse à mémoire de forme haute résilience. Maintien anatomique parfait de la colonne vertébrale.",
         fonts: "Cabinet Grotesk & Satoshi",
         headingFont: "'Cabinet Grotesk', sans-serif",
         bodyFont: "'Satoshi', sans-serif",
-        demoEmoji: "🌙",
-        demoProduct: "Oreiller Cervical Thérapeutique CloudRest",
+        image: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Oreiller Ergonomique Cervical CloudRest",
         demoPrice: "4 900 DA",
         demoWasPrice: "7 900 DA",
         ctaText: "TESTER PENDANT 30 NUITS (COD)",
@@ -1034,7 +1040,9 @@
           accentSoft: "#eef2ff",
           border: "#e0e7ff"
         },
-        desc: "Apaisement et ergonomie médicale. Schémas vertébraux explicatifs, rassurance housse lavable et garantie 30 nuits."
+        isBundle: true,
+        bundleOption: "Pack Duo Pour Lit Double : 8 500 DA",
+        desc: "Apaisement ergonomique. Explication du soulagement des disques cervicaux et garantie d'essai."
       }
     ];
 
@@ -1054,7 +1062,7 @@
               <span class="card-category">#${index + 1} · ${t.category}</span>
               <h3>${t.name}</h3>
             </div>
-            <span class="scope-pill scope-${t.scope}">${t.scope === 'boutique' ? '🏬 Boutique' : '🎯 Funnel COD'}</span>
+            <span class="scope-pill scope-${t.scope}">${t.scope === 'boutique' ? 'Boutique' : 'Funnel COD'}</span>
           </div>
 
           <!-- Realistic Mini Canvas Mockup -->
@@ -1070,32 +1078,43 @@
                 </div>
               </div>
 
-              <!-- Mini Hero -->
-              <div class="mock-hero">
-                <span class="mock-badge" style="background: ${t.colors.accentSoft}; color: ${t.colors.accent}; border: 1px solid ${t.colors.border};">
-                  ${t.badge}
-                </span>
-                <h4 class="mock-heading" style="font-family: ${t.headingFont};">${t.headline}</h4>
-                <p class="mock-sub">${t.sub}</p>
-
-                <!-- Product Box -->
-                <div class="mock-product-row" style="background: ${t.colors.bg}; border: 1px solid ${t.colors.border};">
-                  <div class="mock-product-img">${t.demoEmoji}</div>
-                  <div class="mock-product-info">
-                    <p class="mock-product-name">${t.demoProduct}</p>
-                    <p class="mock-product-price" style="color: ${t.colors.accent};">
-                      ${t.demoPrice}
-                      <span class="mock-was-price">${t.demoWasPrice}</span>
-                    </p>
-                  </div>
+              <!-- Mini Content -->
+              <div class="mock-content">
+                <!-- Real curated image banner -->
+                <div class="mock-img-banner" style="background-image: url('${t.image}');">
+                  <span class="mock-badge-tag" style="background: ${t.colors.accent}; color: ${t.colors.accentText};">
+                    ${t.badge}
+                  </span>
                 </div>
 
+                <h4 class="mock-h4" style="font-family: ${t.headingFont};">${t.headline}</h4>
+                <p class="mock-copy">${t.sub}</p>
+
+                <!-- Product Box -->
+                <div class="mock-product-box" style="background: ${t.colors.bg}; border-color: ${t.colors.border};">
+                  <span class="mock-p-title">${t.demoProduct}</span>
+                  <span class="mock-p-price" style="color: ${t.colors.accent};">
+                    ${t.demoPrice}
+                    <span class="mock-p-was">${t.demoWasPrice}</span>
+                  </span>
+                </div>
+
+                ${t.isBundle ? `
+                  <div class="mock-bundle-options">
+                    <div class="mock-bundle-item mock-bundle-selected" style="background: ${t.colors.accentSoft}; border-color: ${t.colors.accent};">
+                      <span>${t.bundleOption}</span>
+                      <span style="color: ${t.colors.accent}; font-weight: 800;">✓ Sélectionné</span>
+                    </div>
+                  </div>
+                ` : ''}
+
                 <!-- CTA Button -->
-                <button class="mock-cta" style="background: ${t.colors.accent}; color: ${t.colors.accentText};">
+                <button class="mock-btn" style="background: ${t.colors.accent}; color: ${t.colors.accentText};">
                   ${t.ctaText}
                 </button>
-                <div class="mock-guarantee">
-                  <span>🚚 Livraison 58 Wilayas</span> · <span>💵 Paiement Cash à la Livraison</span>
+
+                <div class="mock-trust">
+                  <span>Livraison 58 Wilayas</span> · <span>Paiement Cash à la Livraison</span>
                 </div>
               </div>
             </div>
@@ -1106,7 +1125,7 @@
             <p class="card-desc">${t.desc}</p>
 
             <div class="card-meta-row">
-              <span class="fonts-tag">🔤 ${t.fonts}</span>
+              <span class="fonts-tag">${t.fonts}</span>
               <div class="swatches">
                 <div class="swatch" style="background: ${t.colors.bg};" data-hex="Fond: ${t.colors.bg}"></div>
                 <div class="swatch" style="background: ${t.colors.surface};" data-hex="Surface: ${t.colors.surface}"></div>
@@ -1129,7 +1148,12 @@
     function toggleTheme() {
       const isDark = document.documentElement.classList.toggle('dark');
       document.documentElement.classList.toggle('light', !isDark);
-      document.getElementById('theme-icon').textContent = isDark ? '🌙' : '☀️';
+      const iconSpan = document.getElementById('theme-icon');
+      if (isDark) {
+        iconSpan.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+      } else {
+        iconSpan.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+      }
       document.getElementById('theme-label').textContent = isDark ? 'Mode Clair' : 'Mode Sombre';
     }
 
