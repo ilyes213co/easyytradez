@@ -41,6 +41,15 @@ export async function PATCH(
     delete body.id;
     delete body.store_id;
 
+    if (body.name && !body.slug) {
+      body.slug = body.name
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
     if (body.images && Array.isArray(body.images)) {
       body.images = body.images.map((img: any, idx: number) => {
         if (typeof img === "string") {
