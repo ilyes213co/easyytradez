@@ -40,7 +40,7 @@ const BOUTIQUE_ITEMS: NavItemConfig[] = [
   { label: "Commandes",    href: "/dashboard/boutique/orders",   icon: Package },
   { label: "Produits",     href: "/dashboard/boutique/products", icon: Tag },
   { label: "Leads",        href: "/dashboard/team",              icon: Users },
-  { label: "Boutique",     href: "/dashboard/boutique",          icon: Store, badge: "Beta", exact: true },
+  { label: "Boutique",     href: "/dashboard/boutique",          icon: Store, exact: true },
   { label: "Analytiques",  href: "/dashboard/analytics?section=boutique", icon: BarChart2 },
 ];
 
