@@ -3,1316 +3,1212 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EasyTrade - Refonte Dashboard & Flow de Création (Taste-Skill & Anti-Slop)</title>
+  <title>EasyTrade - Refonte Dashboard & Flow de Création (Style Stripe & Linear)</title>
 
-  <!-- Typography: Syne (Display) + Plus Jakarta Sans (Interface) + JetBrains Mono (Numbers/Metrics) -->
+  <!-- Typography: Inter + Geist + JetBrains Mono (Linear / Stripe Signature) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
+    /* ──────────────── LINEAR & STRIPE DESIGN TOKENS ──────────────── */
     :root {
-      --bg: #090a14;
-      --bg-subtle: #0e101f;
-      --surface: #121427;
-      --surface-elevated: #181a33;
+      /* Dark mode: Deep refined zinc / graphite (Linear aesthetic) */
+      --bg-base: #09090b;
+      --bg-subtle: #0f1015;
+      --surface: #14151d;
+      --surface-elevated: #1a1c27;
+      --surface-hover: #1f2230;
       --border: rgba(255, 255, 255, 0.08);
+      --border-subtle: rgba(255, 255, 255, 0.05);
       --border-strong: rgba(255, 255, 255, 0.16);
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent: #2563eb;
-      --accent-soft: rgba(37, 99, 235, 0.14);
-      --accent-hover: #1d4ed8;
+      --text-primary: #f4f4f6;
+      --text-secondary: #8b8d98;
+      --text-tertiary: #5e606e;
+      --accent: #5e6ad2; /* Linear signature indigo */
+      --accent-hover: #6b77df;
+      --accent-soft: rgba(94, 106, 210, 0.14);
+      --accent-border: rgba(94, 106, 210, 0.35);
+      --accent-text: #ffffff;
       --success: #10b981;
-      --success-soft: rgba(16, 185, 129, 0.14);
+      --success-soft: rgba(16, 185, 129, 0.12);
       --warning: #f59e0b;
-      --warning-soft: rgba(245, 158, 11, 0.14);
-      --danger: #ef4444;
-      --danger-soft: rgba(239, 68, 68, 0.14);
-      --font-display: 'Syne', sans-serif;
-      --font-sans: 'Plus Jakarta Sans', sans-serif;
+      --warning-soft: rgba(245, 158, 11, 0.12);
+      --danger: #f43f5e;
+      --danger-soft: rgba(244, 63, 94, 0.12);
+      --font-sans: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
+      --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 12px 24px -10px rgba(0, 0, 0, 0.5);
     }
 
     html.light {
-      --bg: #f8fafc;
-      --bg-subtle: #f1f5f9;
+      /* Light mode: Clean, crisp, neutral (Stripe dashboard aesthetic) */
+      --bg-base: #fafafa;
+      --bg-subtle: #f4f4f5;
       --surface: #ffffff;
-      --surface-elevated: #f8fafc;
-      --border: #e2e8f0;
-      --border-strong: #cbd5e1;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --accent: #2563eb;
-      --accent-soft: rgba(37, 99, 235, 0.08);
-      --accent-hover: #1d4ed8;
+      --surface-elevated: #ffffff;
+      --surface-hover: #f4f4f6;
+      --border: #e4e4e7;
+      --border-subtle: #f0f0f2;
+      --border-strong: #d4d4d8;
+      --text-primary: #09090b;
+      --text-secondary: #71717a;
+      --text-tertiary: #a1a1aa;
+      --accent: #5e6ad2;
+      --accent-hover: #4f5bbf;
+      --accent-soft: rgba(94, 106, 210, 0.08);
+      --accent-border: rgba(94, 106, 210, 0.25);
+      --accent-text: #ffffff;
       --success: #059669;
-      --success-soft: rgba(5, 150, 105, 0.1);
+      --success-soft: rgba(5, 150, 105, 0.08);
       --warning: #d97706;
-      --warning-soft: rgba(217, 119, 6, 0.1);
-      --danger: #dc2626;
-      --danger-soft: rgba(220, 38, 38, 0.1);
+      --warning-soft: rgba(217, 119, 6, 0.08);
+      --danger: #e11d48;
+      --danger-soft: rgba(225, 29, 72, 0.08);
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 16px -4px rgba(0, 0, 0, 0.04);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: var(--font-sans);
-      background: var(--bg);
-      color: var(--text);
+      background: var(--bg-base);
+      color: var(--text-primary);
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
-      transition: background 0.25s, color 0.25s;
+      transition: background 0.2s, color 0.2s;
     }
 
-    /* Top presentation control bar */
-    .showcase-bar {
+    /* Top Control Bar */
+    .top-controls {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(18, 20, 39, 0.95);
-      backdrop-filter: blur(16px);
+      background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 12px 24px;
+      padding: 10px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
       flex-wrap: wrap;
     }
-    html.light .showcase-bar { background: rgba(255, 255, 255, 0.95); }
 
-    .brand-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .brand-title {
-      font-family: var(--font-display);
-      font-size: 1.15rem;
-      font-weight: 900;
-      letter-spacing: -0.3px;
-    }
-    .badge-protocol {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      font-weight: 700;
-      background: var(--accent-soft);
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      padding: 2px 8px;
-      border-radius: 6px;
-      letter-spacing: 0.3px;
-    }
-
-    .view-selectors {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--bg);
-      padding: 4px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-    }
-    .view-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      padding: 7px 14px;
-      border-radius: 7px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-    .view-btn.active {
-      background: var(--accent);
-      color: #ffffff;
-    }
-
-    .tools-group {
+    .brand-cluster {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .action-pill {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 7px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-    .action-pill:hover { border-color: var(--accent); }
-
-    /* App Shell Container */
-    .app-viewport {
-      max-width: 1440px;
-      margin: 0 auto;
-      padding: 24px;
-      min-height: calc(100vh - 65px);
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    /* Sub-header navigation within Dashboard views */
-    .app-layout {
-      display: grid;
-      grid-template-columns: 240px 1fr;
-      gap: 24px;
-      align-items: start;
-    }
-    @media (max-width: 1024px) {
-      .app-layout { grid-template-columns: 1fr; }
-    }
-
-    /* Redesigned Sidebar */
-    .sidebar-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      position: sticky;
-      top: 80px;
-    }
-    @media (max-width: 1024px) {
-      .sidebar-panel { display: none; }
-    }
-
-    .sidebar-switch-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4px;
-      background: var(--bg);
-      padding: 3px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-    }
-    .switch-tab {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      padding: 8px;
+    .brand-mark {
+      width: 26px;
+      height: 26px;
       border-radius: 7px;
-      font-size: 11.5px;
-      font-weight: 800;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
-    }
-    .switch-tab.active {
       background: var(--accent);
       color: #fff;
-    }
-
-    .store-active-card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .store-info-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .store-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: var(--accent-soft);
-      color: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 900;
-      font-size: 13px;
-    }
-    .store-title {
-      font-size: 13px;
       font-weight: 800;
-      line-height: 1.2;
+      font-size: 13px;
     }
-    .store-type {
-      font-size: 10.5px;
-      color: var(--text-muted);
+    .brand-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+    .badge-style-pill {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      color: var(--accent);
+    }
+
+    .view-switcher-bar {
       display: flex;
       align-items: center;
       gap: 4px;
-    }
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: var(--success);
-    }
-
-    .nav-list {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      list-style: none;
-    }
-    .nav-link {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 12px;
-      border-radius: 10px;
-      color: var(--text-muted);
-      font-size: 12.5px;
-      font-weight: 700;
-      text-decoration: none;
-      transition: all 0.15s;
-      cursor: pointer;
-    }
-    .nav-link:hover {
-      background: var(--bg);
-      color: var(--text);
-    }
-    .nav-link.active {
-      background: var(--accent-soft);
-      color: var(--accent);
-      border: 1px solid rgba(37, 99, 235, 0.25);
-    }
-    .nav-badge-count {
-      margin-left: auto;
-      font-family: var(--font-mono);
-      font-size: 10.5px;
-      font-weight: 800;
-      padding: 1px 6px;
-      border-radius: 5px;
-      background: var(--surface-elevated);
-      color: var(--text-muted);
-    }
-
-    /* Main Area */
-    .main-canvas {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    /* Top Bar in Dashboard */
-    .dashboard-topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .page-heading h1 {
-      font-family: var(--font-display);
-      font-size: 1.7rem;
-      font-weight: 900;
-      letter-spacing: -0.5px;
-    }
-    .page-heading p {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .top-actions-cluster {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .date-filter-pill {
-      background: var(--surface);
+      background: var(--bg-subtle);
+      padding: 3px;
+      border-radius: 8px;
       border: 1px solid var(--border);
-      color: var(--text);
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 12.5px;
-      font-weight: 700;
+    }
+    .view-tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .view-tab-btn.active {
+      background: var(--surface);
+      color: var(--text-primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .tools-cluster {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .btn-create-primary {
-      background: var(--accent);
-      color: #ffffff;
-      border: none;
-      padding: 9px 18px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 800;
+    .btn-tool {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 7px;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
-      transition: transform 0.15s, opacity 0.15s;
+      gap: 6px;
+      transition: all 0.15s;
     }
-    .btn-create-primary:hover {
-      transform: translateY(-1px);
-      opacity: 0.95;
-    }
+    .btn-tool:hover { border-color: var(--border-strong); }
 
-    /* Cockpit Metrics Grid (Non-identical Cards - Anti-Slop Directive) */
-    .metrics-cockpit-grid {
-      display: grid;
-      grid-template-columns: 1.6fr 1fr 1fr 1fr;
-      gap: 16px;
-    }
-    @media (max-width: 1200px) {
-      .metrics-cockpit-grid { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 640px) {
-      .metrics-cockpit-grid { grid-template-columns: 1fr; }
-    }
-
-    .metric-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 20px;
+    /* Main Container */
+    .viewport-wrapper {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 24px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      position: relative;
-      overflow: hidden;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-    .metric-card:hover {
-      border-color: var(--border-strong);
-      transform: translateY(-2px);
-    }
-    .metric-card.hero-metric {
-      background: linear-gradient(145deg, var(--surface) 0%, var(--bg-subtle) 100%);
-      border-color: rgba(37, 99, 235, 0.3);
+      gap: 24px;
     }
 
-    .metric-label-row {
+    /* Layout: Sidebar + Cockpit */
+    .app-frame {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 980px) {
+      .app-frame { grid-template-columns: 1fr; }
+    }
+
+    /* ─── SIDEBAR (Linear Style) ─── */
+    .sidebar-linear {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: sticky;
+      top: 68px;
+    }
+    @media (max-width: 980px) { .sidebar-linear { display: none; } }
+
+    .segmented-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--bg-subtle);
+      padding: 2px;
+      border-radius: 7px;
+      border: 1px solid var(--border-subtle);
+    }
+    .segmented-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      padding: 6px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .segmented-btn.active {
+      background: var(--surface);
+      color: var(--text-primary);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    .store-badge-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 8px;
+      cursor: pointer;
     }
-    .metric-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-    }
-    .metric-tag-indicator {
-      font-family: var(--font-mono);
-      font-size: 11px;
+    .store-badge-name {
+      font-size: 12px;
       font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 6px;
+      line-height: 1.2;
+    }
+    .store-badge-type {
+      font-size: 10px;
+      color: var(--text-secondary);
       display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .pulse-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--success);
+    }
+
+    .nav-group-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-tertiary);
+      padding: 0 8px;
+      margin-bottom: 4px;
+    }
+    .nav-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      list-style: none;
+    }
+    .nav-item-btn {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 9px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .nav-item-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+    .nav-item-btn.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .nav-counter {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: var(--border);
+      color: var(--text-secondary);
+    }
+
+    /* ─── COCKPIT (Linear / Stripe Hybrid) ─── */
+    .cockpit-canvas {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .cockpit-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .header-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-bottom: 4px;
+    }
+    .header-title {
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+    }
+    .header-desc {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .header-actions-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-period-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 7px 12px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary-action {
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 7px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+    .btn-primary-action:hover { background: var(--accent-hover); }
+
+    /* ─── METRICS STRIP (Stripe Style) ─── */
+    .stripe-metrics-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 1100px) { .stripe-metrics-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .stripe-metrics-grid { grid-template-columns: 1fr; } }
+
+    .card-metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .card-metric:hover {
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-card);
+    }
+    .card-metric.highlight {
+      border-color: var(--accent-border);
+    }
+
+    .metric-top-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .metric-title-txt {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+    }
+    .delta-badge {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      display: inline-flex;
       align-items: center;
       gap: 3px;
     }
-    .metric-tag-indicator.positive {
-      background: var(--success-soft);
-      color: var(--success);
-    }
-    .metric-tag-indicator.neutral {
-      background: var(--surface-elevated);
-      color: var(--text-muted);
-    }
+    .delta-positive { background: var(--success-soft); color: var(--success); }
+    .delta-neutral { background: var(--border-subtle); color: var(--text-secondary); }
 
-    .metric-value-huge {
+    .metric-number-big {
       font-family: var(--font-mono);
-      font-size: 2.1rem;
-      font-weight: 800;
-      letter-spacing: -1px;
-      margin: 14px 0 6px;
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      line-height: 1.1;
     }
-    .metric-sub-detail {
-      font-size: 11.5px;
-      color: var(--text-muted);
+    .metric-footnote {
+      font-size: 11px;
+      color: var(--text-secondary);
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
     }
 
-    /* Live Activity & Orders Table */
-    .dashboard-split-content {
+    /* ─── DATA TABLE & WIDGETS (Stripe Cleanliness) ─── */
+    .dashboard-lower-grid {
       display: grid;
       grid-template-columns: 2fr 1fr;
-      gap: 20px;
-    }
-    @media (max-width: 1100px) {
-      .dashboard-split-content { grid-template-columns: 1fr; }
-    }
-
-    .content-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 22px;
-      display: flex;
-      flex-direction: column;
       gap: 16px;
     }
-    .box-header {
+    @media (max-width: 1024px) { .dashboard-lower-grid { grid-template-columns: 1fr; } }
+
+    .panel-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-box-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
     }
-    .box-title-group h3 {
-      font-size: 1.05rem;
-      font-weight: 800;
+    .panel-heading-text h3 {
+      font-size: 13.5px;
+      font-weight: 700;
       letter-spacing: -0.2px;
     }
-    .box-title-group p {
-      font-size: 12px;
-      color: var(--text-muted);
+    .panel-heading-text p {
+      font-size: 11px;
+      color: var(--text-secondary);
     }
 
-    /* Orders List Feed */
-    .orders-feed {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    /* Stripe Clean Table */
+    .table-container {
+      overflow-x: auto;
     }
-    .order-feed-row {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      transition: border-color 0.15s;
-    }
-    .order-feed-row:hover {
-      border-color: var(--accent);
-    }
-    .order-meta-left {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-    .order-id-badge {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      font-weight: 800;
-      color: var(--accent);
-      background: var(--accent-soft);
-      padding: 4px 8px;
-      border-radius: 6px;
-    }
-    .order-buyer-name {
-      font-size: 13px;
-      font-weight: 800;
-    }
-    .order-buyer-wilaya {
-      font-size: 11.5px;
-      color: var(--text-muted);
-    }
-
-    .order-product-snippet {
+    .stripe-table {
+      width: 100%;
+      border-collapse: collapse;
       font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
+      text-align: left;
     }
-    .order-price-bold {
-      font-family: var(--font-mono);
-      font-size: 14px;
-      font-weight: 800;
-      text-align: right;
-    }
-    .order-status-pill {
+    .stripe-table th {
+      background: var(--bg-subtle);
+      padding: 10px 16px;
       font-size: 10.5px;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 6px;
-      letter-spacing: 0.3px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
-    .status-confirmed { background: var(--success-soft); color: var(--success); }
-    .status-pending { background: var(--warning-soft); color: var(--warning); }
-    .status-delivering { background: var(--accent-soft); color: var(--accent); }
+    .stripe-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    .stripe-table tr:hover td {
+      background: var(--surface-hover);
+    }
 
-    /* Wilaya Analytics Widget */
-    .wilaya-list {
+    .order-code {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .client-name { font-weight: 600; }
+    .client-loc { font-size: 10.5px; color: var(--text-secondary); }
+    .amount-cell {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 12.5px;
+    }
+
+    .badge-status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .badge-confirmed { background: var(--success-soft); color: var(--success); }
+    .badge-pending { background: var(--warning-soft); color: var(--warning); }
+    .badge-delivering { background: var(--accent-soft); color: var(--accent); }
+
+    /* Wilayas Widget */
+    .wilaya-widget-body {
+      padding: 16px 18px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
-    .wilaya-item {
+    .wilaya-row {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
     }
-    .wilaya-info-row {
+    .wilaya-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 11.5px;
+      font-weight: 600;
     }
-    .wilaya-progress-track {
-      height: 6px;
+    .wilaya-pct { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
+    .wilaya-track {
+      height: 4px;
+      background: var(--bg-subtle);
       border-radius: 999px;
-      background: var(--bg);
       overflow: hidden;
-      border: 1px solid var(--border);
     }
-    .wilaya-progress-bar {
+    .wilaya-fill {
       height: 100%;
       background: var(--accent);
       border-radius: 999px;
     }
 
-    /* Store Management Cards */
-    .stores-catalog-row {
+    /* ─── STORES / FUNNELS LIST ─── */
+    .stores-card-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
+      gap: 14px;
+      padding: 16px 18px;
     }
-    .store-card {
-      background: var(--surface);
+    .store-linear-card {
+      background: var(--bg-subtle);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
+      border-radius: 8px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      transition: transform 0.2s, border-color 0.2s;
+      gap: 12px;
+      transition: all 0.15s;
     }
-    .store-card:hover {
-      transform: translateY(-2px);
+    .store-linear-card:hover {
       border-color: var(--border-strong);
+      background: var(--surface);
     }
-    .store-card-header {
+    .store-head-row {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 10px;
     }
-    .store-card-meta {
+    .store-head-left {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .store-card-title {
-      font-size: 14.5px;
-      font-weight: 800;
+    .store-icon-tile {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 12px;
     }
-    .store-card-url {
-      font-size: 11px;
-      color: var(--accent);
+    .store-card-name { font-size: 13px; font-weight: 700; }
+    .store-card-link {
       font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--accent);
       text-decoration: none;
     }
-    .store-card-stats {
+
+    .store-kpi-row {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 8px;
-      background: var(--bg);
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      text-align: center;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
     }
-    .stat-mini-label {
+    .kpi-sub-label {
       font-size: 9.5px;
-      color: var(--text-muted);
+      color: var(--text-secondary);
       text-transform: uppercase;
-      font-weight: 700;
+      font-weight: 600;
     }
-    .stat-mini-val {
+    .kpi-sub-val {
       font-family: var(--font-mono);
-      font-size: 13px;
-      font-weight: 800;
-      margin-top: 2px;
-    }
-
-    .store-card-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: auto;
-    }
-    .btn-action-outline {
-      flex: 1;
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 7px 10px;
-      border-radius: 8px;
-      font-size: 11.5px;
+      font-size: 12.5px;
       font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      transition: all 0.15s;
-    }
-    .btn-action-outline:hover {
-      border-color: var(--accent);
-      color: var(--accent);
+      margin-top: 1px;
     }
 
-    /* ──────────────── WIZARD REDESIGN SECTION ──────────────── */
-    .wizard-shell {
+    /* ─── LINEAR STYLE CREATE FLOW (WIZARD) ─── */
+    .wizard-linear-view {
       display: none;
-      flex-direction: column;
-      gap: 24px;
-    }
-    .wizard-shell.active {
-      display: flex;
-    }
-
-    .wizard-container {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 36px;
-      max-width: 980px;
+      max-width: 840px;
       margin: 0 auto;
       width: 100%;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+    }
+    .wizard-linear-view.active { display: block; }
+
+    .wizard-card-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: var(--shadow-card);
     }
 
-    /* Stepper Bar */
-    .stepper-header {
+    .wizard-stepper-line {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      position: relative;
-      margin-bottom: 36px;
-      padding-bottom: 24px;
+      gap: 8px;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
       border-bottom: 1px solid var(--border);
     }
-    .stepper-step {
+    .step-pill-indicator {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-tertiary);
       cursor: pointer;
     }
-    .step-number {
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      background: var(--bg);
-      border: 2px solid var(--border);
-      color: var(--text-muted);
+    .step-dot-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 800;
-      transition: all 0.2s;
+      font-size: 11px;
+      font-weight: 700;
     }
-    .stepper-step.active .step-number {
+    .step-pill-indicator.active {
+      color: var(--text-primary);
+    }
+    .step-pill-indicator.active .step-dot-num {
       background: var(--accent);
       border-color: var(--accent);
       color: #fff;
     }
-    .stepper-step.completed .step-number {
-      background: var(--success);
+    .step-pill-indicator.done {
+      color: var(--success);
+    }
+    .step-pill-indicator.done .step-dot-num {
+      background: var(--success-soft);
       border-color: var(--success);
-      color: #fff;
-    }
-    .step-text-title {
-      font-size: 13px;
-      font-weight: 800;
-    }
-    .step-text-sub {
-      font-size: 10.5px;
-      color: var(--text-muted);
+      color: var(--success);
     }
 
-    /* Form Fields Grid */
-    .wizard-step-body {
+    .wizard-form-body {
       display: none;
       flex-direction: column;
-      gap: 24px;
-    }
-    .wizard-step-body.active {
-      display: flex;
-    }
-
-    .form-grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
       gap: 20px;
     }
-    @media (max-width: 680px) {
-      .form-grid-2 { grid-template-columns: 1fr; }
-    }
+    .wizard-form-body.active { display: flex; }
 
-    .form-field {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .form-label {
-      font-size: 12px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      color: var(--text);
-    }
-    .form-input-text, .form-select-box {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-      color: var(--text);
-      font-size: 13.5px;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .form-input-text:focus, .form-select-box:focus {
-      border-color: var(--accent);
-    }
-
-    /* Template Cards in Wizard Step 2 */
-    .template-selection-grid {
+    .field-pair {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: 1fr 1fr;
       gap: 16px;
-      margin-top: 10px;
     }
-    .tpl-card-choice {
-      background: var(--bg);
-      border: 2px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-      cursor: pointer;
-      position: relative;
-      transition: all 0.2s;
-    }
-    .tpl-card-choice:hover {
-      border-color: var(--border-strong);
-      transform: translateY(-2px);
-    }
-    .tpl-card-choice.selected {
-      border-color: var(--accent);
-      box-shadow: 0 8px 24px var(--accent-soft);
-    }
-    .tpl-card-img {
-      height: 140px;
-      background-size: cover;
-      background-position: center;
-      position: relative;
-    }
-    .tpl-badge-float {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      font-size: 9.5px;
-      font-weight: 800;
-      background: rgba(0, 0, 0, 0.75);
-      color: #fff;
-      padding: 3px 8px;
-      border-radius: 5px;
-      backdrop-filter: blur(8px);
-    }
-    .tpl-card-body {
-      padding: 14px;
+    @media (max-width: 640px) { .field-pair { grid-template-columns: 1fr; } }
+
+    .input-block {
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
-    .tpl-name {
-      font-size: 13.5px;
-      font-weight: 900;
+    .input-label-text {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-secondary);
     }
-    .tpl-font-tag {
-      font-family: var(--font-mono);
-      font-size: 10.5px;
-      color: var(--text-muted);
+    .input-control {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 12px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .input-control:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
     }
 
-    /* Wizard Action Navigation Footer */
-    .wizard-footer-nav {
+    /* Template Cards in Wizard */
+    .tpl-gallery-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .tpl-selectable-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tpl-selectable-card:hover { border-color: var(--border-strong); }
+    .tpl-selectable-card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .tpl-preview-thumb {
+      height: 120px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    .tpl-pill-tag {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+    }
+    .tpl-meta-inner {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .tpl-meta-title { font-size: 12.5px; font-weight: 700; }
+    .tpl-meta-fonts {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    .wizard-actions-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-top: 36px;
-      padding-top: 24px;
+      margin-top: 32px;
+      padding-top: 20px;
       border-top: 1px solid var(--border);
     }
-    .btn-nav-prev {
-      background: var(--bg);
+    .btn-back-step {
+      background: none;
       border: 1px solid var(--border);
-      color: var(--text);
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 700;
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
     }
-    .btn-nav-next {
+    .btn-next-step {
       background: var(--accent);
       color: #fff;
       border: none;
-      padding: 12px 24px;
-      border-radius: 10px;
-      font-size: 13.5px;
-      font-weight: 800;
+      padding: 9px 20px;
+      border-radius: 7px;
+      font-size: 12.5px;
+      font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 14px var(--accent-soft);
-      transition: transform 0.15s;
+      gap: 6px;
+      transition: background 0.15s;
     }
-    .btn-nav-next:hover { transform: translateY(-1px); }
-
-    /* Comparison / Anti-Slop Audit Drawer */
-    .audit-drawer {
-      display: none;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 28px;
-      margin-top: 24px;
-    }
-    .audit-drawer.open { display: block; }
-    .audit-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      margin-top: 16px;
-    }
-    .audit-table th, .audit-table td {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-    }
-    .audit-table th {
-      font-size: 11px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
+    .btn-next-step:hover { background: var(--accent-hover); }
   </style>
 </head>
 <body>
 
   <!-- Top Control Header -->
-  <header class="showcase-bar">
-    <div class="brand-group">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" color="#2563eb">
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-      </svg>
-      <span class="brand-title">EasyTrade Redesign</span>
-      <span class="badge-protocol">TASTE-SKILL & ANTI-SLOP</span>
+  <header class="top-controls">
+    <div class="brand-cluster">
+      <div class="brand-mark">E</div>
+      <span class="brand-name">EasyTrade Platform</span>
+      <span class="badge-style-pill">STYLE STRIPE & LINEAR</span>
     </div>
 
-    <!-- Active View Selector -->
-    <div class="view-selectors">
-      <button class="view-btn active" id="btn-view-funnels" onclick="switchView('dashboard-funnels')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Dashboard Funnels
+    <!-- View Switcher -->
+    <div class="view-switcher-bar">
+      <button class="view-tab-btn active" id="btn-tab-funnels" onclick="switchDashboardView('funnel')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Funnels Dashboard
       </button>
-      <button class="view-btn" id="btn-view-boutiques" onclick="switchView('dashboard-boutiques')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Dashboard Boutiques
+      <button class="view-tab-btn" id="btn-tab-boutiques" onclick="switchDashboardView('boutique')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Boutiques Dashboard
       </button>
-      <button class="view-btn" id="btn-view-wizard" onclick="switchView('create-wizard')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        Nouveau Flow de Création (Wizard)
+      <button class="view-tab-btn" id="btn-tab-wizard" onclick="switchDashboardView('wizard')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Nouveau Flow de Création (Linear)
       </button>
     </div>
 
-    <!-- Theme & Audit Controls -->
-    <div class="tools-group">
-      <button class="action-pill" onclick="toggleAuditDrawer()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        Matrice Anti-Slop
-      </button>
-      <button class="action-pill" onclick="toggleTheme()">
+    <!-- Theme & Tools -->
+    <div class="tools-cluster">
+      <button class="btn-tool" onclick="toggleThemeMode()">
         <span id="theme-icon">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </span>
-        <span id="theme-label">Mode Clair</span>
+        <span id="theme-text">Mode Clair</span>
       </button>
     </div>
   </header>
 
-  <main class="app-viewport">
+  <main class="viewport-wrapper">
 
-    <!-- ──────────────── VIEW 1 & 2: DASHBOARDS (FUNNELS & BOUTIQUES) ──────────────── -->
-    <div id="view-dashboard" class="app-layout">
+    <!-- ──────────────── DASHBOARD VIEW (STRIPE / LINEAR COCKPIT) ──────────────── -->
+    <div id="view-cockpit" class="app-frame">
 
-      <!-- Left Sidebar (Clean Anti-Slop Navigation) -->
-      <aside class="sidebar-panel">
-        <div class="sidebar-switch-tabs">
-          <button class="switch-tab active" id="tab-side-funnels" onclick="switchView('dashboard-funnels')">Funnels</button>
-          <button class="switch-tab" id="tab-side-boutiques" onclick="switchView('dashboard-boutiques')">Boutiques</button>
+      <!-- Sidebar (Linear Style) -->
+      <aside class="sidebar-linear">
+        <div class="segmented-switch">
+          <button class="segmented-btn active" id="seg-funnels" onclick="switchDashboardView('funnel')">Funnels</button>
+          <button class="segmented-btn" id="seg-boutiques" onclick="switchDashboardView('boutique')">Boutiques</button>
         </div>
 
-        <div class="store-active-card">
-          <div class="store-info-left">
-            <div class="store-avatar" id="side-store-avatar">F</div>
-            <div>
-              <div class="store-title" id="side-store-title">Flash-Convert DZ</div>
-              <div class="store-type">
-                <span class="status-dot"></span>
-                <span id="side-store-type">Tunnel COD Actif</span>
-              </div>
+        <div class="store-badge-card">
+          <div>
+            <div class="store-badge-name" id="side-store-name">Flash-Convert DZ</div>
+            <div class="store-badge-type">
+              <span class="pulse-dot"></span>
+              <span id="side-store-status">Production · En ligne</span>
             </div>
           </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" color="#8b8d98"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
 
-        <ul class="nav-list">
-          <li>
-            <a class="nav-link active">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-              <span>Vue d'ensemble</span>
-            </a>
-          </li>
-          <li>
-            <a class="nav-link">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-              <span>Commandes COD</span>
-              <span class="nav-badge-count">18</span>
-            </a>
-          </li>
-          <li>
-            <a class="nav-link">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-              <span>Produits & Offres</span>
-            </a>
-          </li>
-          <li>
-            <a class="nav-link">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              <span>Clients & Wilayas</span>
-            </a>
-          </li>
-          <li>
-            <a class="nav-link">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-              <span>Analytiques Ventes</span>
-            </a>
-          </li>
-          <li>
-            <a class="nav-link">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              <span>Paramètres</span>
-            </a>
-          </li>
-        </ul>
+        <div>
+          <div class="nav-group-title">Navigation</div>
+          <ul class="nav-stack">
+            <li>
+              <a class="nav-item-btn active">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                <span>Vue d'ensemble</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-item-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                <span>Commandes COD</span>
+                <span class="nav-counter">18</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-item-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                <span>Produits & Packs</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-item-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <span>Analytiques</span>
+              </a>
+            </li>
+          </ul>
+        </div>
       </aside>
 
-      <!-- Main Dashboard Content -->
-      <section class="main-canvas">
+      <!-- Main Cockpit Area -->
+      <section class="cockpit-canvas">
 
-        <!-- Top Heading & Actions -->
-        <div class="dashboard-topbar">
-          <div class="page-heading">
-            <h1 id="dash-title">Vue d'ensemble des Funnels COD</h1>
-            <p id="dash-sub">Suivi du chiffre d'affaires encaissé, des livraisons 58 Wilayas et des performances de conversion.</p>
+        <!-- Header -->
+        <div class="cockpit-header">
+          <div>
+            <div class="header-breadcrumb">
+              <span>Workspace</span>
+              <span>/</span>
+              <span id="crumb-section">Funnels</span>
+              <span>/</span>
+              <span>Vue d'ensemble</span>
+            </div>
+            <h1 class="header-title" id="page-title">Tableau de bord Funnels</h1>
+            <p class="header-desc">Indicateurs clés d'encaissement Cash on Delivery et suivi en direct des commandes.</p>
           </div>
 
-          <div class="top-actions-cluster">
-            <div class="date-filter-pill">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <span>Ce Mois (Octobre 2026)</span>
+          <div class="header-actions-row">
+            <div class="btn-period-select">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Ce mois-ci (Octobre 2026)</span>
             </div>
 
-            <button class="btn-create-primary" onclick="switchView('create-wizard')">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span id="btn-create-label">Nouveau Funnel</span>
+            <button class="btn-primary-action" onclick="switchDashboardView('wizard')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span id="btn-new-store-label">Créer un Funnel</span>
             </button>
           </div>
         </div>
 
-        <!-- Cockpit Metrics Hierarchy (Taste-Skill / Anti-Slop Calibrated) -->
-        <div class="metrics-cockpit-grid">
-          <!-- Hero Metric: Revenue with Real-Time Algerian COD Breakdown -->
-          <div class="metric-card hero-metric">
-            <div class="metric-label-row">
-              <span class="metric-label">Chiffre d'Affaires Encaissé (DA)</span>
-              <span class="metric-tag-indicator positive">+21.4% vs M-1</span>
+        <!-- Stripe Metrics Grid -->
+        <div class="stripe-metrics-grid">
+          <!-- Gross Volume (DA) -->
+          <div class="card-metric highlight">
+            <div class="metric-top-meta">
+              <span class="metric-title-txt">Volume Net Encaissé (DA)</span>
+              <span class="delta-badge delta-positive">+21.4%</span>
             </div>
-            <div class="metric-value-huge" id="metric-ca">1 428 500 DA</div>
-            <div class="metric-sub-detail">
-              <span>Livré & Réglé : <strong>1 140 000 DA</strong></span>
-              <span>·</span>
-              <span>En cours : <strong>288 500 DA</strong></span>
+            <div class="metric-number-big" id="kpi-ca">1 428 500 DA</div>
+            <div class="metric-footnote">
+              <span>Réglé au livreur : 1 140 000 DA</span>
             </div>
           </div>
 
-          <!-- Taux de Confirmation Téléphonique (Vital COD KPI) -->
-          <div class="metric-card">
-            <div class="metric-label-row">
-              <span class="metric-label">Taux Confirmation COD</span>
-              <span class="metric-tag-indicator positive">79.2%</span>
+          <!-- Taux de Confirmation Téléphonique (Vital COD) -->
+          <div class="card-metric">
+            <div class="metric-top-meta">
+              <span class="metric-title-txt">Confirmation Tel. (COD)</span>
+              <span class="delta-badge delta-positive">79.2%</span>
             </div>
-            <div class="metric-value-huge">342 / 432</div>
-            <div class="metric-sub-detail">
-              <span>Annulations après appel : <strong>20.8%</strong></span>
-            </div>
-          </div>
-
-          <!-- Panier Moyen en Dinars -->
-          <div class="metric-card">
-            <div class="metric-label-row">
-              <span class="metric-label">Panier Moyen (AOV)</span>
-              <span class="metric-tag-indicator neutral">Pack Duo</span>
-            </div>
-            <div class="metric-value-huge">6 450 DA</div>
-            <div class="metric-sub-detail">
-              <span>64% de ventes en bundles dégressifs</span>
+            <div class="metric-number-big">342 / 432</div>
+            <div class="metric-footnote">
+              <span>90 commandes annulées après appel</span>
             </div>
           </div>
 
-          <!-- Stores / Funnels Actifs -->
-          <div class="metric-card">
-            <div class="metric-label-row">
-              <span class="metric-label" id="metric-active-label">Funnels Actifs</span>
-              <span class="metric-tag-indicator positive">100% Vercel Live</span>
+          <!-- Panier Moyen -->
+          <div class="card-metric">
+            <div class="metric-top-meta">
+              <span class="metric-title-txt">Panier Moyen (AOV)</span>
+              <span class="delta-badge delta-neutral">Stable</span>
             </div>
-            <div class="metric-value-huge" id="metric-active-count">4 Actifs</div>
-            <div class="metric-sub-detail">
-              <span>Taux de conversion moyen : <strong>4.8%</strong></span>
+            <div class="metric-number-big">6 450 DA</div>
+            <div class="metric-footnote">
+              <span>Porté par les offres Pack Duo (-20%)</span>
+            </div>
+          </div>
+
+          <!-- Actifs -->
+          <div class="card-metric">
+            <div class="metric-top-meta">
+              <span class="metric-title-txt" id="kpi-active-label">Funnels Actifs</span>
+              <span class="delta-badge delta-positive">100% UP</span>
+            </div>
+            <div class="metric-number-big" id="kpi-active-val">4 Actifs</div>
+            <div class="metric-footnote">
+              <span>Taux de conversion moyen : 5.1%</span>
             </div>
           </div>
         </div>
 
-        <!-- Split Grid: Live Order Feed + Wilaya Delivery Distribution -->
-        <div class="dashboard-split-content">
+        <!-- Lower Grid: Stripe Orders Table + Wilayas -->
+        <div class="dashboard-lower-grid">
 
-          <!-- Recent Orders Feed -->
-          <div class="content-box">
-            <div class="box-header">
-              <div class="box-title-group">
-                <h3>Dernières Commandes COD Reçues</h3>
-                <p>Mise à jour en temps réel depuis les formulaires 58 Wilayas</p>
+          <!-- Recent Orders Table (Stripe Style) -->
+          <div class="panel-box">
+            <div class="panel-box-header">
+              <div class="panel-heading-text">
+                <h3>Commandes Récentes (58 Wilayas)</h3>
+                <p>Flux en temps réel synchronisé depuis vos formulaires de commande</p>
               </div>
-              <button class="action-pill" style="font-size: 11px;">Voir les 432 commandes</button>
+              <button class="btn-tool" style="font-size: 11px; padding: 4px 8px;">Exporter CSV</button>
             </div>
 
-            <div class="orders-feed">
-              <div class="order-feed-row">
-                <div class="order-meta-left">
-                  <span class="order-id-badge">#DZ-8941</span>
-                  <div>
-                    <div class="order-buyer-name">Farid Messaoudi</div>
-                    <div class="order-buyer-wilaya">16 - Alger (Hydra) · Il y a 6 min</div>
-                  </div>
-                </div>
-                <div class="order-product-snippet">Pack Duo Aspirateur Cyclonique (-20%)</div>
-                <div>
-                  <div class="order-price-bold">6 500 DA</div>
-                  <span class="order-status-pill status-pending">À Confirmer</span>
-                </div>
-              </div>
-
-              <div class="order-feed-row">
-                <div class="order-meta-left">
-                  <span class="order-id-badge">#DZ-8940</span>
-                  <div>
-                    <div class="order-buyer-name">Sarah Bouzid</div>
-                    <div class="order-buyer-wilaya">31 - Oran (Akid Lotfi) · Il y a 24 min</div>
-                  </div>
-                </div>
-                <div class="order-product-snippet">1x Sérum Anti-Imperfections Bio</div>
-                <div>
-                  <div class="order-price-bold">4 400 DA</div>
-                  <span class="order-status-pill status-confirmed">Confirmé Tel</span>
-                </div>
-              </div>
-
-              <div class="order-feed-row">
-                <div class="order-meta-left">
-                  <span class="order-id-badge">#DZ-8939</span>
-                  <div>
-                    <div class="order-buyer-name">Abdelkader Zenati</div>
-                    <div class="order-buyer-wilaya">25 - Constantine (El Khroub) · Il y a 1h</div>
-                  </div>
-                </div>
-                <div class="order-product-snippet">Projecteur Solaire 200W Télécommandé</div>
-                <div>
-                  <div class="order-price-bold">7 800 DA</div>
-                  <span class="order-status-pill status-delivering">En Expédition Yalidine</span>
-                </div>
-              </div>
-
-              <div class="order-feed-row">
-                <div class="order-meta-left">
-                  <span class="order-id-badge">#DZ-8938</span>
-                  <div>
-                    <div class="order-buyer-name">Karim Benmoussa</div>
-                    <div class="order-buyer-wilaya">19 - Sétif (Centre-ville) · Il y a 2h</div>
-                  </div>
-                </div>
-                <div class="order-product-snippet">Chemise Lin Tunisien Écru (Taille L)</div>
-                <div>
-                  <div class="order-price-bold">6 400 DA</div>
-                  <span class="order-status-pill status-confirmed">Confirmé Tel</span>
-                </div>
-              </div>
+            <div class="table-container">
+              <table class="stripe-table">
+                <thead>
+                  <tr>
+                    <th>Réf.</th>
+                    <th>Client</th>
+                    <th>Wilaya & Ville</th>
+                    <th>Produit / Pack</th>
+                    <th>Montant</th>
+                    <th>Statut COD</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="order-code">#DZ-8941</span></td>
+                    <td>
+                      <div class="client-name">Farid Messaoudi</div>
+                      <div class="client-loc">0550 12 XX XX</div>
+                    </td>
+                    <td>16 - Alger (Hydra)</td>
+                    <td>Pack Duo Aspirateur (-20%)</td>
+                    <td><span class="amount-cell">6 500 DA</span></td>
+                    <td><span class="badge-status-dot badge-pending">À Confirmer</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="order-code">#DZ-8940</span></td>
+                    <td>
+                      <div class="client-name">Sarah Bouzid</div>
+                      <div class="client-loc">0661 45 XX XX</div>
+                    </td>
+                    <td>31 - Oran (Akid Lotfi)</td>
+                    <td>1x Sérum Anti-Imperfections</td>
+                    <td><span class="amount-cell">4 400 DA</span></td>
+                    <td><span class="badge-status-dot badge-confirmed">Confirmé Tel</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="order-code">#DZ-8939</span></td>
+                    <td>
+                      <div class="client-name">Abdelkader Zenati</div>
+                      <div class="client-loc">0770 89 XX XX</div>
+                    </td>
+                    <td>25 - Constantine (Khroub)</td>
+                    <td>Projecteur Solaire 200W</td>
+                    <td><span class="amount-cell">7 800 DA</span></td>
+                    <td><span class="badge-status-dot badge-delivering">En Expédition</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="order-code">#DZ-8938</span></td>
+                    <td>
+                      <div class="client-name">Karim Benmoussa</div>
+                      <div class="client-loc">0555 33 XX XX</div>
+                    </td>
+                    <td>19 - Sétif (Centre)</td>
+                    <td>Chemise Lin Tunisien Écru (L)</td>
+                    <td><span class="amount-cell">6 400 DA</span></td>
+                    <td><span class="badge-status-dot badge-confirmed">Confirmé Tel</span></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <!-- Top Wilayas & Logistics Widget -->
-          <div class="content-box">
-            <div class="box-header">
-              <div class="box-title-group">
+          <!-- Wilayas & Transporteurs Widget -->
+          <div class="panel-box">
+            <div class="panel-box-header">
+              <div class="panel-heading-text">
                 <h3>Top Wilayas Livrées</h3>
-                <p>Répartition des expéditions</p>
+                <p>Répartition logistique</p>
               </div>
             </div>
 
-            <div class="wilaya-list">
-              <div class="wilaya-item">
-                <div class="wilaya-info-row">
+            <div class="wilaya-widget-body">
+              <div class="wilaya-row">
+                <div class="wilaya-head">
                   <span>16 - Alger</span>
-                  <span>142 commandes (33%)</span>
+                  <span class="wilaya-pct">33% (142 colis)</span>
                 </div>
-                <div class="wilaya-progress-track">
-                  <div class="wilaya-progress-bar" style="width: 33%;"></div>
-                </div>
+                <div class="wilaya-track"><div class="wilaya-fill" style="width: 33%;"></div></div>
               </div>
 
-              <div class="wilaya-item">
-                <div class="wilaya-info-row">
+              <div class="wilaya-row">
+                <div class="wilaya-head">
                   <span>31 - Oran</span>
-                  <span>88 commandes (20%)</span>
+                  <span class="wilaya-pct">20% (88 colis)</span>
                 </div>
-                <div class="wilaya-progress-track">
-                  <div class="wilaya-progress-bar" style="width: 20%;"></div>
-                </div>
+                <div class="wilaya-track"><div class="wilaya-fill" style="width: 20%;"></div></div>
               </div>
 
-              <div class="wilaya-item">
-                <div class="wilaya-info-row">
+              <div class="wilaya-row">
+                <div class="wilaya-head">
                   <span>25 - Constantine</span>
-                  <span>52 commandes (12%)</span>
+                  <span class="wilaya-pct">12% (52 colis)</span>
                 </div>
-                <div class="wilaya-progress-track">
-                  <div class="wilaya-progress-bar" style="width: 12%;"></div>
-                </div>
+                <div class="wilaya-track"><div class="wilaya-fill" style="width: 12%;"></div></div>
               </div>
 
-              <div class="wilaya-item">
-                <div class="wilaya-info-row">
+              <div class="wilaya-row">
+                <div class="wilaya-head">
                   <span>19 - Sétif</span>
-                  <span>46 commandes (11%)</span>
+                  <span class="wilaya-pct">11% (46 colis)</span>
                 </div>
-                <div class="wilaya-progress-track">
-                  <div class="wilaya-progress-bar" style="width: 11%;"></div>
-                </div>
+                <div class="wilaya-track"><div class="wilaya-fill" style="width: 11%;"></div></div>
               </div>
 
-              <div class="wilaya-item">
-                <div class="wilaya-info-row">
-                  <span>Autres (54 Wilayas)</span>
-                  <span>104 commandes (24%)</span>
+              <div class="wilaya-row">
+                <div class="wilaya-head">
+                  <span>Autres 54 Wilayas</span>
+                  <span class="wilaya-pct">24% (104 colis)</span>
                 </div>
-                <div class="wilaya-progress-track">
-                  <div class="wilaya-progress-bar" style="width: 24%; background: #64748b;"></div>
-                </div>
+                <div class="wilaya-track"><div class="wilaya-fill" style="width: 24%; background: #71717a;"></div></div>
               </div>
-            </div>
 
-            <div style="margin-top: 10px; padding: 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); font-size: 11.5px; color: var(--text-muted);">
-              <strong style="color: var(--text);">Statistiques transporteurs :</strong> 94.2% de taux de remise réussie via Yalidine Express & ZR Express.
+              <div style="margin-top: 8px; padding: 10px; border-radius: 6px; background: var(--bg-subtle); border: 1px solid var(--border-subtle); font-size: 11px; color: var(--text-secondary);">
+                Taux de retour colis (NPAI/Refus) maîtrisé à <strong>4.8%</strong> grâce à la confirmation téléphonique préalable.
+              </div>
             </div>
           </div>
 
         </div>
 
-        <!-- Active Stores / Funnels Cards Section -->
-        <div class="content-box">
-          <div class="box-header">
-            <div class="box-title-group">
-              <h3 id="stores-section-title">Vos Tunnels de Vente en Ligne</h3>
-              <p>Gestion directe des pages, accès au design et métriques unitaires</p>
+        <!-- Managed Projects Cards -->
+        <div class="panel-box">
+          <div class="panel-box-header">
+            <div class="panel-heading-text">
+              <h3 id="projects-section-title">Vos Tunnels de Vente Déployés</h3>
+              <p>Hébergés sur Vercel avec certificats SSL et monitoring 24/7</p>
             </div>
-            <button class="btn-create-primary" style="padding: 7px 14px; font-size: 12px;" onclick="switchView('create-wizard')">
-              + Ajouter
+            <button class="btn-primary-action" style="padding: 5px 12px; font-size: 11.5px;" onclick="switchDashboardView('wizard')">
+              + Nouveau Projet
             </button>
           </div>
 
-          <div class="stores-catalog-row" id="stores-cards-container">
-            <!-- Card 1 -->
-            <div class="store-card">
-              <div class="store-card-header">
-                <div class="store-card-meta">
-                  <div class="store-avatar" style="background: rgba(37, 99, 235, 0.15); color: #2563eb;">FC</div>
+          <div class="stores-card-grid">
+            <div class="store-linear-card">
+              <div class="store-head-row">
+                <div class="store-head-left">
+                  <div class="store-icon-tile">FC</div>
                   <div>
-                    <h4 class="store-card-title">Flash-Convert Aspirateur</h4>
-                    <a href="https://easytradez.site/preview-funnel.html" target="_blank" class="store-card-url">easytradez.site/preview-funnel.html ↗</a>
+                    <div class="store-card-name">Flash-Convert Aspirateur</div>
+                    <a href="https://easytradez.site/preview-funnel.html" target="_blank" class="store-card-link">easytradez.site/preview-funnel.html ↗</a>
                   </div>
                 </div>
-                <span class="order-status-pill status-confirmed">En Ligne</span>
+                <span class="badge-status-dot badge-confirmed">En Ligne</span>
               </div>
-              <div class="store-card-stats">
+              <div class="store-kpi-row">
                 <div>
-                  <div class="stat-mini-label">Visites</div>
-                  <div class="stat-mini-val">4 210</div>
+                  <div class="kpi-sub-label">Visites</div>
+                  <div class="kpi-sub-val">4 210</div>
                 </div>
                 <div>
-                  <div class="stat-mini-label">Conv.</div>
-                  <div class="stat-mini-val" style="color: var(--success);">5.2%</div>
+                  <div class="kpi-sub-label">Conv.</div>
+                  <div class="kpi-sub-val" style="color: var(--success);">5.2%</div>
                 </div>
                 <div>
-                  <div class="stat-mini-label">Revenus</div>
-                  <div class="stat-mini-val">842k DA</div>
+                  <div class="kpi-sub-label">Chiffre d'Affaires</div>
+                  <div class="kpi-sub-val">842k DA</div>
                 </div>
-              </div>
-              <div class="store-card-actions">
-                <button class="btn-action-outline">Éditer le Funnel</button>
-                <button class="btn-action-outline">Bordereaux COD</button>
               </div>
             </div>
 
-            <!-- Card 2 -->
-            <div class="store-card">
-              <div class="store-card-header">
-                <div class="store-card-meta">
-                  <div class="store-avatar" style="background: rgba(212, 175, 55, 0.15); color: #d4af37;">SN</div>
+            <div class="store-linear-card">
+              <div class="store-head-row">
+                <div class="store-head-left">
+                  <div class="store-icon-tile">SN</div>
                   <div>
-                    <h4 class="store-card-title">Sahara Noir Parfumerie</h4>
-                    <a href="https://easytradez.site/preview-boutique.html" target="_blank" class="store-card-url">easytradez.site/preview-boutique.html ↗</a>
+                    <div class="store-card-name">Sahara Noir Parfumerie</div>
+                    <a href="https://easytradez.site/preview-boutique.html" target="_blank" class="store-card-link">easytradez.site/preview-boutique.html ↗</a>
                   </div>
                 </div>
-                <span class="order-status-pill status-confirmed">En Ligne</span>
+                <span class="badge-status-dot badge-confirmed">En Ligne</span>
               </div>
-              <div class="store-card-stats">
+              <div class="store-kpi-row">
                 <div>
-                  <div class="stat-mini-label">Visites</div>
-                  <div class="stat-mini-val">2 850</div>
+                  <div class="kpi-sub-label">Visites</div>
+                  <div class="kpi-sub-val">2 850</div>
                 </div>
                 <div>
-                  <div class="stat-mini-label">Conv.</div>
-                  <div class="stat-mini-val" style="color: var(--success);">4.4%</div>
+                  <div class="kpi-sub-label">Conv.</div>
+                  <div class="kpi-sub-val" style="color: var(--success);">4.4%</div>
                 </div>
                 <div>
-                  <div class="stat-mini-label">Revenus</div>
-                  <div class="stat-mini-val">586k DA</div>
+                  <div class="kpi-sub-label">Chiffre d'Affaires</div>
+                  <div class="kpi-sub-val">586k DA</div>
                 </div>
-              </div>
-              <div class="store-card-actions">
-                <button class="btn-action-outline">Éditer le Catalogue</button>
-                <button class="btn-action-outline">Avis Clients</button>
               </div>
             </div>
           </div>
@@ -1321,366 +1217,280 @@
       </section>
     </div>
 
-    <!-- ──────────────── VIEW 3: REDESIGNED CREATION WIZARD (CREATE FLOW) ──────────────── -->
-    <div id="view-wizard" class="wizard-shell">
-      <div class="wizard-container">
+    <!-- ──────────────── LINEAR STYLE CREATE FLOW (WIZARD) ──────────────── -->
+    <div id="view-wizard-linear" class="wizard-linear-view">
+      <div class="wizard-card-box">
 
-        <!-- Stepper Progress Bar -->
-        <div class="stepper-header">
-          <div class="stepper-step active" id="step-nav-1" onclick="gotoWizardStep(1)">
-            <div class="step-number">1</div>
-            <div>
-              <div class="step-text-title">Identité & Niche</div>
-              <div class="step-text-sub">Nom, contact WhatsApp</div>
-            </div>
+        <!-- Stepper Line (Linear Minimalist) -->
+        <div class="wizard-stepper-line">
+          <div class="step-pill-indicator active" id="wiz-step-ind-1" onclick="jumpToWizardStep(1)">
+            <span class="step-dot-num">1</span>
+            <span>Identité & WhatsApp</span>
           </div>
-
-          <div class="stepper-step" id="step-nav-2" onclick="gotoWizardStep(2)">
-            <div class="step-number">2</div>
-            <div>
-              <div class="step-text-title">Template & Univers</div>
-              <div class="step-text-sub">Typographie, palette</div>
-            </div>
+          <div class="step-pill-indicator" id="wiz-step-ind-2" onclick="jumpToWizardStep(2)">
+            <span class="step-dot-num">2</span>
+            <span>Template E-commerce</span>
           </div>
-
-          <div class="stepper-step" id="step-nav-3" onclick="gotoWizardStep(3)">
-            <div class="step-number">3</div>
-            <div>
-              <div class="step-text-title">Offre & Packs COD</div>
-              <div class="step-text-sub">Produit vedette, bundles</div>
-            </div>
+          <div class="step-pill-indicator" id="wiz-step-ind-3" onclick="jumpToWizardStep(3)">
+            <span class="step-dot-num">3</span>
+            <span>Packs & Tarification</span>
           </div>
-
-          <div class="stepper-step" id="step-nav-4" onclick="gotoWizardStep(4)">
-            <div class="step-number">4</div>
-            <div>
-              <div class="step-text-title">Livraison & Lancement</div>
-              <div class="step-text-sub">Wilayas, confirmation</div>
-            </div>
+          <div class="step-pill-indicator" id="wiz-step-ind-4" onclick="jumpToWizardStep(4)">
+            <span class="step-dot-num">4</span>
+            <span>Logistique 58 Wilayas</span>
           </div>
         </div>
 
-        <!-- Step 1: Identité & Contact -->
-        <div class="wizard-step-body active" id="wizard-step-1">
+        <!-- Step 1 Form -->
+        <div class="wizard-form-body active" id="form-step-1">
           <div>
-            <h2 style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 900;">Informations Essentielles</h2>
-            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Donnez un nom et configurez le canal WhatsApp de confirmation de vos commandes.</p>
+            <h2 style="font-size: 1.25rem; font-weight: 700; letter-spacing: -0.3px;">Configuration Initiale</h2>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Renseignez les détails fondamentaux de votre nouvelle vitrine.</p>
           </div>
 
-          <div class="form-grid-2">
-            <div class="form-field">
-              <label class="form-label">Type de Projet</label>
-              <select class="form-select-box" id="wiz-project-type">
-                <option value="funnel">Tunnel de Vente Mono-Produit (Funnel COD)</option>
-                <option value="boutique">Boutique Multi-Produits (Catalogue)</option>
+          <div class="field-pair">
+            <div class="input-block">
+              <label class="input-label-text">Type de Déploiement</label>
+              <select class="input-control">
+                <option value="funnel">Tunnel de Vente Mono-Produit (Funnel COD Express)</option>
+                <option value="boutique">Boutique Multi-Produits (Catalogue complet)</option>
               </select>
             </div>
-
-            <div class="form-field">
-              <label class="form-label">Catégorie Marché</label>
-              <select class="form-select-box">
+            <div class="input-block">
+              <label class="input-label-text">Secteur / Niche Marché</label>
+              <select class="input-control">
                 <option>Gadgets Viraux & Utilitaires Maison</option>
-                <option>Mode & Prêt-à-porter</option>
-                <option>Beauté, Cosmétique & Soins Bio</option>
-                <option>High-Tech & Accessoires Auto</option>
-                <option>Terroir & Artisanat d'Algérie</option>
+                <option>Mode & Prêt-à-porter Masculin/Féminin</option>
+                <option>Soins Botaniques & Cosmétique Bio</option>
+                <option>Électronique & Équipement Solaire</option>
+                <option>Maison & Décoration Wabi-Sabi</option>
               </select>
             </div>
           </div>
 
-          <div class="form-grid-2">
-            <div class="form-field">
-              <label class="form-label">Nom de la Marque ou du Funnel</label>
-              <input type="text" class="form-input-text" placeholder="Ex: Flash-Convert DZ" value="Flash-Convert DZ">
+          <div class="field-pair">
+            <div class="input-block">
+              <label class="input-label-text">Nom Commercial</label>
+              <input type="text" class="input-control" value="Flash-Convert DZ">
             </div>
-
-            <div class="form-field">
-              <label class="form-label">Numéro WhatsApp Réception Commandes</label>
-              <input type="tel" class="form-input-text" placeholder="0550 12 34 56" value="0550 98 76 54">
+            <div class="input-block">
+              <label class="input-label-text">Numéro WhatsApp Réception Commandes (+213)</label>
+              <input type="tel" class="input-control" value="0550 98 76 54">
             </div>
-          </div>
-
-          <div class="form-field">
-            <label class="form-label">Description Courte de l'Offre</label>
-            <input type="text" class="form-input-text" placeholder="La promesse forte de votre produit en une phrase percutante" value="Aspirateur cyclonique portatif sans fil haute aspiration 9 000 Pa.">
           </div>
         </div>
 
-        <!-- Step 2: Template Selection -->
-        <div class="wizard-step-body" id="wizard-step-2">
+        <!-- Step 2 Form (Templates) -->
+        <div class="wizard-form-body" id="form-step-2">
           <div>
-            <h2 style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 900;">Sélection du Template Anti-Slop</h2>
-            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Chaque template dispose de sa propre direction artistique calibrée (typographie, palette, contrastes WCAG AA).</p>
+            <h2 style="font-size: 1.25rem; font-weight: 700; letter-spacing: -0.3px;">Choix de la Direction Graphique</h2>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Templates conçus selon les critères de conversion et de typographie du marché algérien.</p>
           </div>
 
-          <div class="template-selection-grid">
-            <div class="tpl-card-choice selected" onclick="selectTemplateCard(this)">
-              <div class="tpl-card-img" style="background-image: url('https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=500&q=80');">
-                <span class="tpl-badge-float">Funnel COD #1</span>
+          <div class="tpl-gallery-row">
+            <div class="tpl-selectable-card selected" onclick="pickTemplateCard(this)">
+              <div class="tpl-preview-thumb" style="background-image: url('https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=500&q=80');">
+                <span class="tpl-pill-tag">Funnel COD</span>
               </div>
-              <div class="tpl-card-body">
-                <div class="tpl-name">FLASH-CONVERT</div>
-                <div class="tpl-font-tag">Rubik & Inter · Bleu Cobalt</div>
-              </div>
-            </div>
-
-            <div class="tpl-card-choice" onclick="selectTemplateCard(this)">
-              <div class="tpl-card-img" style="background-image: url('https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=500&q=80');">
-                <span class="tpl-badge-float">Boutique #1</span>
-              </div>
-              <div class="tpl-card-body">
-                <div class="tpl-name">ATLAS MINIMAL</div>
-                <div class="tpl-font-tag">Playfair Display & Inter · Lin Écru</div>
+              <div class="tpl-meta-inner">
+                <div class="tpl-meta-title">FLASH-CONVERT</div>
+                <div class="tpl-meta-fonts">Rubik & Inter · Bleu Cobalt</div>
               </div>
             </div>
 
-            <div class="tpl-card-choice" onclick="selectTemplateCard(this)">
-              <div class="tpl-card-img" style="background-image: url('https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=500&q=80');">
-                <span class="tpl-badge-float">Prestige</span>
+            <div class="tpl-selectable-card" onclick="pickTemplateCard(this)">
+              <div class="tpl-preview-thumb" style="background-image: url('https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=500&q=80');">
+                <span class="tpl-pill-tag">Boutique</span>
               </div>
-              <div class="tpl-card-body">
-                <div class="tpl-name">SAHARA NOIR</div>
-                <div class="tpl-font-tag">Cormorant Garamond · Or Champagne</div>
+              <div class="tpl-meta-inner">
+                <div class="tpl-meta-title">ATLAS MINIMAL</div>
+                <div class="tpl-meta-fonts">Playfair Display & Inter · Lin Écru</div>
+              </div>
+            </div>
+
+            <div class="tpl-selectable-card" onclick="pickTemplateCard(this)">
+              <div class="tpl-preview-thumb" style="background-image: url('https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=500&q=80');">
+                <span class="tpl-pill-tag">Prestige</span>
+              </div>
+              <div class="tpl-meta-inner">
+                <div class="tpl-meta-title">SAHARA NOIR</div>
+                <div class="tpl-meta-fonts">Cormorant Garamond · Or Champagne</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Step 3: Offre & Packs Dégressifs -->
-        <div class="wizard-step-body" id="wizard-step-3">
+        <!-- Step 3 Form (Packs & Pricing) -->
+        <div class="wizard-form-body" id="form-step-3">
           <div>
-            <h2 style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 900;">Tarification & Stratégie de Bundles</h2>
-            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Le secret de la rentabilité e-commerce en Algérie : inciter le client à commander 2 ou 3 pièces.</p>
+            <h2 style="font-size: 1.25rem; font-weight: 700; letter-spacing: -0.3px;">Tarification & Stratégie Packs</h2>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Incitez les acheteurs à commander 2 ou 3 pièces avec la livraison offerte.</p>
           </div>
 
-          <div class="form-grid-2">
-            <div class="form-field">
-              <label class="form-label">Prix Unitaire (1 Pièce)</label>
-              <input type="text" class="form-input-text" value="3 900 DA">
+          <div class="field-pair">
+            <div class="input-block">
+              <label class="input-label-text">Prix 1 Pièce</label>
+              <input type="text" class="input-control" value="3 900 DA">
             </div>
-            <div class="form-field">
-              <label class="form-label">Prix Barré (Référence Psychologique)</label>
-              <input type="text" class="form-input-text" value="6 500 DA">
+            <div class="input-block">
+              <label class="input-label-text">Prix Barré de Référence</label>
+              <input type="text" class="input-control" value="6 500 DA">
             </div>
           </div>
 
-          <div class="form-grid-2">
-            <div class="form-field">
-              <label class="form-label">Pack 2 Pièces (Recommandé -20%)</label>
-              <input type="text" class="form-input-text" value="6 500 DA (Livraison Gratuite)">
+          <div class="field-pair">
+            <div class="input-block">
+              <label class="input-label-text">Pack Duo (Recommandé -20%)</label>
+              <input type="text" class="input-control" value="6 500 DA (Livraison Gratuite)">
             </div>
-            <div class="form-field">
-              <label class="form-label">Pack Famille 3 Pièces (-35%)</label>
-              <input type="text" class="form-input-text" value="8 900 DA + Cadeau">
+            <div class="input-block">
+              <label class="input-label-text">Pack 3 Pièces (-35%)</label>
+              <input type="text" class="input-control" value="8 900 DA + Cadeau Exclusif">
             </div>
           </div>
         </div>
 
-        <!-- Step 4: Wilayas & Confirmation -->
-        <div class="wizard-step-body" id="wizard-step-4">
+        <!-- Step 4 Form (Logistics) -->
+        <div class="wizard-form-body" id="form-step-4">
           <div>
-            <h2 style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 900;">Logistique 58 Wilayas & Mise en Ligne</h2>
-            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Votre site sera généré, sécurisé et prêt à recevoir des commandes immédiatement.</p>
+            <h2 style="font-size: 1.25rem; font-weight: 700; letter-spacing: -0.3px;">Paramètres de Livraison & Déploiement</h2>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Intégration du formulaire Cash on Delivery 58 Wilayas prêt à l'emploi.</p>
           </div>
 
-          <div class="form-grid-2">
-            <div class="form-field">
-              <label class="form-label">Transporteur Partenaire Préféré</label>
-              <select class="form-select-box">
-                <option>Yalidine Express (Livraison à domicile & Stopdesk)</option>
+          <div class="field-pair">
+            <div class="input-block">
+              <label class="input-label-text">Transporteur Principal</label>
+              <select class="input-control">
+                <option>Yalidine Express (Livraison Domicile & Stopdesk)</option>
                 <option>ZR Express (58 Wilayas)</option>
                 <option>Maystro Delivery</option>
-                <option>Flotte interne de livreurs</option>
               </select>
             </div>
-            <div class="form-field">
-              <label class="form-label">Frais de Livraison Standard</label>
-              <input type="text" class="form-input-text" value="Alger : 400 DA · Autres wilayas : 700 DA">
+            <div class="input-block">
+              <label class="input-label-text">Frais de Livraison Forfaitaires</label>
+              <input type="text" class="input-control" value="Alger : 400 DA · Autres Wilayas : 700 DA">
             </div>
           </div>
 
-          <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-top: 10px;">
-            <div style="display: flex; align-items: center; gap: 10px; color: var(--success); font-weight: 800; font-size: 13.5px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Prêt pour le déploiement haute performance Vercel
-            </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-              Formulaire de commande COD direct connecté, notifications WhatsApp configurées, responsive mobile-first garanti.
-            </p>
+          <div style="padding: 14px; border-radius: 7px; background: var(--bg-subtle); border: 1px solid var(--border); font-size: 12px; color: var(--text-secondary);">
+            <strong style="color: var(--text-primary);">Prêt pour le déploiement :</strong> Votre tunnel sera compilé et hébergé sous un domaine sécurisé avec connexion directe aux statistiques du dashboard.
           </div>
         </div>
 
-        <!-- Wizard Navigation Footer -->
-        <div class="wizard-footer-nav">
-          <button class="btn-nav-prev" id="btn-wiz-prev" onclick="changeWizardStep(-1)">Précédent</button>
-          <button class="btn-nav-next" id="btn-wiz-next" onclick="changeWizardStep(1)">
-            <span id="btn-wiz-next-label">Continuer vers l'Étape 2</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        <!-- Wizard Navigation -->
+        <div class="wizard-actions-bar">
+          <button class="btn-back-step" id="btn-linear-prev" onclick="moveWizardStep(-1)">Précédent</button>
+          <button class="btn-next-step" id="btn-linear-next" onclick="moveWizardStep(1)">
+            <span id="btn-linear-label">Étape Suivante</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </div>
 
       </div>
     </div>
 
-    <!-- ──────────────── AUDIT DRAWER (EXPLICATION DES RÈGLES APPLIQUÉES) ──────────────── -->
-    <div id="audit-drawer" class="audit-drawer">
-      <div class="box-header">
-        <div>
-          <h3 style="font-family: var(--font-display); font-size: 1.25rem;">Matrice d'Audit Anti-Slop (Avant vs Après)</h3>
-          <p style="font-size: 12.5px; color: var(--text-muted);">Comment les directives de <code>taste-skill</code> et <code>anti-slop</code> transforment le Dashboard et le Create Flow</p>
-        </div>
-        <button class="action-pill" onclick="toggleAuditDrawer()">Fermer ✕</button>
-      </div>
-
-      <table class="audit-table">
-        <thead>
-          <tr>
-            <th>Élément d'Interface</th>
-            <th>Ancien Dashboard / Cliché IA</th>
-            <th>Nouveau Design (Taste-Skill & Anti-Slop)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>Cartes de Métriques</strong></td>
-            <td>4 cartes strictement identiques en hauteur et largeur, icônes décoratives répétitives.</td>
-            <td><strong>Hiérarchie asymétrique (Cockpit 1.6fr / 1fr)</strong> : Chiffre d'Affaires héroïque en grand format avec ventilation Réglé vs En cours.</td>
-          </tr>
-          <tr>
-            <td><strong>Indicateurs Business</strong></td>
-            <td>Stats abstraites ou inventées ("1000% ROI", "Score IA 99%").</td>
-            <td><strong>Vrais KPIs du COD algérien</strong> : Taux de confirmation téléphonique après appel, ventilation par Wilaya, panier moyen en Dinars.</td>
-          </tr>
-          <tr>
-            <td><strong>Flux d'activité</strong></td>
-            <td>Pas d'affichage clair des commandes en temps réel.</td>
-            <td><strong>Flux en direct des commandes</strong> avec Wilayas (16, 31, 25...), montant précis en DA et statut de validation.</td>
-          </tr>
-          <tr>
-            <td><strong>Create Flow (Wizard)</strong></td>
-            <td>Formulaire long avec aperçus abstraits et choix de templates confus.</td>
-            <td><strong>4 étapes guidées nettes</strong> : Identité & WhatsApp, Carte grand format des templates réels, Stratégie de packs dégressifs, Logistique 58 Wilayas.</td>
-          </tr>
-          <tr>
-            <td><strong>Typographie & Symboles</strong></td>
-            <td>Usage d'Inter par défaut, emojis comme icônes (`🚀`, `📦`), tirets cadratins `—`.</td>
-            <td><strong>Syne (Display) + Plus Jakarta Sans + JetBrains Mono</strong>. Zéro emoji, zéro tiret cadratin `—`, symboles SVG précis.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
   </main>
 
   <script>
-    let currentView = 'dashboard-funnels';
-    let currentWizardStep = 1;
+    let currentMode = 'funnel';
+    let currentStep = 1;
 
-    function switchView(view) {
-      currentView = view;
-      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    function switchDashboardView(view) {
+      currentMode = view;
+      document.querySelectorAll('.view-tab-btn').forEach(b => b.classList.remove('active'));
 
-      const dashView = document.getElementById('view-dashboard');
-      const wizView = document.getElementById('view-wizard');
+      const cockpit = document.getElementById('view-cockpit');
+      const wizard = document.getElementById('view-wizard-linear');
 
-      if (view === 'dashboard-funnels') {
-        document.getElementById('btn-view-funnels').classList.add('active');
-        dashView.style.display = 'grid';
-        wizView.classList.remove('active');
+      if (view === 'funnel') {
+        document.getElementById('btn-tab-funnels').classList.add('active');
+        document.getElementById('seg-funnels').classList.add('active');
+        document.getElementById('seg-boutiques').classList.remove('active');
+        cockpit.style.display = 'grid';
+        wizard.classList.remove('active');
 
-        // Configure funnel dashboard
-        document.getElementById('dash-title').textContent = "Vue d'ensemble des Funnels COD";
-        document.getElementById('dash-sub').textContent = "Suivi du chiffre d'affaires encaissé, des livraisons 58 Wilayas et des performances de conversion.";
-        document.getElementById('btn-create-label').textContent = "Nouveau Funnel";
-        document.getElementById('metric-ca').textContent = "1 428 500 DA";
-        document.getElementById('metric-active-label').textContent = "Funnels Actifs";
-        document.getElementById('metric-active-count').textContent = "4 Actifs";
-        document.getElementById('side-store-avatar').textContent = "F";
-        document.getElementById('side-store-title').textContent = "Flash-Convert DZ";
-        document.getElementById('side-store-type').textContent = "Tunnel COD Actif";
-        document.getElementById('tab-side-funnels').classList.add('active');
-        document.getElementById('tab-side-boutiques').classList.remove('active');
-      } else if (view === 'dashboard-boutiques') {
-        document.getElementById('btn-view-boutiques').classList.add('active');
-        dashView.style.display = 'grid';
-        wizView.classList.remove('active');
+        document.getElementById('crumb-section').textContent = 'Funnels';
+        document.getElementById('page-title').textContent = 'Tableau de bord Funnels';
+        document.getElementById('btn-new-store-label').textContent = 'Créer un Funnel';
+        document.getElementById('kpi-ca').textContent = '1 428 500 DA';
+        document.getElementById('kpi-active-label').textContent = 'Funnels Actifs';
+        document.getElementById('kpi-active-val').textContent = '4 Actifs';
+        document.getElementById('side-store-name').textContent = 'Flash-Convert DZ';
+        document.getElementById('side-store-status').textContent = 'Production · En ligne';
+        document.getElementById('projects-section-title').textContent = 'Vos Tunnels de Vente Déployés';
+      } else if (view === 'boutique') {
+        document.getElementById('btn-tab-boutiques').classList.add('active');
+        document.getElementById('seg-funnels').classList.remove('active');
+        document.getElementById('seg-boutiques').classList.add('active');
+        cockpit.style.display = 'grid';
+        wizard.classList.remove('active');
 
-        // Configure boutique dashboard
-        document.getElementById('dash-title').textContent = "Vue d'ensemble des Boutiques";
-        document.getElementById('dash-sub').textContent = "Catalogue multi-produits, stocks, commandes et fidélité client en Algérie.";
-        document.getElementById('btn-create-label').textContent = "Nouvelle Boutique";
-        document.getElementById('metric-ca').textContent = "2 180 000 DA";
-        document.getElementById('metric-active-label').textContent = "Boutiques Actives";
-        document.getElementById('metric-active-count').textContent = "2 Actives";
-        document.getElementById('side-store-avatar').textContent = "B";
-        document.getElementById('side-store-title').textContent = "Atlas Minimal";
-        document.getElementById('side-store-type').textContent = "Catalogue En Ligne";
-        document.getElementById('tab-side-funnels').classList.remove('active');
-        document.getElementById('tab-side-boutiques').classList.add('active');
-      } else if (view === 'create-wizard') {
-        document.getElementById('btn-view-wizard').classList.add('active');
-        dashView.style.display = 'none';
-        wizView.classList.add('active');
-        gotoWizardStep(1);
+        document.getElementById('crumb-section').textContent = 'Boutiques';
+        document.getElementById('page-title').textContent = 'Tableau de bord Boutiques';
+        document.getElementById('btn-new-store-label').textContent = 'Créer une Boutique';
+        document.getElementById('kpi-ca').textContent = '2 180 000 DA';
+        document.getElementById('kpi-active-label').textContent = 'Boutiques Actives';
+        document.getElementById('kpi-active-val').textContent = '2 Actives';
+        document.getElementById('side-store-name').textContent = 'Atlas Minimal';
+        document.getElementById('side-store-status').textContent = 'Catalogue · En ligne';
+        document.getElementById('projects-section-title').textContent = 'Vos Boutiques en Ligne';
+      } else if (view === 'wizard') {
+        document.getElementById('btn-tab-wizard').classList.add('active');
+        cockpit.style.display = 'none';
+        wizard.classList.add('active');
+        jumpToWizardStep(1);
       }
     }
 
-    function gotoWizardStep(step) {
-      currentWizardStep = step;
-      document.querySelectorAll('.stepper-step').forEach((el, idx) => {
-        el.classList.remove('active');
-        if (idx + 1 < step) el.classList.add('completed');
-        else el.classList.remove('completed');
-        if (idx + 1 === step) el.classList.add('active');
+    function jumpToWizardStep(step) {
+      currentStep = step;
+      document.querySelectorAll('.step-pill-indicator').forEach((el, i) => {
+        el.classList.remove('active', 'done');
+        if (i + 1 < step) el.classList.add('done');
+        else if (i + 1 === step) el.classList.add('active');
       });
 
-      document.querySelectorAll('.wizard-step-body').forEach(el => el.classList.remove('active'));
-      const activeBody = document.getElementById(`wizard-step-${step}`);
-      if (activeBody) activeBody.classList.add('active');
+      document.querySelectorAll('.wizard-form-body').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById(`form-step-${step}`);
+      if (target) target.classList.add('active');
 
-      const prevBtn = document.getElementById('btn-wiz-prev');
-      const nextBtnLabel = document.getElementById('btn-wiz-next-label');
+      const prevBtn = document.getElementById('btn-linear-prev');
+      const nextBtnLabel = document.getElementById('btn-linear-label');
 
       if (step === 1) prevBtn.style.display = 'none';
       else prevBtn.style.display = 'block';
 
-      if (step === 4) nextBtnLabel.textContent = "Déployer en 1 Clic sur Vercel";
-      else nextBtnLabel.textContent = `Continuer vers l'Étape ${step + 1}`;
+      if (step === 4) nextBtnLabel.textContent = 'Déployer sur Vercel';
+      else nextBtnLabel.textContent = `Étape Suivante`;
     }
 
-    function changeWizardStep(delta) {
-      const next = currentWizardStep + delta;
+    function moveWizardStep(delta) {
+      const next = currentStep + delta;
       if (next >= 1 && next <= 4) {
-        gotoWizardStep(next);
+        jumpToWizardStep(next);
       } else if (next > 4) {
-        alert("Félicitations ! Le funnel / boutique a été simulé avec succès et prêt à être déployé.");
-        switchView('dashboard-funnels');
+        alert('Validation réussie ! Votre funnel/boutique est prêt à être déployé.');
+        switchDashboardView('funnel');
       }
     }
 
-    function selectTemplateCard(el) {
-      document.querySelectorAll('.tpl-card-choice').forEach(c => c.classList.remove('selected'));
+    function pickTemplateCard(el) {
+      document.querySelectorAll('.tpl-selectable-card').forEach(c => c.classList.remove('selected'));
       el.classList.add('selected');
     }
 
-    function toggleAuditDrawer() {
-      const drawer = document.getElementById('audit-drawer');
-      drawer.classList.toggle('open');
-      if (drawer.classList.contains('open')) {
-        drawer.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-
-    function toggleTheme() {
+    function toggleThemeMode() {
       const isDark = document.documentElement.classList.toggle('dark');
       document.documentElement.classList.toggle('light', !isDark);
       const icon = document.getElementById('theme-icon');
+      const text = document.getElementById('theme-text');
       if (isDark) {
-        icon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+        icon.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+        text.textContent = 'Mode Clair';
       } else {
-        icon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+        icon.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+        text.textContent = 'Mode Sombre';
       }
-      document.getElementById('theme-label').textContent = isDark ? 'Mode Clair' : 'Mode Sombre';
     }
   </script>
 </body>
