@@ -1,0 +1,2425 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EasyTrade - Maquettes des 20 Nouveaux Templates (Anti-Slop Taste Skill)</title>
+  
+  <!-- Google Fonts: Calibrated pairings according to Taste-Skill directives -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Bebas+Neue&family=Bodoni+Moda:ital,wght@0,600;0,800;1,400&family=Chakra+Petch:wght@600;700&family=Cinzel:wght@600;800&family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@500;700&family=Exo+2:wght@600;800&family=Fredoka:wght@600;700&family=Inter:wght@400;500;600;700;800&family=Italiana&family=Marcellus&family=Mulish:wght@500;700&family=Orbitron:wght@700;900&family=Outfit:wght@500;700;800;900&family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Poppins:wght@500;600;700&family=Prata&family=Quicksand:wght@600;700&family=Rajdhani:wght@600;700&family=Rubik:wght@600;800&family=Space+Grotesk:wght@600;700&family=Space+Mono:wght@700&family=Syne:wght@700;800&family=Teko:wght@600;700&family=Tenor+Sans&family=Urbanist:wght@600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #090a14;
+      --surface: #101224;
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #2540ea;
+      --accent-glow: rgba(37, 64, 234, 0.35);
+    }
+    html.light {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #2540ea;
+      --accent-glow: rgba(37, 64, 234, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      transition: background 0.25s, color 0.25s;
+      padding-bottom: 80px;
+    }
+
+    /* Top bar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(16, 18, 36, 0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    html.light .topbar { background: rgba(255, 255, 255, 0.92); }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      font-size: 1.15rem;
+      letter-spacing: -0.3px;
+    }
+    .brand-svg {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      color: var(--accent);
+    }
+    .skill-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(37, 64, 234, 0.15);
+      border: 1px solid rgba(37, 64, 234, 0.3);
+      color: #93c5fd;
+      font-family: monospace;
+      font-weight: 700;
+    }
+    html.light .skill-badge { color: #2540ea; }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .theme-btn {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      color: var(--text);
+      padding: 7px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .theme-btn:hover { border-color: var(--accent); }
+
+    /* Hero header */
+    .hero {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 40px 24px 28px;
+      text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(37, 64, 234, 0.1);
+      border: 1px solid rgba(37, 64, 234, 0.25);
+      color: #60a5fa;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+    html.light .hero-eyebrow { color: #2540ea; }
+    .hero h1 {
+      font-size: clamp(1.8rem, 3.5vw, 2.75rem);
+      font-weight: 900;
+      letter-spacing: -0.8px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--text) 40%, #60a5fa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      color: var(--text-muted);
+      font-size: 0.98rem;
+      max-width: 720px;
+      margin: 0 auto 28px;
+    }
+
+    /* Filter tabs */
+    .filter-tabs {
+      display: inline-flex;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      padding: 4px;
+      border-radius: 14px;
+      gap: 4px;
+    }
+    .filter-tab {
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-tab.active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    /* Catalog Grid */
+    .catalog {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(370px, 1fr));
+      gap: 28px;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 22px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      position: relative;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(37, 64, 234, 0.45);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-header {
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .card-title-group h3 {
+      font-size: 1.12rem;
+      font-weight: 900;
+      letter-spacing: -0.3px;
+    }
+    .card-category {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .scope-pill {
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 6px;
+      letter-spacing: 0.3px;
+    }
+    .scope-boutique {
+      background: rgba(14, 165, 233, 0.12);
+      color: #38bdf8;
+      border: 1px solid rgba(14, 165, 233, 0.25);
+    }
+    .scope-funnel {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+
+    /* Mockup Canvas Container */
+    .mockup-canvas {
+      padding: 14px;
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .mockup-frame {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Mock Nav */
+    .mock-nav {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid;
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+    .mock-nav-links {
+      display: flex;
+      gap: 10px;
+      font-size: 9.5px;
+      opacity: 0.7;
+    }
+
+    /* Mock Content Area */
+    .mock-content {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Image Banner with Badge */
+    .mock-img-banner {
+      width: 100%;
+      height: 120px;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .mock-badge-tag {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+
+    /* Headings */
+    .mock-h4 {
+      font-size: 13.5px;
+      line-height: 1.25;
+      font-weight: 800;
+    }
+    .mock-copy {
+      font-size: 10px;
+      line-height: 1.4;
+      opacity: 0.75;
+    }
+
+    /* Product or Bundle Element */
+    .mock-product-box {
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid;
+      gap: 8px;
+    }
+    .mock-p-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 170px;
+    }
+    .mock-p-price {
+      font-size: 11.5px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .mock-p-was {
+      font-size: 8.5px;
+      text-decoration: line-through;
+      opacity: 0.5;
+      margin-left: 3px;
+    }
+
+    /* Bundle Selector for Funnels */
+    .mock-bundle-options {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .mock-bundle-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 9.5px;
+      border: 1px solid;
+    }
+    .mock-bundle-selected {
+      border-width: 1.5px;
+      font-weight: 700;
+    }
+
+    /* CTA Button */
+    .mock-btn {
+      width: 100%;
+      padding: 7px 12px;
+      border-radius: 7px;
+      font-size: 10.5px;
+      font-weight: 800;
+      text-align: center;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.2px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+      transition: opacity 0.15s;
+    }
+    .mock-btn:hover { opacity: 0.92; }
+
+    /* Trust Footer */
+    .mock-trust {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 8.5px;
+      opacity: 0.7;
+    }
+
+    /* Card Details Footer */
+    .card-footer {
+      padding: 14px 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      justify-content: space-between;
+    }
+    .card-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 11px;
+    }
+    .fonts-tag {
+      font-family: monospace;
+      font-size: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--surface-border);
+      padding: 2px 7px;
+      border-radius: 5px;
+      color: var(--text-muted);
+    }
+    html.light .fonts-tag { background: #f1f5f9; }
+
+    .swatches {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .swatch {
+      width: 15px;
+      height: 15px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 0, 0, 0.25);
+      cursor: pointer;
+      position: relative;
+    }
+    .swatch:hover::after {
+      content: attr(data-hex);
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000;
+      color: #fff;
+      font-size: 9px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .card-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Card Action Buttons */
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--surface-border);
+    }
+    .btn-full-preview {
+      flex: 1;
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      padding: 9px 12px;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn-full-preview:hover {
+      filter: brightness(1.15);
+      transform: translateY(-1px);
+    }
+    .btn-code-preview {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--surface-border);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    html.light .btn-code-preview { background: #f1f5f9; }
+    .btn-code-preview:hover {
+      border-color: var(--accent);
+    }
+
+    /* Fullscreen Preview Modal */
+    .preview-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(14px);
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      padding: 14px;
+    }
+    .preview-modal-overlay.open { display: flex; }
+    .preview-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 20px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 14px 14px 0 0;
+      flex-wrap: wrap;
+    }
+    .modal-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .modal-title-wrap h2 {
+      font-size: 1.15rem;
+      font-weight: 900;
+    }
+    .modal-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .device-switcher, .view-switcher {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--surface-border);
+    }
+    .device-tab, .view-tab {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .device-tab.active, .view-tab.active {
+      background: var(--accent);
+      color: #ffffff;
+    }
+    .modal-close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--surface-border);
+      color: var(--text);
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 800;
+      transition: all 0.15s;
+    }
+    .modal-close-btn:hover {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+    .preview-modal-body {
+      flex: 1;
+      background: #090a14;
+      border: 1px solid var(--surface-border);
+      border-top: none;
+      border-radius: 0 0 14px 14px;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      overflow: hidden;
+      position: relative;
+    }
+    .preview-iframe-wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+      background: #030712;
+    }
+    .preview-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #ffffff;
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .preview-frame.device-mobile {
+      width: 390px;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+      border-left: 2px solid rgba(255, 255, 255, 0.12);
+      border-right: 2px solid rgba(255, 255, 255, 0.12);
+    }
+    .preview-frame.device-tablet {
+      width: 768px;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+    }
+    .code-editor-view {
+      display: none;
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow: auto;
+      white-space: pre;
+      border: none;
+      outline: none;
+      resize: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      </svg>
+      <span>EasyTrade</span>
+      <span class="skill-badge">ANTI-SLOP TASTE SKILL v2</span>
+    </div>
+
+    <div class="top-actions">
+      <button class="theme-btn" onclick="toggleTheme()">
+        <span id="theme-icon" style="display: flex; align-items: center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span> <span id="theme-label">Mode Clair</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero Header -->
+  <section class="hero">
+    <div class="hero-eyebrow">Design Read : 20 Directions Visuelles Non-Clichées</div>
+    <h1>Catalogue des Nouveaux Templates</h1>
+    <p>Chaque template applique les règles strictes anti-slop : vraies photographies de catalogue, typographies de caractère, palettes calibrées avec zéro gradient IA cliché, et structures adaptées au commerce COD en Algérie.</p>
+
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filterTemplates('all', this)">Tous (20)</button>
+      <button class="filter-tab" onclick="filterTemplates('boutique', this)">Boutiques Multi-Produits (10)</button>
+      <button class="filter-tab" onclick="filterTemplates('funnel', this)">Funnels Vente COD (10)</button>
+    </div>
+  </section>
+
+  <!-- Catalog Grid -->
+  <main class="catalog" id="templates-grid">
+    <!-- Populated by JavaScript -->
+  </main>
+
+  <!-- Fullscreen Template Preview Modal -->
+  <div id="preview-modal" class="preview-modal-overlay">
+    <div class="preview-modal-header">
+      <div class="modal-title-wrap">
+        <span id="modal-scope-badge" class="scope-pill"></span>
+        <h2 id="modal-template-name">Template Name</h2>
+        <span id="modal-font-badge" class="fonts-tag"></span>
+      </div>
+
+      <div class="modal-controls">
+        <!-- View Switcher -->
+        <div class="view-switcher">
+          <button class="view-tab active" id="tab-visual" onclick="switchModalView('visual')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+            Page Complète
+          </button>
+          <button class="view-tab" id="tab-code" onclick="switchModalView('code')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Code HTML
+          </button>
+        </div>
+
+        <!-- Device Switcher -->
+        <div class="device-switcher" id="device-controls">
+          <button class="device-tab active" id="btn-device-desktop" onclick="setPreviewDevice('desktop')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Desktop (100%)
+          </button>
+          <button class="device-tab" id="btn-device-tablet" onclick="setPreviewDevice('tablet')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            Tablette (768px)
+          </button>
+          <button class="device-tab" id="btn-device-mobile" onclick="setPreviewDevice('mobile')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            Mobile (390px)
+          </button>
+        </div>
+
+        <button class="modal-close-btn" onclick="closePreviewModal()" title="Fermer (Échap)">✕</button>
+      </div>
+    </div>
+
+    <div class="preview-modal-body">
+      <div class="preview-iframe-wrapper" id="iframe-wrapper">
+        <iframe id="preview-frame" class="preview-frame"></iframe>
+      </div>
+      <textarea id="code-view" class="code-editor-view" readonly></textarea>
+    </div>
+  </div>
+
+  <script>
+    const TEMPLATES = [
+      // ──────────────── BOUTIQUES (10) ────────────────
+      {
+        id: "atlas-minimal",
+        name: "ATLAS MINIMAL",
+        scope: "boutique",
+        category: "Mode & Prêt-à-porter",
+        badge: "Permanent Collection",
+        headline: "L'élégance du minimalisme, coupée pour durer.",
+        sub: "Vestiaire intemporel en lin lavé et coton peigné lourd.",
+        fonts: "Playfair Display & Inter",
+        headingFont: "'Playfair Display', serif",
+        bodyFont: "'Inter', sans-serif",
+        image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Chemise Lin Tunisien Écru",
+        demoPrice: "6 400 DA",
+        demoWasPrice: "8 900 DA",
+        ctaText: "Découvrir la collection",
+        colors: {
+          bg: "#fbfbfa",
+          surface: "#ffffff",
+          text: "#18181b",
+          accent: "#1c1917",
+          accentText: "#ffffff",
+          accentSoft: "#f4f4f5",
+          border: "#e4e4e7"
+        },
+        desc: "Direction éditoriale épurée. Pas d'artifice, grand espace respirant et typographie haute couture."
+      },
+      {
+        id: "kasbah-heritage",
+        name: "KASBAH HERITAGE",
+        scope: "boutique",
+        category: "Artisanat d'Art & Terroir",
+        badge: "Artisanat Fait Main",
+        headline: "L'art ancestral algérien directement chez vous.",
+        sub: "Poteries de Sejnane, tapis berbères noués main et argenterie kabyle.",
+        fonts: "Cinzel & Plus Jakarta Sans",
+        headingFont: "'Cinzel', serif",
+        bodyFont: "'Plus Jakarta Sans', sans-serif",
+        image: "https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Vase Céramique Cuite Ocre",
+        demoPrice: "4 800 DA",
+        demoWasPrice: "6 500 DA",
+        ctaText: "Explorer le catalogue",
+        colors: {
+          bg: "#f7f3ee",
+          surface: "#ffffff",
+          text: "#292524",
+          accent: "#c25e2e",
+          accentText: "#ffffff",
+          accentSoft: "#fbeee6",
+          border: "#e7ded5"
+        },
+        desc: "Chaleur de la terre cuite et texture minérale. Conçu pour honorer le patrimoine d'Algérie."
+      },
+      {
+        id: "sahara-noir",
+        name: "SAHARA NOIR",
+        scope: "boutique",
+        category: "Haute Parfumerie & Horlogerie",
+        badge: "Édition Prestige",
+        headline: "Des essences rares, un sillage inoubliable.",
+        sub: "Oud précieux du Cambodge, ambre gris et maroquinerie pleine fleur numérotée.",
+        fonts: "Cormorant Garamond & Outfit",
+        headingFont: "'Cormorant Garamond', serif",
+        bodyFont: "'Outfit', sans-serif",
+        image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Extrait de Parfum Oud Royal 100ml",
+        demoPrice: "18 500 DA",
+        demoWasPrice: "24 000 DA",
+        ctaText: "Commander le flacon",
+        colors: {
+          bg: "#0b0c10",
+          surface: "#13151b",
+          text: "#f8fafc",
+          accent: "#d4af37",
+          accentText: "#000000",
+          accentSoft: "rgba(212, 175, 55, 0.15)",
+          border: "#2a2e3d"
+        },
+        desc: "Dark luxury souverain. Noir obsidienne profond et or champagne brossé sans éclat clinquant."
+      },
+      {
+        id: "medina-beauty",
+        name: "MEDINA BEAUTY",
+        scope: "boutique",
+        category: "Cosmétique & Soins Bio",
+        badge: "100% Ingrédients Végétaux",
+        headline: "Le meilleur de la botanique pour votre peau.",
+        sub: "Sérums purs à la figue de barbarie, huiles d'argan et hydrolats frais.",
+        fonts: "Marcellus & DM Sans",
+        headingFont: "'Marcellus', serif",
+        bodyFont: "'DM Sans', sans-serif",
+        image: "https://images.unsplash.com/photo-1608248597359-21b6d2133271?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Élixir Figue de Barbarie 30ml",
+        demoPrice: "3 900 DA",
+        demoWasPrice: "5 200 DA",
+        ctaText: "Découvrir la routine",
+        colors: {
+          bg: "#fdfbf9",
+          surface: "#ffffff",
+          text: "#1f2937",
+          accent: "#059669",
+          accentText: "#ffffff",
+          accentSoft: "#e8f5e9",
+          border: "#eedcd4"
+        },
+        desc: "Esthétique botanique apaisante. Vert sauge herboriste et rose poudré soyeux."
+      },
+      {
+        id: "cyber-tech",
+        name: "CYBER DZ TECH",
+        scope: "boutique",
+        category: "Gaming & Composants PC",
+        badge: "Garantie 12 Mois & Testé",
+        headline: "La haute performance livrée en 24h.",
+        sub: "Cartes graphiques, casques haute fidélité et périphériques mécaniques pour joueurs exigeants.",
+        fonts: "Orbitron & Space Grotesk",
+        headingFont: "'Orbitron', sans-serif",
+        bodyFont: "'Space Grotesk', sans-serif",
+        image: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Casque Audio Spatial Pro 7.1",
+        demoPrice: "11 900 DA",
+        demoWasPrice: "16 500 DA",
+        ctaText: "Voir les configurations",
+        colors: {
+          bg: "#090a15",
+          surface: "#101324",
+          text: "#f1f5f9",
+          accent: "#00e5ff",
+          accentText: "#000000",
+          accentSoft: "rgba(0, 229, 255, 0.15)",
+          border: "#1e2646"
+        },
+        desc: "Ambiance technique tranchante. Bleu spatial et cyan laser précis pour l'informatique."
+      },
+      {
+        id: "babeled-street",
+        name: "BAB EL STREET",
+        scope: "boutique",
+        category: "Streetwear & Sneakers",
+        badge: "Drop 50 Pièces Seules",
+        headline: "Coupe brute. Pensé pour la rue.",
+        sub: "Hoodies boxy 480 GSM, t-shirts sérigraphiés épais et accessoires utilitaires.",
+        fonts: "Syne & Archivo",
+        headingFont: "'Syne', sans-serif",
+        bodyFont: "'Archivo', sans-serif",
+        image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Hoodie Boxy Casbah Heavyweight",
+        demoPrice: "7 200 DA",
+        demoWasPrice: "9 500 DA",
+        ctaText: "Acheter le Drop",
+        colors: {
+          bg: "#f4f4f0",
+          surface: "#ffffff",
+          text: "#0a0a0a",
+          accent: "#ff3300",
+          accentText: "#ffffff",
+          accentSoft: "#ffe600",
+          border: "#0a0a0a"
+        },
+        desc: "Néo-brutalisme sans filtre. Typographie monumentale, bordures noires denses et orange signalétique."
+      },
+      {
+        id: "yalla-kids",
+        name: "YALLA KIDS",
+        scope: "boutique",
+        category: "Bébé, Jouets & Montessori",
+        badge: "Approuvé par les Pédiatres",
+        headline: "Le confort et l'éveil pour vos petits.",
+        sub: "Jouets éducatifs en bois certifié, gigoteuses respirantes et indispensables naissance.",
+        fonts: "Fredoka & Quicksand",
+        headingFont: "'Fredoka', cursive",
+        bodyFont: "'Quicksand', sans-serif",
+        image: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Tour d'Éveil Évolutive en Bois",
+        demoPrice: "8 900 DA",
+        demoWasPrice: "12 000 DA",
+        ctaText: "Découvrir la sélection",
+        colors: {
+          bg: "#fefcf6",
+          surface: "#ffffff",
+          text: "#1e293b",
+          accent: "#f59e0b",
+          accentText: "#ffffff",
+          accentSoft: "#fef3c7",
+          border: "#fde68a"
+        },
+        desc: "Courbes douces et rassurance familiale. Teintes miel ambré et vanille apaisante."
+      },
+      {
+        id: "dar-deco",
+        name: "DAR DECO",
+        scope: "boutique",
+        category: "Maison & Céramique",
+        badge: "Nouvelle Collection",
+        headline: "Un intérieur harmonieux et organique.",
+        sub: "Luminaires wabi-sabi, vaisselle d'atelier artisanale et textiles de lin brut.",
+        fonts: "Tenor Sans & Mulish",
+        headingFont: "'Tenor Sans', sans-serif",
+        bodyFont: "'Mulish', sans-serif",
+        image: "https://images.unsplash.com/photo-1579656381226-5fc0f0100c3b?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Lampe de Table Céramique Ocre",
+        demoPrice: "5 700 DA",
+        demoWasPrice: "7 800 DA",
+        ctaText: "Sublimer mon salon",
+        colors: {
+          bg: "#f5f4ef",
+          surface: "#ffffff",
+          text: "#2d2a26",
+          accent: "#556b2f",
+          accentText: "#ffffff",
+          accentSoft: "#e8e6df",
+          border: "#ded9cf"
+        },
+        desc: "Inspiration méditerranéenne wabi-sabi. Enduit de chaux naturelle et vert olive végétal."
+      },
+      {
+        id: "titan-sport",
+        name: "TITAN SPORT",
+        scope: "boutique",
+        category: "Fitness & Nutrition Athlétique",
+        badge: "Pureté Testée en Labo",
+        headline: "Dépassez vos limites à chaque série.",
+        sub: "Protéines isolat natives, vêtements de compression sans coutures et équipement de force.",
+        fonts: "Teko & Barlow Condensed",
+        headingFont: "'Teko', sans-serif",
+        bodyFont: "'Barlow Condensed', sans-serif",
+        image: "https://images.unsplash.com/photo-1584863265045-f9d10ca7fa61?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Whey Isolate Native 2kg",
+        demoPrice: "13 500 DA",
+        demoWasPrice: "17 000 DA",
+        ctaText: "Commander mon pack",
+        colors: {
+          bg: "#0e1015",
+          surface: "#161922",
+          text: "#ffffff",
+          accent: "#ccff00",
+          accentText: "#000000",
+          accentSoft: "rgba(204, 255, 0, 0.15)",
+          border: "#242938"
+        },
+        desc: "Graphisme athlétique sans compromis. Noir carbone et jaune volt haute visibilité."
+      },
+      {
+        id: "gourmet-el-bahia",
+        name: "GOURMET EL BAHIA",
+        scope: "boutique",
+        category: "Épicerie Fine & Récoltes Rares",
+        badge: "Terroir 100% Certifié",
+        headline: "Les joyaux gustatifs d'Algérie.",
+        sub: "Dattes Deglet Nour de Tolga première cueillette, miels de cèdre et huiles médaillées.",
+        fonts: "Bodoni Moda & Spectral",
+        headingFont: "'Bodoni Moda', serif",
+        bodyFont: "'Spectral', serif",
+        image: "https://images.unsplash.com/photo-1509358271058-acd22cc93898?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Dattes Fourrées Tolga Prestige 1kg",
+        demoPrice: "4 200 DA",
+        demoWasPrice: "5 500 DA",
+        ctaText: "Découvrir les récoltes",
+        colors: {
+          bg: "#fcf9f2",
+          surface: "#ffffff",
+          text: "#1a202c",
+          accent: "#064e3b",
+          accentText: "#ffffff",
+          accentSoft: "#fef08a",
+          border: "#e6dfd1"
+        },
+        desc: "Souveraineté gastronomique. Ivoire lin noble et vert émeraude des oasis."
+      },
+
+      // ──────────────── FUNNELS COD (10) ────────────────
+      {
+        id: "flash-convert",
+        name: "FLASH-CONVERT",
+        scope: "funnel",
+        category: "Gadgets Viraux & Utilitaires",
+        badge: "Offre Spéciale 48H",
+        headline: "La solution efficace que tout le monde s'arrache.",
+        sub: "Résout vos tracas du quotidien en quelques secondes. Plus de 2 500 utilisateurs en Algérie.",
+        fonts: "Rubik & Inter",
+        headingFont: "'Rubik', sans-serif",
+        bodyFont: "'Inter', sans-serif",
+        image: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Aspirateur Cyclonique Portable Voiture",
+        demoPrice: "3 900 DA",
+        demoWasPrice: "6 500 DA",
+        ctaText: "COMMANDER - PAIEMENT À LA LIVRAISON",
+        colors: {
+          bg: "#ffffff",
+          surface: "#f8fafc",
+          text: "#0f172a",
+          accent: "#2540ea",
+          accentText: "#ffffff",
+          accentSoft: "#eff6ff",
+          border: "#e2e8f0"
+        },
+        isBundle: true,
+        bundleOption: "Pack 2 Appareils : 6 500 DA (-20%)",
+        desc: "Architecture COD taillée pour TikTok Ads. Formulaire express, pack dégressif et réassurance."
+      },
+      {
+        id: "velvet-elixir",
+        name: "VELVET ELIXIR",
+        scope: "funnel",
+        category: "Sérum Anti-Imperfections",
+        badge: "98% Satisfaction Testée",
+        headline: "Retrouvez un teint net et rayonnant dès 7 jours.",
+        sub: "Formulation concentrée en acide hyaluronique pur et peptides régénérants.",
+        fonts: "Prata & Plus Jakarta Sans",
+        headingFont: "'Prata', serif",
+        bodyFont: "'Plus Jakarta Sans', sans-serif",
+        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Sérum Rajeunissant Bio-Actif 30ml",
+        demoPrice: "4 400 DA",
+        demoWasPrice: "7 200 DA",
+        ctaText: "RÉSERVER MON FLACON (COD)",
+        colors: {
+          bg: "#faf6f0",
+          surface: "#ffffff",
+          text: "#1e1919",
+          accent: "#832729",
+          accentText: "#ffffff",
+          accentSoft: "#fae8e0",
+          border: "#ebdcd0"
+        },
+        isBundle: true,
+        bundleOption: "Duo Flacons : 7 500 DA (-25% + Livraison Gratuite)",
+        desc: "Cosméceutique haut de gamme. Avis cliniques vérifiés et formulation en gros plan."
+      },
+      {
+        id: "hydra-pulse",
+        name: "HYDRA-PULSE",
+        scope: "funnel",
+        category: "Soulagement Musculaire & Kiné",
+        badge: "Recommandé par les Praticiens",
+        headline: "Dénouez vos tensions musculaires en 5 minutes.",
+        sub: "Percussion profonde 3 200 tr/min. Soulagement ciblé pour le dos, les trapèzes et les jambes.",
+        fonts: "Chakra Petch & Inter",
+        headingFont: "'Chakra Petch', sans-serif",
+        bodyFont: "'Inter', sans-serif",
+        image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Pistolet Thérapeutique Haute Fréquence",
+        demoPrice: "6 900 DA",
+        demoWasPrice: "11 000 DA",
+        ctaText: "PROFITER DE LA REMISE -35%",
+        colors: {
+          bg: "#0b0f19",
+          surface: "#111827",
+          text: "#f9fafb",
+          accent: "#0284c7",
+          accentText: "#ffffff",
+          accentSoft: "rgba(2, 132, 199, 0.15)",
+          border: "#1f2937"
+        },
+        isBundle: true,
+        bundleOption: "Pack Complet + 6 Embouts : 8 500 DA",
+        desc: "Rassurance technologique médicale. Schémas d'impact et sélecteur de pack clair."
+      },
+      {
+        id: "solar-pro",
+        name: "SOLAR PRO",
+        scope: "funnel",
+        category: "Éclairage Solaire & Sécurité",
+        badge: "0 DA sur votre Facture",
+        headline: "Éclairez votre extérieur sans fil ni câble.",
+        sub: "Projecteur solaire 200W avec cellule photovoltaïque haute capacité et détecteur crépusculaire.",
+        fonts: "Rajdhani & Roboto",
+        headingFont: "'Rajdhani', sans-serif",
+        bodyFont: "'Roboto', sans-serif",
+        image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Projecteur Solaire 200W Télécommandé",
+        demoPrice: "7 800 DA",
+        demoWasPrice: "12 500 DA",
+        ctaText: "COMMANDER LE PACK SOLAIRE",
+        colors: {
+          bg: "#0f172a",
+          surface: "#1e293b",
+          text: "#ffffff",
+          accent: "#f59e0b",
+          accentText: "#000000",
+          accentSoft: "rgba(245, 158, 11, 0.15)",
+          border: "#334155"
+        },
+        isBundle: true,
+        bundleOption: "Pack Villa (2 Projecteurs) : 13 900 DA",
+        desc: "Efficacité pratique et preuves de puissance lumineuse. Teintes industrielles fiables."
+      },
+      {
+        id: "bloc-brutal",
+        name: "BLOC BRUTAL",
+        scope: "funnel",
+        category: "Tactique & Baroudeur",
+        badge: "Norme Militaire Certifiée",
+        headline: "Indestructible. Conçue pour l'extrême.",
+        sub: "Boîtier renforcé en titane et verre saphir. Étanche 50 mètres et résistante aux chocs thermiques.",
+        fonts: "Bebas Neue & Space Mono",
+        headingFont: "'Bebas Neue', sans-serif",
+        bodyFont: "'Space Mono', monospace",
+        image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Montre Commando Tactique Saharienne",
+        demoPrice: "8 400 DA",
+        demoWasPrice: "13 000 DA",
+        ctaText: "COMMANDER AVANT RUPTURE",
+        colors: {
+          bg: "#f2efe9",
+          surface: "#ffffff",
+          text: "#111111",
+          accent: "#1e3a1e",
+          accentText: "#ffffff",
+          accentSoft: "#d9d3c5",
+          border: "#111111"
+        },
+        isBundle: true,
+        bundleOption: "Avec 2 Bracelets Tactiques Offerts",
+        desc: "Graphisme brut militaire sans fard. Lignes dures, typographie pochoir et crash-tests."
+      },
+      {
+        id: "aurora-silk",
+        name: "AURORA SILK",
+        scope: "funnel",
+        category: "Épilation Lumière Pulsée",
+        badge: "Résultats Institut à Domicile",
+        headline: "Une peau douce et soyeuse sans douleur.",
+        sub: "Flashs de précision IPL sécurisés. Réduction de 92% de la repousse en 8 séances.",
+        fonts: "Italiana & Urbanist",
+        headingFont: "'Italiana', serif",
+        bodyFont: "'Urbanist', sans-serif",
+        image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Épilateur IPL Compact Pro Glow",
+        demoPrice: "9 500 DA",
+        demoWasPrice: "15 000 DA",
+        ctaText: "RECEVOIR MON APPAREIL (COD)",
+        colors: {
+          bg: "#fdfaff",
+          surface: "#ffffff",
+          text: "#18181b",
+          accent: "#a855f7",
+          accentText: "#ffffff",
+          accentSoft: "#fae8ff",
+          border: "#f3e8ff"
+        },
+        isBundle: true,
+        bundleOption: "Appareil + Lunettes UV + Tondeuse Précision",
+        desc: "Douceur nacrée lilas. Mise en valeur des économies réalisées par rapport aux salons."
+      },
+      {
+        id: "kitchen-hero",
+        name: "KITCHEN HERO",
+        scope: "funnel",
+        category: "Robot Cuisine & Pâtisserie",
+        badge: "Gain de Temps Multiplié par 10",
+        headline: "Préparez vos plats et pâtes en quelques secondes.",
+        sub: "Hachoir multifonction 3L en acier inoxydable. Idéal pour viandes, amandes, légumes et sauces.",
+        fonts: "Outfit & Poppins",
+        headingFont: "'Outfit', sans-serif",
+        bodyFont: "'Poppins', sans-serif",
+        image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Hachoir Express Multifonction 3L Inox",
+        demoPrice: "4 600 DA",
+        demoWasPrice: "7 000 DA",
+        ctaText: "COMMANDER LE HACHOIR MAINTENANT",
+        colors: {
+          bg: "#fffdfa",
+          surface: "#ffffff",
+          text: "#1f2937",
+          accent: "#e11d48",
+          accentText: "#ffffff",
+          accentSoft: "#ffe4e6",
+          border: "#fecdd3"
+        },
+        isBundle: true,
+        bundleOption: "Pack Duo Couteaux Titane Offert",
+        desc: "Générosité culinaire. Avis de mamans algériennes, démonstrations concrètes de hachage express."
+      },
+      {
+        id: "royal-oud",
+        name: "ROYAL OUD",
+        scope: "funnel",
+        category: "Parfum Unique & Coffret Cadeau",
+        badge: "Coffret Prestige Offert",
+        headline: "Une présence magnétique et raffinée.",
+        sub: "Flaconnage massif 100ml avec fiole de voyage concentrée. Tenue certifiée 24h sur les textiles.",
+        fonts: "Cinzel & Lora",
+        headingFont: "'Cinzel', serif",
+        bodyFont: "'Lora', serif",
+        image: "https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Coffret Oud Al Sultan 100ml + Fiole",
+        demoPrice: "5 900 DA",
+        demoWasPrice: "9 500 DA",
+        ctaText: "RÉSERVER MON COFFRET CADEAU",
+        colors: {
+          bg: "#0a0a0c",
+          surface: "#141419",
+          text: "#f4f4f5",
+          accent: "#c59b27",
+          accentText: "#000000",
+          accentSoft: "rgba(197, 155, 39, 0.15)",
+          border: "#2d2b1f"
+        },
+        isBundle: true,
+        bundleOption: "2 Coffrets (Pour Couple) : 9 900 DA",
+        desc: "Mise en scène statutaire. Flacon sur piédestal et rassurance de sillage longue durée."
+      },
+      {
+        id: "car-shield",
+        name: "CAR AUTO-SHIELD",
+        scope: "funnel",
+        category: "Sécurité & Conduite Automobile",
+        badge: "Compatible Toutes Voitures",
+        headline: "Roulez en toute sérénité avec la dashcam 4K.",
+        sub: "Enregistrement en boucle continu avant et arrière avec capteur nocturne Sony et vision grand angle.",
+        fonts: "Exo 2 & Inter",
+        headingFont: "'Exo 2', sans-serif",
+        bodyFont: "'Inter', sans-serif",
+        image: "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Dashcam 4K Ultra Night + Carte 64Go",
+        demoPrice: "8 200 DA",
+        demoWasPrice: "12 900 DA",
+        ctaText: "COMMANDER MON PACK AUTO",
+        colors: {
+          bg: "#0d1117",
+          surface: "#161b22",
+          text: "#f0f6fc",
+          accent: "#ef4444",
+          accentText: "#ffffff",
+          accentSoft: "rgba(239, 68, 68, 0.15)",
+          border: "#30363d"
+        },
+        isBundle: true,
+        bundleOption: "Avec Carte Mémoire 64Go Ultra Offerte",
+        desc: "Rassurance automobile. Preuves vidéo de jour et de nuit, montage express 5 minutes."
+      },
+      {
+        id: "zenith-sleep",
+        name: "ZENITH SLEEP",
+        scope: "funnel",
+        category: "Sommeil & Soulagement Cervical",
+        badge: "30 Nuits d'Essai COD",
+        headline: "Réveillez-vous enfin sans raideur au cou.",
+        sub: "Mousse à mémoire de forme haute résilience. Maintien anatomique parfait de la colonne vertébrale.",
+        fonts: "Cabinet Grotesk & Satoshi",
+        headingFont: "'Cabinet Grotesk', sans-serif",
+        bodyFont: "'Satoshi', sans-serif",
+        image: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=600&q=80",
+        demoProduct: "Oreiller Ergonomique Cervical CloudRest",
+        demoPrice: "4 900 DA",
+        demoWasPrice: "7 900 DA",
+        ctaText: "TESTER PENDANT 30 NUITS (COD)",
+        colors: {
+          bg: "#f5f7fb",
+          surface: "#ffffff",
+          text: "#1e1b4b",
+          accent: "#4338ca",
+          accentText: "#ffffff",
+          accentSoft: "#eef2ff",
+          border: "#e0e7ff"
+        },
+        isBundle: true,
+        bundleOption: "Pack Duo Pour Lit Double : 8 500 DA",
+        desc: "Apaisement ergonomique. Explication du soulagement des disques cervicaux et garantie d'essai."
+      }
+    ];
+
+    function renderTemplates(filter = 'all') {
+      const grid = document.getElementById('templates-grid');
+      grid.innerHTML = '';
+
+      const filtered = TEMPLATES.filter(t => filter === 'all' || t.scope === filter);
+
+      filtered.forEach((t, index) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <!-- Header -->
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="card-category">#${index + 1} · ${t.category}</span>
+              <h3>${t.name}</h3>
+            </div>
+            <span class="scope-pill scope-${t.scope}">${t.scope === 'boutique' ? 'Boutique' : 'Funnel COD'}</span>
+          </div>
+
+          <!-- Realistic Mini Canvas Mockup -->
+          <div class="mockup-canvas" style="background: ${t.colors.bg};">
+            <div class="mockup-frame" style="background: ${t.colors.surface}; border-color: ${t.colors.border}; color: ${t.colors.text}; font-family: ${t.bodyFont};">
+              <!-- Mini Nav -->
+              <div class="mock-nav" style="border-color: ${t.colors.border}; background: ${t.colors.bg};">
+                <span style="font-family: ${t.headingFont};">${t.name}</span>
+                <div class="mock-nav-links">
+                  <span>Accueil</span>
+                  <span>Produits</span>
+                  <span>Contact</span>
+                </div>
+              </div>
+
+              <!-- Mini Content -->
+              <div class="mock-content">
+                <!-- Real curated image banner -->
+                <div class="mock-img-banner" style="background-image: url('${t.image}');">
+                  <span class="mock-badge-tag" style="background: ${t.colors.accent}; color: ${t.colors.accentText};">
+                    ${t.badge}
+                  </span>
+                </div>
+
+                <h4 class="mock-h4" style="font-family: ${t.headingFont};">${t.headline}</h4>
+                <p class="mock-copy">${t.sub}</p>
+
+                <!-- Product Box -->
+                <div class="mock-product-box" style="background: ${t.colors.bg}; border-color: ${t.colors.border};">
+                  <span class="mock-p-title">${t.demoProduct}</span>
+                  <span class="mock-p-price" style="color: ${t.colors.accent};">
+                    ${t.demoPrice}
+                    <span class="mock-p-was">${t.demoWasPrice}</span>
+                  </span>
+                </div>
+
+                ${t.isBundle ? `
+                  <div class="mock-bundle-options">
+                    <div class="mock-bundle-item mock-bundle-selected" style="background: ${t.colors.accentSoft}; border-color: ${t.colors.accent};">
+                      <span>${t.bundleOption}</span>
+                      <span style="color: ${t.colors.accent}; font-weight: 800;">✓ Sélectionné</span>
+                    </div>
+                  </div>
+                ` : ''}
+
+                <!-- CTA Button -->
+                <button class="mock-btn" style="background: ${t.colors.accent}; color: ${t.colors.accentText};">
+                  ${t.ctaText}
+                </button>
+
+                <div class="mock-trust">
+                  <span>Livraison 58 Wilayas</span> · <span>Paiement Cash à la Livraison</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Details Footer -->
+          <div class="card-footer">
+            <p class="card-desc">${t.desc}</p>
+
+            <div class="card-meta-row">
+              <span class="fonts-tag">${t.fonts}</span>
+              <div class="swatches">
+                <div class="swatch" style="background: ${t.colors.bg};" data-hex="Fond: ${t.colors.bg}"></div>
+                <div class="swatch" style="background: ${t.colors.surface};" data-hex="Surface: ${t.colors.surface}"></div>
+                <div class="swatch" style="background: ${t.colors.accent};" data-hex="Accent: ${t.colors.accent}"></div>
+                <div class="swatch" style="background: ${t.colors.text};" data-hex="Texte: ${t.colors.text}"></div>
+              </div>
+            </div>
+
+            <!-- Action Buttons: Full View & Code -->
+            <div class="card-actions">
+              <button class="btn-full-preview" onclick="openFullPreview('${t.id}')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Voir Page Complète
+              </button>
+              <button class="btn-code-preview" onclick="openCodePreview('${t.id}')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                Code HTML
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterTemplates(scope, btn) {
+      document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTemplates(scope);
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      document.documentElement.classList.toggle('light', !isDark);
+      const iconSpan = document.getElementById('theme-icon');
+      if (isDark) {
+        iconSpan.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+      } else {
+        iconSpan.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+      }
+      document.getElementById('theme-label').textContent = isDark ? 'Mode Clair' : 'Mode Sombre';
+    }
+
+    // ──────────────── FULL TEMPLATE HTML GENERATOR ────────────────
+    function generateFullTemplateHtml(t) {
+      const isBoutique = t.scope === 'boutique';
+      return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>\${t.name} - \${isBoutique ? 'Boutique Officielle' : 'Offre Spéciale COD'}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Bebas+Neue&family=Bodoni+Moda:ital,wght@0,600;0,800;1,400&family=Chakra+Petch:wght@600;700&family=Cinzel:wght@600;800&family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@500;700&family=Exo+2:wght@600;800&family=Fredoka:wght@600;700&family=Inter:wght@400;500;600;700;800&family=Italiana&family=Marcellus&family=Mulish:wght@500;700&family=Orbitron:wght@700;900&family=Outfit:wght@500;700;800;900&family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Poppins:wght@500;600;700&family=Prata&family=Quicksand:wght@600;700&family=Rajdhani:wght@600;700&family=Rubik:wght@600;800&family=Space+Grotesk:wght@600;700&family=Space+Mono:wght@700&family=Syne:wght@700;800&family=Teko:wght@600;700&family=Tenor+Sans&family=Urbanist:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: \${t.colors.bg};
+      --surface: \${t.colors.surface};
+      --text: \${t.colors.text};
+      --text-muted: \${t.colors.text}aa;
+      --accent: \${t.colors.accent};
+      --accent-text: \${t.colors.accentText};
+      --accent-soft: \${t.colors.accentSoft};
+      --border: \${t.colors.border};
+      --font-heading: \${t.headingFont};
+      --font-body: \${t.bodyFont};
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: \${!isBoutique ? '80px' : '0'};
+    }
+    h1, h2, h3, h4, .font-heading {
+      font-family: var(--font-heading);
+      letter-spacing: -0.02em;
+    }
+    img { max-width: 100%; height: auto; display: block; }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    .top-bar {
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 9px 16px;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+
+    .site-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .logo {
+      font-family: var(--font-heading);
+      font-size: 1.35rem;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .cart-badge-btn {
+      background: var(--accent-soft);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .hero-section { padding: 60px 0; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 48px;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 32px; }
+    }
+    .hero-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .hero-h1 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.15;
+      font-weight: 900;
+      margin-bottom: 18px;
+    }
+    .hero-sub {
+      font-size: 16px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 28px;
+      max-width: 52ch;
+    }
+    .hero-btns {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .btn-main {
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .btn-main:hover { transform: translateY(-2px); opacity: 0.95; }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 13px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .hero-trust-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      flex-wrap: wrap;
+    }
+    .hero-media-wrap {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+      background: var(--surface);
+    }
+    .hero-media-wrap img {
+      width: 100%;
+      height: 440px;
+      object-fit: cover;
+    }
+    .hero-floating-card {
+      position: absolute;
+      bottom: 18px;
+      left: 18px;
+      right: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.08);
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-pad { padding: 64px 0; }
+    .section-header {
+      text-align: center;
+      max-width: 650px;
+      margin: 0 auto 44px;
+    }
+    .section-eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .section-desc {
+      font-size: 14.5px;
+      color: var(--text-muted);
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+    }
+    .product-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    }
+    .p-img-box {
+      height: 220px;
+      position: relative;
+      overflow: hidden;
+      background: var(--border);
+    }
+    .p-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s;
+    }
+    .product-card:hover .p-img-box img { transform: scale(1.04); }
+    .p-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 5px;
+    }
+    .p-details {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+    .p-cat { font-size: 11px; color: var(--text-muted); }
+    .p-name { font-size: 14.5px; font-weight: 800; }
+    .p-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+    .p-price { font-size: 16px; font-weight: 900; color: var(--accent); }
+    .p-was-price { font-size: 12px; color: var(--text-muted); text-decoration: line-through; }
+    .p-add-btn {
+      margin-top: 10px;
+      width: 100%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      transition: background 0.15s;
+    }
+    .p-add-btn:hover {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .bundle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .bundle-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .bundle-card.featured {
+      border-color: var(--accent);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+    }
+    .bundle-tag {
+      position: absolute;
+      top: -12px;
+      right: 20px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+      letter-spacing: 0.5px;
+    }
+    .bundle-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; }
+    .bundle-desc { font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px; }
+    .bundle-price { font-size: 1.6rem; font-weight: 900; color: var(--accent); margin-bottom: 12px; }
+
+    .cod-form-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 600px;
+      margin: 0 auto;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.1);
+    }
+    .cod-form-title {
+      font-size: 1.35rem;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .cod-form-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--accent); }
+    .cod-submit-btn {
+      width: 100%;
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      margin-top: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .cod-submit-btn:hover { transform: translateY(-2px); opacity: 0.95; }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .benefit-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .benefit-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .benefit-h3 { font-size: 1.1rem; font-weight: 800; }
+    .benefit-p { font-size: 13.5px; color: var(--text-muted); line-height: 1.55; }
+
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .review-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .stars { color: #f59e0b; display: flex; gap: 3px; font-size: 14px; }
+    .review-text { font-size: 13.5px; line-height: 1.6; }
+    .reviewer-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+    .reviewer-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--accent-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .reviewer-name { font-size: 13px; font-weight: 800; }
+    .reviewer-loc { font-size: 11px; color: var(--text-muted); }
+
+    .site-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 48px 0 32px;
+      margin-top: 60px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 768px) {
+      .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .footer-col h5 {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 12px;
+    }
+
+    .sticky-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.15);
+    }
+    .sticky-price { font-size: 1.25rem; font-weight: 900; color: var(--accent); }
+    .sticky-btn {
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    \${isBoutique ? 'Livraison 58 Wilayas en 24-48h · Paiement Cash à la Réception · Support WhatsApp 7j/7' : 'OFFRE SPÉCIALE 48H · EXPÉDITION EXPRESS 58 WILAYAS · PAIEMENT CASH À LA LIVRAISON'}
+  </div>
+
+  <header class="site-header">
+    <div class="logo">\${t.name}</div>
+    \${isBoutique ? `
+      <nav class="nav-links">
+        <a href="#hero">Accueil</a>
+        <a href="#catalogue">Nouveautés</a>
+        <a href="#catalogue">Collections</a>
+        <a href="#valeurs">Notre Histoire</a>
+        <a href="#avis">Avis Clients</a>
+      </nav>
+    ` : `
+      <div style="font-size: 12px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Garantie Test & Vérification avant Paiement
+      </div>
+    `}
+    <div class="header-actions">
+      \${isBoutique ? `
+        <button class="cart-badge-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          Panier (2)
+        </button>
+      ` : `
+        <a href="#commander" class="btn-main" style="padding: 9px 18px; font-size: 12.5px;">Commander</a>
+      `}
+    </div>
+  </header>
+
+  <section class="hero-section" id="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div>
+          <span class="hero-tag">\${t.badge}</span>
+          <h1 class="hero-h1">\${t.headline}</h1>
+          <p class="hero-sub">\${t.sub}</p>
+
+          <div class="hero-btns">
+            \${isBoutique ? `
+              <a href="#catalogue" class="btn-main">\${t.ctaText}</a>
+              <a href="#valeurs" class="btn-secondary">Découvrir l'Atelier</a>
+            ` : `
+              <a href="#commander" class="btn-main">\${t.ctaText}</a>
+              <a href="#benefices" class="btn-secondary">Voir les Démonstrations</a>
+            `}
+          </div>
+
+          <div class="hero-trust-row">
+            <span>✓ Expédition 58 Wilayas</span>
+            <span>✓ Paiement Main à Main</span>
+            <span>✓ 4.9/5 (1 200+ avis)</span>
+          </div>
+        </div>
+
+        <div class="hero-media-wrap">
+          <img src="\${t.image}" alt="\${t.name} Hero">
+          <div class="hero-floating-card">
+            <div>
+              <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b;">Produit Vedette</div>
+              <div style="font-weight: 800; font-size: 13.5px;">\${t.demoProduct}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 16px; font-weight: 900; color: \${t.colors.accent};">\${t.demoPrice}</div>
+              <div style="font-size: 11px; text-decoration: line-through; color: #94a3b8;">\${t.demoWasPrice}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  \${isBoutique ? `
+    <section class="section-pad" id="catalogue" style="background: var(--surface);">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Catalogue Complet</div>
+          <h2 class="section-title">Les Pièces Maîtresses du Moment</h2>
+          <p class="section-desc">Chaque création est sélectionnée et testée selon nos standards les plus rigoureux.</p>
+        </div>
+
+        <div class="products-grid">
+          <div class="product-card">
+            <div class="p-img-box">
+              <img src="\${t.image}" alt="\${t.demoProduct}">
+              <span class="p-badge">Coup de cœur</span>
+            </div>
+            <div class="p-details">
+              <span class="p-cat">\${t.category}</span>
+              <h4 class="p-name">\${t.demoProduct}</h4>
+              <div class="p-price-row">
+                <span class="p-price">\${t.demoPrice}</span>
+                <span class="p-was-price">\${t.demoWasPrice}</span>
+              </div>
+              <button class="p-add-btn">Ajouter au Panier</button>
+            </div>
+          </div>
+
+          <div class="product-card">
+            <div class="p-img-box">
+              <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80" alt="Produit 2">
+              <span class="p-badge">-20%</span>
+            </div>
+            <div class="p-details">
+              <span class="p-cat">\${t.category}</span>
+              <h4 class="p-name">Édition Signature V2</h4>
+              <div class="p-price-row">
+                <span class="p-price">7 900 DA</span>
+                <span class="p-was-price">9 800 DA</span>
+              </div>
+              <button class="p-add-btn">Ajouter au Panier</button>
+            </div>
+          </div>
+
+          <div class="product-card">
+            <div class="p-img-box">
+              <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=600&q=80" alt="Produit 3">
+            </div>
+            <div class="p-details">
+              <span class="p-cat">\${t.category}</span>
+              <h4 class="p-name">Pack Découverte Exclusive</h4>
+              <div class="p-price-row">
+                <span class="p-price">5 200 DA</span>
+                <span class="p-was-price">6 500 DA</span>
+              </div>
+              <button class="p-add-btn">Ajouter au Panier</button>
+            </div>
+          </div>
+
+          <div class="product-card">
+            <div class="p-img-box">
+              <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80" alt="Produit 4">
+              <span class="p-badge">Stock Limité</span>
+            </div>
+            <div class="p-details">
+              <span class="p-cat">\${t.category}</span>
+              <h4 class="p-name">Accessoire Atelier Prestige</h4>
+              <div class="p-price-row">
+                <span class="p-price">3 800 DA</span>
+                <span class="p-was-price">4 900 DA</span>
+              </div>
+              <button class="p-add-btn">Ajouter au Panier</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-pad" id="valeurs">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Nos Engagements</div>
+          <h2 class="section-title">Pourquoi Commander Chez \${t.name}</h2>
+          <p class="section-desc">Un service pensé pour une tranquillité d'esprit absolue partout en Algérie.</p>
+        </div>
+
+        <div class="benefits-grid">
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3 class="benefit-h3">Qualité et Authenticité</h3>
+            <p class="benefit-p">Toutes nos pièces sont inspectées à la main avant chaque emballage sécurisé.</p>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            </div>
+            <h3 class="benefit-h3">Livraison 58 Wilayas</h3>
+            <p class="benefit-p">Partenariat avec les transporteurs les plus rapides pour une remise à domicile sous 24 à 48 heures.</p>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <h3 class="benefit-h3">Paiement à la Réception</h3>
+            <p class="benefit-p">Vous ne réglez rien d'avance. Vous payez en espèces auprès du livreur après avoir vérifié votre paquet.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  ` : `
+    <section class="section-pad" id="benefices" style="background: var(--surface);">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Performances Vérifiées</div>
+          <h2 class="section-title">Pourquoi Vous Allez L'Adopter</h2>
+          <p class="section-desc">Conçu pour résoudre votre besoin immédiatement, sans effort et en toute sécurité.</p>
+        </div>
+
+        <div class="benefits-grid">
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+            </div>
+            <h3 class="benefit-h3">Résultats Immédiats</h3>
+            <p class="benefit-p">Une prise en main intuitive dès le premier déballage pour une satisfaction instantanée.</p>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <h3 class="benefit-h3">Matériaux Renforcés</h3>
+            <p class="benefit-p">Composants haute longévité testés pour résister à une utilisation intensive quotidienne.</p>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h3 class="benefit-h3">Satisfaction 100% Garantie</h3>
+            <p class="benefit-p">Si vous n'êtes pas pleinement conquis, notre service client assure un échange rapide sans tracas.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-pad" id="commander">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Offres Spéciales</div>
+          <h2 class="section-title">Choisissez Votre Pack Promo</h2>
+          <p class="section-desc">Profitez de nos tarifs dégressifs. Plus vous commandez, plus vous économisez !</p>
+        </div>
+
+        <div class="bundle-grid">
+          <div class="bundle-card">
+            <h3 class="bundle-title">1 Pièce</h3>
+            <p class="bundle-desc">Idéal pour tester le produit</p>
+            <div class="bundle-price">\${t.demoPrice}</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Livraison calculée selon Wilaya</div>
+          </div>
+
+          <div class="bundle-card featured">
+            <span class="bundle-tag">LE PLUS VENDU (-20%)</span>
+            <h3 class="bundle-title">Pack Duo (2 Pièces)</h3>
+            <p class="bundle-desc">1 pour vous + 1 pour offrir</p>
+            <div class="bundle-price">\${t.isBundle ? (t.bundleOption.split(':')[1]?.split('(')[0]?.trim() || '6 500 DA') : '6 500 DA'}</div>
+            <div style="font-size: 12px; color: #16a34a; font-weight: 700;">Livraison Gratuite Incluse !</div>
+          </div>
+
+          <div class="bundle-card">
+            <span class="bundle-tag" style="background: #16a34a;">MEILLEURE ÉCONOMIE (-35%)</span>
+            <h3 class="bundle-title">Pack Famille (3 Pièces)</h3>
+            <p class="bundle-desc">Économie maximale pour le foyer</p>
+            <div class="bundle-price">8 900 DA</div>
+            <div style="font-size: 12px; color: #16a34a; font-weight: 700;">Livraison Gratuite + Cadeau Offert</div>
+          </div>
+        </div>
+
+        <div class="cod-form-box">
+          <h3 class="cod-form-title">Passez Commande en 30 Secondes</h3>
+          <p class="cod-form-sub">Remplissez vos informations ci-dessous. Un agent vous contactera par téléphone pour confirmer avant envoi :</p>
+
+          <form onsubmit="event.preventDefault(); alert('Merci pour votre commande ! Notre équipe va vous appeler pour confirmer la livraison.');">
+            <div class="form-group">
+              <label class="form-label">Nom et Prénom</label>
+              <input type="text" class="form-input" placeholder="Ex: Mohamed Benali" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Numéro de Téléphone (Mobile)</label>
+              <input type="tel" class="form-input" placeholder="05 / 06 / 07 XX XX XX" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Wilaya de Livraison (58 Wilayas)</label>
+              <select class="form-select" required>
+                <option value="">Sélectionnez votre wilaya...</option>
+                <option value="16">16 - Alger</option>
+                <option value="31">31 - Oran</option>
+                <option value="25">25 - Constantine</option>
+                <option value="19">19 - Sétif</option>
+                <option value="09">09 - Blida</option>
+                <option value="23">23 - Annaba</option>
+                <option value="05">05 - Batna</option>
+                <option value="13">13 - Tlemcen</option>
+                <option value="15">15 - Tizi Ouzou</option>
+                <option value="06">06 - Béjaïa</option>
+                <option value="35">35 - Boumerdès</option>
+                <option value="42">42 - Tipaza</option>
+                <option value="other">Toutes les autres wilayas (58 disponibles)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Commune & Adresse de Livraison</label>
+              <input type="text" class="form-input" placeholder="Ex: Bab Ezzouar, Cité 8 Mai 1945" required>
+            </div>
+
+            <button type="submit" class="cod-submit-btn">
+              CONFIRMER MA COMMANDE (PAIEMENT À LA LIVRAISON)
+            </button>
+
+            <div style="text-align: center; margin-top: 14px; font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Données strictement confidentielles · Zéro paiement en ligne requis
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  \`}
+
+  <section class="section-pad" id="avis" style="background: var(--surface);">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-eyebrow">Témoignages Vérifiés</div>
+        <h2 class="section-title">Ce Qu'en Disent Nos Clients</h2>
+        <p class="section-desc">Des retours authentiques de clients livrés à travers toute l'Algérie.</p>
+      </div>
+
+      <div class="reviews-grid">
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <p class="review-text">« Produit conforme à 100% aux photos et à la description. Livré chez moi à Kouba en 24 heures seulement. Le livreur était très courtois et j'ai pu ouvrir le paquet avant de payer. »</p>
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">KB</div>
+            <div>
+              <div class="reviewer-name">Karim Benali</div>
+              <div class="reviewer-loc">Alger · Commande vérifiée</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <p class="review-text">« J'avais une hésitation sur la qualité, mais franchement la finition dépasse mes attentes. Le pack 2 pièces vaut largement le coup avec la réduction. Service client au top sur WhatsApp ! »</p>
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">AS</div>
+            <div>
+              <div class="reviewer-name">Amira S.</div>
+              <div class="reviewer-loc">Oran · Commande vérifiée</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <p class="review-text">« Reçu à Constantine en 48 heures sans aucun problème. Emballage soigné et produit robuste. Je recommande sans la moindre hésitation à mes proches. »</p>
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">YM</div>
+            <div>
+              <div class="reviewer-name">Yacine M.</div>
+              <div class="reviewer-loc">Constantine · Commande vérifiée</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="logo" style="margin-bottom: 12px;">\${t.name}</div>
+          <p style="line-height: 1.6; max-width: 38ch;">Plateforme de vente de référence conçue pour l'excellence et la confiance du consommateur algérien.</p>
+        </div>
+        <div class="footer-col">
+          <h5>Navigation</h5>
+          <ul>
+            <li><a href="#hero">Accueil</a></li>
+            <li><a href="\${isBoutique ? '#catalogue' : '#commander'}">\${isBoutique ? 'Catalogue' : 'Commander'}</a></li>
+            <li><a href="#avis">Avis Clients</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Réassurance</h5>
+          <ul>
+            <li>Paiement à la livraison</li>
+            <li>Livraison 58 Wilayas</li>
+            <li>Échange sous 14 jours</li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Support 7j/7</h5>
+          <ul>
+            <li>WhatsApp : +213 (0) 550 00 00 00</li>
+            <li>contact@easytradez.site</li>
+            <li>Dimanche au Jeudi : 9h - 18h</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 \${t.name} · Propulsé par EasyTrade Commerce</div>
+        <div>Paiement Sécurisé Cash On Delivery · Tous droits réservés</div>
+      </div>
+    </div>
+  </footer>
+
+  \${!isBoutique ? `
+    <div class="sticky-bar">
+      <div>
+        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Total Promo COD</div>
+        <div class="sticky-price">\${t.demoPrice}</div>
+      </div>
+      <a href="#commander" class="sticky-btn">COMMANDER MAINTENANT</a>
+    </div>
+  ` : ''}
+
+</body>
+</html>`;
+    }
+
+    // ──────────────── MODAL CONTROLS ────────────────
+    let currentPreviewId = null;
+
+    function openFullPreview(id) {
+      currentPreviewId = id;
+      const t = TEMPLATES.find(item => item.id === id);
+      if (!t) return;
+
+      document.getElementById('modal-template-name').textContent = t.name;
+      const scopeBadge = document.getElementById('modal-scope-badge');
+      scopeBadge.textContent = t.scope === 'boutique' ? 'Boutique' : 'Funnel COD';
+      scopeBadge.className = `scope-pill scope-\${t.scope}`;
+      document.getElementById('modal-font-badge').textContent = t.fonts;
+
+      const htmlContent = generateFullTemplateHtml(t);
+
+      // Populate iframe
+      const frame = document.getElementById('preview-frame');
+      frame.srcdoc = htmlContent;
+
+      // Populate raw code
+      document.getElementById('code-view').value = htmlContent;
+
+      // Reset view to visual desktop
+      switchModalView('visual');
+      setPreviewDevice('desktop');
+
+      document.getElementById('preview-modal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function openCodePreview(id) {
+      openFullPreview(id);
+      switchModalView('code');
+    }
+
+    function closePreviewModal() {
+      document.getElementById('preview-modal').classList.remove('open');
+      document.body.style.overflow = '';
+      const frame = document.getElementById('preview-frame');
+      frame.srcdoc = '';
+    }
+
+    function switchModalView(mode) {
+      const iframeWrapper = document.getElementById('iframe-wrapper');
+      const codeView = document.getElementById('code-view');
+      const tabVisual = document.getElementById('tab-visual');
+      const tabCode = document.getElementById('tab-code');
+      const deviceControls = document.getElementById('device-controls');
+
+      if (mode === 'visual') {
+        iframeWrapper.style.display = 'flex';
+        codeView.style.display = 'none';
+        tabVisual.classList.add('active');
+        tabCode.classList.remove('active');
+        deviceControls.style.display = 'flex';
+      } else {
+        iframeWrapper.style.display = 'none';
+        codeView.style.display = 'block';
+        tabVisual.classList.remove('active');
+        tabCode.classList.add('active');
+        deviceControls.style.display = 'none';
+      }
+    }
+
+    function setPreviewDevice(device) {
+      const frame = document.getElementById('preview-frame');
+      document.querySelectorAll('.device-tab').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`btn-device-\${device}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      frame.className = `preview-frame device-\${device}`;
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closePreviewModal();
+    });
+
+    // Initial render
+    renderTemplates('all');
+  </script>
+</body>
+</html>

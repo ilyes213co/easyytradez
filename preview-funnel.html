@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLASH-CONVERT - Aspirateur Cyclonique Voiture Sans Fil (Offre Spéciale COD)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rubik:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #2540ea;
+      --accent-text: #ffffff;
+      --accent-soft: #eff6ff;
+      --border: #e2e8f0;
+      --font-heading: 'Rubik', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 84px;
+    }
+    h1, h2, h3, h4 {
+      font-family: var(--font-heading);
+      letter-spacing: -0.02em;
+    }
+    img { max-width: 100%; height: auto; display: block; }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    .top-bar {
+      background: #dc2626;
+      color: #ffffff;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 9px 16px;
+      text-align: center;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .site-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .logo {
+      font-family: var(--font-heading);
+      font-size: 1.3rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+    .header-badge {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #16a34a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .hero-section { padding: 48px 0; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 40px;
+      align-items: center;
+    }
+    @media (max-width: 860px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 28px; }
+    }
+    .hero-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #fee2e2;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+    .rating-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #f59e0b;
+      margin-bottom: 12px;
+    }
+    .hero-h1 {
+      font-size: clamp(1.9rem, 3.8vw, 3rem);
+      line-height: 1.15;
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+    .hero-sub {
+      font-size: 15.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .hero-price-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .price-main { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
+    .price-was { font-size: 14px; color: var(--text-muted); text-decoration: line-through; }
+    .btn-cta {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: var(--accent);
+      color: var(--accent-text);
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.3px;
+      box-shadow: 0 10px 24px rgba(37, 64, 234, 0.25);
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .btn-cta:hover { transform: translateY(-2px); opacity: 0.95; }
+
+    .hero-media-wrap {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.08);
+    }
+    .hero-media-wrap img {
+      width: 100%;
+      height: 420px;
+      object-fit: cover;
+    }
+    .discount-floating-tag {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: #dc2626;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 900;
+      padding: 6px 14px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    }
+
+    .section-pad { padding: 56px 0; }
+    .section-header {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 36px;
+    }
+    .section-eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .section-title {
+      font-size: 1.85rem;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+    .section-desc { font-size: 14px; color: var(--text-muted); }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .benefit-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .benefit-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .benefit-h3 { font-size: 1.1rem; font-weight: 800; }
+    .benefit-p { font-size: 13.5px; color: var(--text-muted); line-height: 1.55; }
+
+    .bundle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .bundle-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .bundle-card.featured {
+      border-color: var(--accent);
+      background: #fbfdff;
+      box-shadow: 0 10px 28px rgba(37, 64, 234, 0.12);
+    }
+    .bundle-tag {
+      position: absolute;
+      top: -12px;
+      right: 18px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+    .bundle-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+    .bundle-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+    .bundle-price { font-size: 1.5rem; font-weight: 900; color: var(--accent); margin-bottom: 10px; }
+
+    .cod-form-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 600px;
+      margin: 0 auto;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.06);
+    }
+    .cod-form-title { font-size: 1.35rem; font-weight: 900; text-align: center; margin-bottom: 6px; }
+    .cod-form-sub { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--accent); }
+    .cod-submit-btn {
+      width: 100%;
+      background: #16a34a;
+      color: #ffffff;
+      border: none;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      margin-top: 12px;
+      box-shadow: 0 8px 20px rgba(22, 163, 74, 0.25);
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .cod-submit-btn:hover { transform: translateY(-2px); opacity: 0.95; }
+
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .review-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .stars { color: #f59e0b; display: flex; gap: 3px; font-size: 14px; }
+    .review-text { font-size: 13.5px; line-height: 1.6; }
+    .reviewer-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+    .reviewer-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--accent-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .reviewer-name { font-size: 13px; font-weight: 800; }
+    .reviewer-loc { font-size: 11px; color: var(--text-muted); }
+
+    .site-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 40px 0 24px;
+      margin-top: 48px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .sticky-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.12);
+    }
+    .sticky-price { font-size: 1.25rem; font-weight: 900; color: var(--accent); }
+    .sticky-btn {
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <span>OFFRE SPÉCIALE 48H</span>
+    <span>·</span>
+    <span>PLUS QUE 14 APPAREILS EN STOCK AU TARIF PROMO</span>
+  </div>
+
+  <header class="site-header">
+    <div class="logo">FLASH-CONVERT</div>
+    <div class="header-badge">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Paiement Cash à la Réception
+    </div>
+    <a href="#commander" class="btn-cta" style="width: auto; padding: 8px 16px; font-size: 12px;">Commander</a>
+  </header>
+
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-grid">
+        <div>
+          <span class="hero-tag">Best-Seller Utile 2026</span>
+          <div class="rating-row">
+            <span>★★★★★</span>
+            <span>4.9/5 (840+ commandes vérifiées)</span>
+          </div>
+          <h1 class="hero-h1">La solution efficace pour une voiture impeccable en 2 minutes.</h1>
+          <p class="hero-sub">Aspirateur cyclonique portatif sans fil haute aspiration 9 000 Pa. Élimine miettes, poussières et poils d'animaux dans les moindres recoins de vos sièges.</p>
+
+          <div class="hero-price-box">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Tarif Promotionnel</div>
+              <div class="price-main">3 900 DA</div>
+            </div>
+            <div style="text-align: right;">
+              <span class="price-was">6 500 DA</span>
+              <div style="font-size: 11px; color: #dc2626; font-weight: 800;">Économisez 2 600 DA</div>
+            </div>
+          </div>
+
+          <a href="#commander" class="btn-cta">COMMANDER MAINTENANT (PAIEMENT À LA LIVRAISON)</a>
+
+          <div style="display: flex; gap: 14px; margin-top: 16px; font-size: 12px; color: var(--text-muted); font-weight: 600; justify-content: center;">
+            <span>✓ Expédition 58 Wilayas</span>
+            <span>✓ Test avant Paiement</span>
+            <span>✓ Garantie 6 Mois</span>
+          </div>
+        </div>
+
+        <div class="hero-media-wrap">
+          <img src="https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=800&q=80" alt="Aspirateur Cyclonique">
+          <div class="discount-floating-tag">-40% FLASH</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" style="background: var(--surface);">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-eyebrow">Pourquoi Tout le Monde en Parle</div>
+        <h2 class="section-title">Trois Avantages Clés</h2>
+        <p class="section-desc">Fini les allers-retours coûteux au lave-auto pour un simple coup d'aspirateur.</p>
+      </div>
+
+      <div class="benefits-grid">
+        <div class="benefit-item">
+          <div class="benefit-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+          </div>
+          <h3 class="benefit-h3">Moteur Turbine 9 000 Pa</h3>
+          <p class="benefit-p">Une force d'aspiration concentrée qui avale même le sable incrusté et les débris logés dans les glissières de sièges.</p>
+        </div>
+
+        <div class="benefit-item">
+          <div class="benefit-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <h3 class="benefit-h3">Batterie Sans Fil Longue Durée</h3>
+          <p class="benefit-p">Rechargeable en USB-C sur l'allume-cigare ou à la maison. 30 minutes d'autonomie continue par charge.</p>
+        </div>
+
+        <div class="benefit-item">
+          <div class="benefit-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h3 class="benefit-h3">Filtre HEPA Lavable & Réutilisable</h3>
+          <p class="benefit-p">Zéro consommable à racheter. Il suffit de rincer le filtre à l'eau courante et il est comme neuf.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" id="commander">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-eyebrow">Offres Dégressives Spéciales</div>
+        <h2 class="section-title">Sélectionnez Votre Offre</h2>
+        <p class="section-desc">Commandez plus d'une pièce pour équiper vos deux véhicules ou faire un cadeau pratique.</p>
+      </div>
+
+      <div class="bundle-grid">
+        <div class="bundle-card">
+          <h3 class="bundle-title">1 Appareil Complet</h3>
+          <p class="bundle-desc">Avec ses 3 embouts de précision</p>
+          <div class="bundle-price">3 900 DA</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Livraison calculée selon Wilaya</div>
+        </div>
+
+        <div class="bundle-card featured">
+          <span class="bundle-tag">LE PLUS DEMANDÉ (-20%)</span>
+          <h3 class="bundle-title">Pack Duo (2 Appareils)</h3>
+          <p class="bundle-desc">1 pour vous + 1 pour un proche</p>
+          <div class="bundle-price">6 500 DA</div>
+          <div style="font-size: 12px; color: #16a34a; font-weight: 700;">Livraison Gratuite Incluse !</div>
+        </div>
+
+        <div class="bundle-card">
+          <span class="bundle-tag" style="background: #16a34a;">PACK FAMILLE (-30%)</span>
+          <h3 class="bundle-title">Pack 3 Appareils</h3>
+          <p class="bundle-desc">Le maximum d'économies</p>
+          <div class="bundle-price">8 900 DA</div>
+          <div style="font-size: 12px; color: #16a34a; font-weight: 700;">Livraison Gratuite + Embout Brosse Offert</div>
+        </div>
+      </div>
+
+      <div class="cod-form-box">
+        <h3 class="cod-form-title">Formulaire de Commande Express</h3>
+        <p class="cod-form-sub">Veuillez indiquer vos coordonnées. Notre équipe vous appelle pour valider la livraison :</p>
+
+        <form onsubmit="event.preventDefault(); alert('Merci ! Votre commande a été enregistrée. Nous vous contacterons par téléphone dans les prochaines minutes.');">
+          <div class="form-group">
+            <label class="form-label">Nom et Prénom</label>
+            <input type="text" class="form-input" placeholder="Ex: Karim Hadj" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Numéro de Téléphone (Mobile)</label>
+            <input type="tel" class="form-input" placeholder="05 / 06 / 07 XX XX XX" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Wilaya de Livraison (58 Wilayas)</label>
+            <select class="form-select" required>
+              <option value="">Sélectionnez votre wilaya...</option>
+              <option value="16">16 - Alger</option>
+              <option value="31">31 - Oran</option>
+              <option value="25">25 - Constantine</option>
+              <option value="19">19 - Sétif</option>
+              <option value="09">09 - Blida</option>
+              <option value="23">23 - Annaba</option>
+              <option value="05">05 - Batna</option>
+              <option value="13">13 - Tlemcen</option>
+              <option value="15">15 - Tizi Ouzou</option>
+              <option value="06">06 - Béjaïa</option>
+              <option value="35">35 - Boumerdès</option>
+              <option value="42">42 - Tipaza</option>
+              <option value="other">Toutes les autres wilayas d'Algérie</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Commune / Adresse de Résidence</label>
+            <input type="text" class="form-input" placeholder="Ex: Kouba, Rue Mohamed Belkacemi" required>
+          </div>
+
+          <button type="submit" class="cod-submit-btn">
+            CONFIRMER MA COMMANDE (PAIEMENT À LA LIVRAISON)
+          </button>
+
+          <div style="text-align: center; margin-top: 14px; font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Paiement Cash à Réception · Vérification du colis autorisée
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" style="background: var(--surface);">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-eyebrow">Retours d'Expérience</div>
+        <h2 class="section-title">Ce Que Pensent les Acheteurs</h2>
+      </div>
+
+      <div class="reviews-grid">
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <p class="review-text">« Très impressionné par la puissance d'aspiration vu la taille de l'appareil. Je l'ai reçu à Alger en 24h, testé immédiatement sur mes tapis de sol, tout est propre. »</p>
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">OB</div>
+            <div>
+              <div class="reviewer-name">Omar B.</div>
+              <div class="reviewer-loc">Alger · Achat vérifié</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <p class="review-text">« J'ai pris le pack 2 appareils pour la voiture de ma femme et la mienne. On s'en sert aussi pour nettoyer le clavier d'ordinateur à la maison. Très pratique ! »</p>
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">SL</div>
+            <div>
+              <div class="reviewer-name">Samir L.</div>
+              <div class="reviewer-loc">Oran · Achat vérifié</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <p class="review-text">« Colis bien protégé, livreur sérieux qui m'a appelé 30 minutes avant de passer. Le filtre se lave facilement au robinet. Excellent rapport qualité prix. »</p>
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">MN</div>
+            <div>
+              <div class="reviewer-name">Mustapha N.</div>
+              <div class="reviewer-loc">Blida · Achat vérifié</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2026 FLASH-CONVERT · Tous droits réservés · Expédition nationale 58 Wilayas en Algérie</p>
+    </div>
+  </footer>
+
+  <div class="sticky-bar">
+    <div>
+      <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Offre Flash 48H</div>
+      <div class="sticky-price">3 900 DA</div>
+    </div>
+    <a href="#commander" class="sticky-btn">COMMANDER MAINTENANT</a>
+  </div>
+
+</body>
+</html>
