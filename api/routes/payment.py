@@ -175,7 +175,7 @@ async def create_subscription_invoice(
         raise HTTPException(status_code=500, detail=str(e))
 
     # Récupération des informations de contact du marchand pour SlickPay
-    profile_name = "Marchand StoreGen"
+    profile_name = "Marchand EasyTrade"
     profile_phone = "0555000000"
     try:
         prof_res = await run_db(
@@ -191,8 +191,8 @@ async def create_subscription_invoice(
 
     name_parts = profile_name.split()
     firstname = name_parts[0] if name_parts else "Marchand"
-    lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else "StoreGen"
-    email = user.email or f"merchant_{user.id[:8]}@storegen.shop"
+    lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else "EasyTrade"
+    email = user.email or f"merchant_{user.id[:8]}@easytradez.site"
 
     # Appel création de facture
     try:
@@ -205,7 +205,7 @@ async def create_subscription_invoice(
             email=email,
             phone=profile_phone,
             address="Algérie",
-            comment=f"Abonnement StoreGen {payload.plan.upper()} par utilisateur {user.id}",
+            comment=f"Abonnement EasyTrade {payload.plan.upper()} par utilisateur {user.id}",
         )
     except SlickPayError as e:
         logger.error(f"Échec création facture SlickPay: {e}")
@@ -252,7 +252,7 @@ async def create_subscription_invoice(
 
 @router.get("/verify", response_model=VerifySubscriptionResponse)
 async def verify_subscription_payment(
-    invoice_id: str = Query(..., description="ID de facture SlickPay"),
+    invoice_id: Optional[str] = Query(None, description="ID de facture SlickPay"),
     transaction_id: Optional[str] = Query(None, description="UUID transaction optionnel"),
     user: UserInfo = Depends(get_current_user),
     supabase = Depends(get_supabase),
@@ -260,6 +260,7 @@ async def verify_subscription_payment(
     """
     Vérifie le paiement d'une facture SlickPay auprès du serveur et active le plan.
     Idempotent : ne réactive pas si déjà payé.
+    Fallback automatique sur la dernière transaction en attente si invoice_id n'est pas fourni.
     """
     # 1. Récupération de la transaction en base
     transaction = None
@@ -267,14 +268,25 @@ async def verify_subscription_payment(
         query = supabase.table("plan_transactions").select("*")
         if transaction_id:
             query = query.eq("id", transaction_id)
-        else:
+        elif invoice_id:
             query = query.eq("invoice_id", invoice_id)
+        else:
+            # Fallback sur la dernière transaction en attente pour cet utilisateur
+            query = query.eq("user_id", user.id).eq("status", "pending").order("created_at", desc=True).limit(1)
 
         tx_res = await run_db(lambda: query.execute())
         if tx_res.data and len(tx_res.data) > 0:
             transaction = tx_res.data[0]
+            if not invoice_id and transaction.get("invoice_id"):
+                invoice_id = str(transaction["invoice_id"])
     except Exception as e:
         logger.warning(f"Recherche transaction échouée: {e}")
+
+    if not invoice_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Identifiant de facture introuvable. Veuillez réessayer depuis votre tableau de bord.",
+        )
 
     # Si déjà marqué comme payé en base
     if transaction and transaction.get("status") == "paid":

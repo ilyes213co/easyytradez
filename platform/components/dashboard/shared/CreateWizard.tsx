@@ -19,6 +19,7 @@ import { storesApi, uploadApi, deployApi } from "@/lib/api";
 import { STORE_AND_FUNNEL_TEMPLATES, getTemplatesForScope, type TemplateData } from "@/lib/templates/data";
 import type { Store as StoreType, Product } from "@/types/database";
 import type { ProductOption, ProductOptionValue } from "@/types/product";
+import UpgradeModal from "../UpgradeModal";
 
 // ─── Constants & Types ────────────────────────────────────────────────────────
 
@@ -134,6 +135,20 @@ export default function CreateWizard({ type }: CreateWizardProps) {
   const [elapsedSec, setElapsedSec] = useState(0);
   const [pendingDeploy, setPendingDeploy] = useState<{ jobId: string; storeId: string } | null>(null);
   const genTimerRef = useRef<number | null>(null);
+
+  // Upgrade Modal state
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeInfo, setUpgradeInfo] = useState<{
+    title: string;
+    description: string;
+    recommendedPlan: "pro" | "business";
+    limitType: "stores" | "products" | "team";
+  }>({
+    title: "Limite de boutiques atteinte",
+    description: "",
+    recommendedPlan: "pro",
+    limitType: "stores",
+  });
 
   // Load draft
   useEffect(() => {
@@ -437,7 +452,19 @@ export default function CreateWizard({ type }: CreateWizardProps) {
     } catch (err: any) {
       setIsGenerating(false);
       const detail = err?.response?.data?.detail;
-      toast.error(typeof detail === "string" ? detail : err?.message ?? "Une erreur est survenue");
+      const code = err?.response?.data?.code;
+
+      if (code === "PLAN_STORE_LIMIT_REACHED") {
+        setUpgradeInfo({
+          title: "Limite de boutiques atteinte 🚀",
+          description: detail || "Vous avez atteint la limite de boutiques autorisées par votre pack actuel.",
+          recommendedPlan: "pro",
+          limitType: "stores",
+        });
+        setShowUpgradeModal(true);
+      } else {
+        toast.error(typeof detail === "string" ? detail : err?.message ?? "Une erreur est survenue");
+      }
     }
   };
 
@@ -668,6 +695,16 @@ export default function CreateWizard({ type }: CreateWizardProps) {
           )}
         </div>
       </div>
+
+      {/* Upgrade Modal en cas de dépassement de quota */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title={upgradeInfo.title}
+        description={upgradeInfo.description}
+        recommendedPlan={upgradeInfo.recommendedPlan}
+        limitType={upgradeInfo.limitType}
+      />
     </div>
   );
 }

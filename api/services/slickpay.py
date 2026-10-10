@@ -281,7 +281,10 @@ class SlickPayService:
         is_paid = (
             completed_flag == 1
             or pay_status == 1
-            or status_raw in ("completed", "paid", "success", "settled", "payé", "complété")
+            or status_raw in (
+                "completed", "paid", "success", "settled",
+                "payé", "paye", "complété", "complete", "terminé", "termine", "traité", "traite"
+            )
         )
 
         return SlickPayStatusResult(
@@ -311,7 +314,7 @@ def get_plan_items(plan: str, billing_period: str = "monthly") -> List[Dict[str,
 
     return [
         {
-            "name": f"Abonnement StoreGen {plan_name} ({period_label})",
+            "name": f"Abonnement EasyTrade {plan_name} ({period_label})",
             "price": amount,
             "quantity": 1,
         }
