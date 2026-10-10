@@ -252,7 +252,7 @@ function AuthCardContent({ initialMode = "login" }: AuthCardProps) {
             full_name: fullName.trim(),
             phone: phone.replace(/\s+/g, ""),
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
         },
       });
 
@@ -500,6 +500,9 @@ function AuthCardContent({ initialMode = "login" }: AuthCardProps) {
                     const { error } = await supabase.auth.resend({
                       type: "signup",
                       email: email.trim(),
+                      options: {
+                        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+                      },
                     });
                     if (error) {
                       toast.error(error.message);

@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
+import { type EmailOtpType } from "@supabase/supabase-js";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  const token_hash = url.searchParams.get("token_hash");
+  const type = url.searchParams.get("type") as EmailOtpType | null;
   const error = url.searchParams.get("error");
   const errorDescription = url.searchParams.get("error_description");
   const next = url.searchParams.get("next") ?? "/dashboard";
@@ -15,9 +20,10 @@ export async function GET(request: Request) {
     return NextResponse.redirect(loginUrl);
   }
 
+  const supabase = await createServerSupabaseClient();
+
   if (code) {
     try {
-      const supabase = await createServerSupabaseClient();
       const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
       if (exchangeError) {
         console.error("Exchange code error:", exchangeError);
@@ -26,13 +32,33 @@ export async function GET(request: Request) {
         return NextResponse.redirect(loginUrl);
       }
     } catch (err: any) {
-      console.error("Auth callback unexpected exception:", err);
+      console.error("Auth callback unexpected exception on code exchange:", err);
       const loginUrl = new URL("/login", url.origin);
       loginUrl.searchParams.set("error", "Erreur lors de l'authentification.");
       return NextResponse.redirect(loginUrl);
     }
+  } else if (token_hash && type) {
+    try {
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        type,
+        token_hash,
+      });
+      if (verifyError) {
+        console.error("Verify OTP error:", verifyError);
+        const loginUrl = new URL("/login", url.origin);
+        loginUrl.searchParams.set("error", verifyError.message);
+        return NextResponse.redirect(loginUrl);
+      }
+    } catch (err: any) {
+      console.error("Auth callback unexpected exception on verifyOtp:", err);
+      const loginUrl = new URL("/login", url.origin);
+      loginUrl.searchParams.set("error", "Erreur lors de la validation du lien.");
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
-  return NextResponse.redirect(new URL(next, url.origin));
+  const safeNext = next.startsWith("/") ? next : "/dashboard";
+  return NextResponse.redirect(new URL(safeNext, url.origin));
 }
+
 
