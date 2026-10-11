@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient, getAuthUser, verifyStoreOwner, safeInsert } from "@/lib/api-auth";
+import { getUserPlan } from "@/lib/plan-limits";
 
 export async function GET(req: NextRequest) {
   try {
@@ -69,13 +70,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ detail: "Le prix doit être supérieur à 0." }, { status: 400 });
     }
 
-    // Auto-calculate position
     const { count } = await admin
       .from("products")
       .select("id", { count: "exact", head: true })
       .eq("store_id", storeId);
 
     const position = count ?? 0;
+
+    const planLimits = await getUserPlan(user.id, admin);
+    if (planLimits.productsLimit !== -1 && position >= planLimits.productsLimit) {
+      return NextResponse.json(
+        {
+          detail: `Limite de produits atteinte pour votre forfait ${planLimits.planName} (max: ${planLimits.productsLimit} produits). Passez au forfait Pro ou Business pour ajouter des produits en illimité.`,
+          code: "PLAN_LIMIT_REACHED",
+          limit: planLimits.productsLimit,
+          current: position,
+        },
+        { status: 403 }
+      );
+    }
 
     // Normalize images
     const rawImages = Array.isArray(body.images) ? body.images : [];

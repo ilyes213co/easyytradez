@@ -35,7 +35,6 @@ export async function POST(req: NextRequest) {
 
     const admin = getAdminClient();
 
-    // Récupération des informations de profil
     let profileName = "Marchand EasyTrade";
     let profilePhone = "0555000000";
 
@@ -57,11 +56,9 @@ export async function POST(req: NextRequest) {
     const lastname = nameParts.slice(1).join(" ") || "EasyTrade";
     const email = user.email || `merchant_${user.id.slice(0, 8)}@easytradez.site`;
 
-    // Détermination de l'URL de retour
     const origin = req.nextUrl.origin || process.env.NEXT_PUBLIC_APP_URL || "https://easytradez.site";
     const returnUrl = body.return_url || `${origin}/dashboard/upgrade/callback`;
 
-    // Création de la facture auprès de SlickPay
     const slickpay = new SlickPayService();
     const result = await slickpay.createInvoice({
       amount,
@@ -75,7 +72,6 @@ export async function POST(req: NextRequest) {
       address: "Algérie",
     });
 
-    // Enregistrement de la transaction dans la table plan_transactions
     let transactionId = null;
     try {
       const { data: tx, error: txErr } = await admin

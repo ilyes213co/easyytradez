@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient, getAuthUser, getUniqueStoreSlug, safeInsert } from "@/lib/api-auth";
+import { getUserPlan } from "@/lib/plan-limits";
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const storeType = searchParams.get("type"); // "boutique" | "funnel"
+    const storeType = searchParams.get("type");
 
     const admin = getAdminClient();
     let query = admin
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     const admin = getAdminClient();
 
-    // Ensure user profile exists to satisfy foreign key constraint on stores(owner_id)
+    // Ensure default profile exists without overwriting paid subscriptions
     try {
       await admin.from("profiles").upsert(
         {
@@ -58,10 +59,31 @@ export async function POST(req: NextRequest) {
           full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "Commerçant",
           plan: "free",
         },
-        { onConflict: "id" }
+        { onConflict: "id", ignoreDuplicates: true }
       );
     } catch (e) {
       console.warn("Profile upsert warning:", e);
+    }
+
+    // Enforce store quota based on user subscription tier
+    const planLimits = await getUserPlan(user.id, admin);
+    if (planLimits.storesLimit !== -1) {
+      const { count: storeCount } = await admin
+        .from("stores")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", user.id);
+
+      if ((storeCount ?? 0) >= planLimits.storesLimit) {
+        return NextResponse.json(
+          {
+            detail: `Limite atteinte : votre forfait ${planLimits.planName} vous permet de créer au maximum ${planLimits.storesLimit} boutique(s). Passez à un forfait supérieur pour débloquer plus de boutiques.`,
+            code: "PLAN_LIMIT_REACHED",
+            limit: planLimits.storesLimit,
+            current: storeCount ?? 0,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const slug = await getUniqueStoreSlug(body.slug || name, admin);

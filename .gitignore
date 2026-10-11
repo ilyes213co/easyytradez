@@ -35,7 +35,12 @@ store-template/.env.local
 
 # Debug / e2e artifacts
 tmp*/
-tmp-*.log
+tmp-*
+*.log
+_qa*.txt
+_run*.log
+*.bak
+.temp/
 .sixth/
 scratch/
 

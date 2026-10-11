@@ -20,8 +20,17 @@ export async function GET(req: NextRequest) {
 
     const admin = getAdminClient();
 
-    // 1. Recherche de la transaction en base
-    let transaction: any = null;
+    interface StoredTransaction {
+      id: string;
+      user_id: string;
+      plan: string;
+      billing_period?: "monthly" | "yearly";
+      invoice_id?: string | number;
+      status: string;
+      expires_at?: string;
+    }
+
+    let transaction: StoredTransaction | null = null;
     try {
       let query = admin.from("plan_transactions").select("*");
       if (transactionId) {
@@ -29,7 +38,6 @@ export async function GET(req: NextRequest) {
       } else if (invoiceId) {
         query = query.eq("invoice_id", invoiceId);
       } else {
-        // Fallback sur la dernière transaction en attente de l'utilisateur
         query = query
           .eq("user_id", user.id)
           .eq("status", "pending")
@@ -39,7 +47,7 @@ export async function GET(req: NextRequest) {
 
       const { data: rows } = await query;
       if (rows && rows.length > 0) {
-        transaction = rows[0];
+        transaction = rows[0] as StoredTransaction;
         if (!invoiceId && transaction.invoice_id) {
           invoiceId = String(transaction.invoice_id);
         }
@@ -58,7 +66,7 @@ export async function GET(req: NextRequest) {
     const targetPlan = transaction?.plan || "pro";
     const billingPeriod = transaction?.billing_period || "monthly";
 
-    // Si déjà validé en base (idempotence)
+    // Return active status early if transaction was already confirmed
     if (transaction && transaction.status === "paid") {
       return NextResponse.json({
         success: true,
@@ -70,7 +78,6 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // 2. Vérification auprès de SlickPay
     const slickpay = new SlickPayService();
     const statusRes = await slickpay.getInvoice(invoiceId);
 
@@ -84,13 +91,11 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // 3. Paiement validé avec succès ! Calcul date expiration
     const daysToAdd = billingPeriod === "yearly" ? 365 : 30;
     const expiresAtDate = new Date();
     expiresAtDate.setDate(expiresAtDate.getDate() + daysToAdd);
     const expiresAtIso = expiresAtDate.toISOString();
 
-    // Mise à jour du profil du marchand
     try {
       await admin
         .from("profiles")
@@ -103,7 +108,6 @@ export async function GET(req: NextRequest) {
       console.error("Erreur mise à jour profil marchand:", err);
     }
 
-    // Mise à jour de la table plan_transactions
     if (transaction) {
       try {
         await admin
