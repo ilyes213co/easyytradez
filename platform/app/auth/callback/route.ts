@@ -47,12 +47,31 @@ export async function GET(request: Request) {
 
   if (code) {
     try {
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+      const { data: authData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
       if (exchangeError) {
         console.error("Exchange code error:", exchangeError);
         const loginUrl = new URL("/login", url.origin);
         loginUrl.searchParams.set("error", exchangeError.message);
         return NextResponse.redirect(loginUrl);
+      }
+
+      if (authData?.user) {
+        const u = authData.user;
+        const fullName = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Marchand";
+        const avatarUrl = u.user_metadata?.avatar_url || u.user_metadata?.picture || null;
+        try {
+          await supabase.from("profiles").upsert(
+            {
+              id: u.id,
+              full_name: fullName,
+              avatar_url: avatarUrl,
+              plan: "free",
+            },
+            { onConflict: "id", ignoreDuplicates: true }
+          );
+        } catch (profileErr) {
+          console.warn("Could not ensure profile on OAuth callback:", profileErr);
+        }
       }
     } catch (err: any) {
       console.error("Auth callback unexpected exception on code exchange:", err);
