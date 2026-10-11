@@ -3,6 +3,8 @@ import { getAdminClient, getAuthUser } from "@/lib/api-auth";
 import { getEffectivePlan, getUserPlan } from "@/lib/plan-limits";
 import { PLANS_PRICING } from "@/lib/slickpay";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const user = await getAuthUser(req);
@@ -54,6 +56,9 @@ export async function GET(req: NextRequest) {
       can_use_custom_domain: planLimits.canUseCustomDomain,
     });
   } catch (err: any) {
+    if (err?.digest === "DYNAMIC_SERVER_USAGE" || err?.message?.includes("Dynamic server usage")) {
+      throw err;
+    }
     console.error("GET /api/payment/status error:", err);
     return NextResponse.json(
       { detail: err.message || "Erreur récupération statut abonnement" },

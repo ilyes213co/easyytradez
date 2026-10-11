@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient, getAuthUser } from "@/lib/api-auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const user = await getAuthUser(req);
@@ -28,6 +30,9 @@ export async function GET(req: NextRequest) {
       transactions: transactions || [],
     });
   } catch (err: any) {
+    if (err?.digest === "DYNAMIC_SERVER_USAGE" || err?.message?.includes("Dynamic server usage")) {
+      throw err;
+    }
     console.error("GET /api/payment/transactions error:", err);
     return NextResponse.json(
       { detail: err.message || "Erreur récupération historique" },
