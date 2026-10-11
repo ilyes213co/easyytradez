@@ -90,6 +90,7 @@ export class SlickPayService {
 
     const planInfo = PLANS_PRICING[plan.toLowerCase()] ?? PLANS_PRICING.pro!;
     const periodLabel = billingPeriod === "yearly" ? "Annuel" : "Mensuel";
+    const reference = Date.now().toString(36).toUpperCase();
 
     const payload = {
       amount: Math.round(amount),
@@ -101,12 +102,12 @@ export class SlickPayService {
       address: address || "Algérie",
       items: [
         {
-          name: `Abonnement EasyTrade ${planInfo.name} (${periodLabel})`,
+          name: `Abonnement EasyTrade ${planInfo.name} (${periodLabel}) #${reference}`,
           price: Math.round(amount),
           quantity: 1,
         },
       ],
-      comment: `Abonnement EasyTrade ${plan.toUpperCase()} - ${email}`,
+      comment: `Abonnement EasyTrade ${plan.toUpperCase()} [${reference}] - ${email}`,
     };
 
     const response = await fetch(`${this.baseUrl}/users/invoices`, {
@@ -121,8 +122,21 @@ export class SlickPayService {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("SlickPay createInvoice error:", response.status, errorText);
-      throw new Error(`Erreur passerelle SlickPay (HTTP ${response.status}) : ${errorText}`);
+      let readableMessage = errorText;
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) {
+          readableMessage = parsed.message;
+        } else if (parsed.errors && typeof parsed.errors === "object") {
+          readableMessage = Object.values(parsed.errors).flat().join(" - ");
+        } else if (parsed.error) {
+          readableMessage = String(parsed.error);
+        }
+      } catch {
+        // Fallback to raw text when response is not JSON
+      }
+      console.error("SlickPay createInvoice error:", response.status, readableMessage);
+      throw new Error(`Erreur passerelle SlickPay (HTTP ${response.status}) : ${readableMessage}`);
     }
 
     const data = await response.json();

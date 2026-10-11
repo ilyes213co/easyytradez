@@ -35,6 +35,38 @@ export async function POST(req: NextRequest) {
 
     const admin = getAdminClient();
 
+    // Reuse existing pending payment session if created recently
+    try {
+      const { data: existingTxs } = await admin
+        .from("plan_transactions")
+        .select("id, invoice_id, payment_url, amount, currency, created_at")
+        .eq("user_id", user.id)
+        .eq("plan", plan)
+        .eq("billing_period", billingPeriod)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (existingTxs && existingTxs.length > 0 && existingTxs[0]) {
+        const activeTx = existingTxs[0];
+        const ageMinutes = (Date.now() - new Date(activeTx.created_at).getTime()) / (1000 * 60);
+        if (ageMinutes < 15 && activeTx.payment_url && activeTx.invoice_id) {
+          return NextResponse.json({
+            success: true,
+            invoice_id: String(activeTx.invoice_id),
+            payment_url: activeTx.payment_url,
+            transaction_id: activeTx.id,
+            amount: activeTx.amount,
+            currency: activeTx.currency || "DZD",
+            is_simulation: false,
+            message: "Reprise de votre session de paiement BaridiMob / SATIM...",
+          });
+        }
+      }
+    } catch (checkErr) {
+      console.warn("Could not check existing pending transactions:", checkErr);
+    }
+
     let profileName = "Marchand EasyTrade";
     let profilePhone = "0555000000";
 
@@ -51,26 +83,71 @@ export async function POST(req: NextRequest) {
       console.warn("Could not fetch profile info for invoice:", e);
     }
 
+    let cleanPhone = profilePhone;
+    if (cleanPhone.startsWith("+213")) {
+      cleanPhone = "0" + cleanPhone.slice(4);
+    } else if (cleanPhone.startsWith("213")) {
+      cleanPhone = "0" + cleanPhone.slice(3);
+    }
+    cleanPhone = cleanPhone.replace(/[^0-9]/g, "");
+    if (!cleanPhone || cleanPhone.length < 9) {
+      cleanPhone = "0555000000";
+    }
+
     const nameParts = profileName.split(" ");
     const firstname = nameParts[0] || "Marchand";
     const lastname = nameParts.slice(1).join(" ") || "EasyTrade";
     const email = user.email || `merchant_${user.id.slice(0, 8)}@easytradez.site`;
 
-    const origin = req.nextUrl.origin || process.env.NEXT_PUBLIC_APP_URL || "https://easytradez.site";
-    const returnUrl = body.return_url || `${origin}/dashboard/upgrade/callback`;
+    const defaultAppUrl = process.env.NEXT_PUBLIC_APP_URL || "https://easytradez.site";
+    const origin = req.nextUrl.origin || defaultAppUrl;
+    let returnUrl = body.return_url || `${origin}/dashboard/upgrade/callback`;
+    if (returnUrl.includes("localhost") && !defaultAppUrl.includes("localhost")) {
+      returnUrl = `${defaultAppUrl.replace(/\/$/, "")}/dashboard/upgrade/callback`;
+    }
 
     const slickpay = new SlickPayService();
-    const result = await slickpay.createInvoice({
-      amount,
-      returnUrl,
-      plan,
-      billingPeriod,
-      firstname,
-      lastname,
-      email,
-      phone: profilePhone,
-      address: "Algérie",
-    });
+    let result;
+    try {
+      result = await slickpay.createInvoice({
+        amount,
+        returnUrl,
+        plan,
+        billingPeriod,
+        firstname,
+        lastname,
+        email,
+        phone: cleanPhone,
+        address: "Algérie",
+      });
+    } catch (err: any) {
+      const errorMsg = String(err?.message || "").toLowerCase();
+      // Recover existing pending session if SATIM rejects with a duplicate order error
+      if (errorMsg.includes("already registered") || errorMsg.includes("processed already")) {
+        const { data: latestPending } = await admin
+          .from("plan_transactions")
+          .select("id, invoice_id, payment_url, amount, currency")
+          .eq("user_id", user.id)
+          .eq("plan", plan)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (latestPending && latestPending.length > 0 && latestPending[0]?.payment_url) {
+          const pendingItem = latestPending[0];
+          return NextResponse.json({
+            success: true,
+            invoice_id: String(pendingItem.invoice_id),
+            payment_url: pendingItem.payment_url,
+            transaction_id: pendingItem.id,
+            amount,
+            currency: "DZD",
+            is_simulation: false,
+            message: "Redirection vers la session de paiement active...",
+          });
+        }
+      }
+      throw err;
+    }
 
     let transactionId = null;
     try {
