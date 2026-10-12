@@ -129,7 +129,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700;900&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Cairo:wght@500;700;900&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Readex+Pro:wght@400;600;700&family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&family=Syne:wght@700;800;900&family=Unbounded:wght@700;900&family=Urbanist:wght@500;700;800;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700;900&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Cairo:wght@500;700;900&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Readex+Pro:wght@400;600;700&family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&family=Syne:wght@700;800;900&family=Unbounded:wght@700;900&family=Urbanist:wght@500;700;800;900&display=swap"
           rel="stylesheet"
         />
         <script

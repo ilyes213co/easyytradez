@@ -4,9 +4,31 @@ import { useState } from "react";
 import type { Product } from "../../app/types";
 import { useStore } from "./StoreShell";
 
+function hexToLuminance(hex: string): number {
+  const cleaned = hex.replace("#", "");
+  if (cleaned.length < 6) return 0.5;
+  const r = parseInt(cleaned.substring(0, 2), 16) / 255;
+  const g = parseInt(cleaned.substring(2, 4), 16) / 255;
+  const b = parseInt(cleaned.substring(4, 6), 16) / 255;
+  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
+function hasContrast(hex1: string, hex2: string): boolean {
+  try {
+    const l1 = hexToLuminance(hex1);
+    const l2 = hexToLuminance(hex2);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05) >= 3.5;
+  } catch {
+    return false;
+  }
+}
+
 export default function ProductCard({ product }: { product: Product }) {
   const { theme, primary, openProduct, addToCart, store } = useStore();
   const [hovered, setHovered] = useState(false);
+
+  const priceColor = hasContrast(primary, theme.surface) ? primary : theme.text;
 
   const img = product.images[0]?.url ?? null;
   const discount =
@@ -146,7 +168,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* Price */}
         <div style={priceRow}>
-          <span style={{ fontWeight: 700, fontSize: "18px", color: primary }}>
+          <span style={{ fontWeight: 700, fontSize: "18px", color: priceColor }}>
             {product.price.toLocaleString("fr-DZ")} DZD
           </span>
           {product.original_price && (

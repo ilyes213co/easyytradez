@@ -151,7 +151,11 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
   };
 
   return (
-    <div className="storefront-wrapper min-h-screen" data-theme={store.theme || "crimson"}>
+    <div
+      className="storefront-wrapper min-h-screen bg-[var(--bg)] text-[var(--text)]"
+      data-theme={store.theme || "crimson"}
+      style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
+    >
       {/* 1. Header Navigation */}
       <nav className="st-nav">
         <div className="st-nav__in">

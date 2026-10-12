@@ -21,6 +21,10 @@ export default function BrandInjector({
   useEffect(() => {
     const html = document.documentElement;
     html.setAttribute("data-theme", theme);
+    html.style.setProperty("background-color", "var(--bg)");
+    html.style.setProperty("color", "var(--text)");
+    document.body.style.setProperty("background-color", "var(--bg)");
+    document.body.style.setProperty("color", "var(--text)");
 
     if (brandAccent) {
       html.style.setProperty("--accent", brandAccent);
@@ -37,6 +41,11 @@ export default function BrandInjector({
     }
 
     return () => {
+      html.removeAttribute("data-theme");
+      html.style.removeProperty("background-color");
+      html.style.removeProperty("color");
+      document.body.style.removeProperty("background-color");
+      document.body.style.removeProperty("color");
       if (brandAccent) {
         html.style.removeProperty("--accent");
         html.style.removeProperty("--focus");
@@ -54,6 +63,13 @@ export default function BrandInjector({
       id="brand-injector-ssr"
       dangerouslySetInnerHTML={{
         __html: `
+          html[data-theme="${theme}"],
+          html[data-theme="${theme}"] body,
+          body:has([data-theme="${theme}"]),
+          [data-theme="${theme}"] {
+            background-color: var(--bg) !important;
+            color: var(--text) !important;
+          }
           html[data-theme="${theme}"] {
             ${
               brandAccent

@@ -37,7 +37,7 @@
   --chip-on:var(--accent-soft);
   --chip-on-ink:var(--text);
   --off-bg:var(--accent-soft);
-  --off-ink:var(--accent-text);
+  --off-ink:#9e4a08;
   --flag-bg:var(--accent);
   --flag-ink:var(--accent-ink);
   --toast-bg:var(--text);

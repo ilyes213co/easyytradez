@@ -199,7 +199,15 @@ export default function ProductPage({
   const productReviewsCount = (product as any).reviews_count;
 
   return (
-    <div className="pd-wrapper min-h-screen" data-theme={activeTheme} style={inlineBrandingStyles}>
+    <div
+      className="pd-wrapper min-h-screen bg-[var(--bg)] text-[var(--text)]"
+      data-theme={activeTheme}
+      style={{
+        backgroundColor: "var(--bg)",
+        color: "var(--text)",
+        ...inlineBrandingStyles,
+      }}
+    >
       {/* ── HEADER ── */}
       <header className="pd-top">
         <div className="pd-top__in">

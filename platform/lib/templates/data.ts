@@ -8,6 +8,7 @@ export interface TemplateData {
   category: string;
   headline: string;
   description: string;
+  structureHint?: string;
   fonts: string;
   colors: {
     bg: string;
@@ -40,6 +41,7 @@ export const STORE_AND_FUNNEL_TEMPLATES: TemplateData[] = [
     category: "Mode & Maroquinerie",
     headline: "Le cuir se patine. Le style reste.",
     description: "Vestes, sacs et ceintures en cuir pleine fleur, tannage végétal de caractère.",
+    structureHint: "Tunnel conversion directe, typographie condensée majuscule, bordure rouge accentuée.",
     fonts: "Anton & Barlow",
     colors: {
       bg: "#faf7f6",
@@ -70,6 +72,7 @@ export const STORE_AND_FUNNEL_TEMPLATES: TemplateData[] = [
     category: "Audio, Sport & Tech",
     headline: "Bouge plus vite que tes excuses.",
     description: "Audio sport haute performance, vêtements techniques et accessoires testés en salle.",
+    structureHint: "Tunnel high-energy, CTA pillule, badge néon contrasté, conversion directe.",
     fonts: "Archivo",
     colors: {
       bg: "#f2f3f6",
@@ -100,6 +103,7 @@ export const STORE_AND_FUNNEL_TEMPLATES: TemplateData[] = [
     category: "Terroir & Produits Bio",
     headline: "De la terre de Kabylie à votre table.",
     description: "Huile d'olive extra vierge, miel pur et produits de coopératives locales sans intermédiaire.",
+    structureHint: "Ambiance terroir & bio, grands espaces aérés, cartes douces avec bordure feutrée.",
     fonts: "Newsreader & Work Sans",
     colors: {
       bg: "#f7f5ee",
@@ -130,6 +134,7 @@ export const STORE_AND_FUNNEL_TEMPLATES: TemplateData[] = [
     category: "Montres & Design épuré",
     headline: "Des objets qui durent, pas qui crient.",
     description: "Montres, maroquinerie sobre et essentiels choisis pour leur précision intemporelle.",
+    structureHint: "Minimalisme suisse radical, typographie massive, zéro image hero, grille épurée.",
     fonts: "Schibsted Grotesk",
     colors: {
       bg: "#ffffff",
@@ -160,6 +165,7 @@ export const STORE_AND_FUNNEL_TEMPLATES: TemplateData[] = [
     category: "Luxe & Haute Parfumerie",
     headline: "Un sillage qu'on n'oublie pas.",
     description: "Eaux de parfum composées avec des essences rares, flacons gravables offerts.",
+    structureHint: "Dark prestige asymétrique, cartes au format portrait 3:4, accents dorés et navigation haute couture.",
     fonts: "Cormorant Garamond & Jost",
     colors: {
       bg: "#0b0b0c",
@@ -190,6 +196,7 @@ export const STORE_AND_FUNNEL_TEMPLATES: TemplateData[] = [
     category: "Bijoux & Artisanat du Sud",
     headline: "Chaque pièce porte la main qui l'a gravée.",
     description: "Bijoux, argenterie et textiles touaregs façonnés par les maîtres artisans du Hoggar.",
+    structureHint: "Structure artisanale saharienne, encadrements francs 2px, nuances bleu indigo & sable.",
     fonts: "Amiri & Cairo",
     colors: {
       bg: "#f6f1e5",
@@ -220,6 +227,7 @@ export const STORE_AND_FUNNEL_TEMPLATES: TemplateData[] = [
     category: "Enfants & Fournitures",
     headline: "Prêts pour l'école, prêts à jouer.",
     description: "Cartables ergonomiques, trousses et accessoires ludiques conçus pour résister à la cour.",
+    structureHint: "Formes ultra-arrondies, ombres 3D décalées orange vif, boutons pillules rebondissants.",
     fonts: "Fredoka & Nunito",
     colors: {
       bg: "#fff8ef",
@@ -250,6 +258,7 @@ export const STORE_AND_FUNNEL_TEMPLATES: TemplateData[] = [
     category: "Sneakers & Streetwear",
     headline: "QUAND C'EST PARTI, C'EST PARTI.",
     description: "Sneakers et streetwear en drops numérotés sans réassort, esthétique brute et affirmée.",
+    structureHint: "Néo-brutalisme percutant, ombres dures 10px, typographie monospace & DM Sans.",
     fonts: "Space Mono & DM Sans",
     colors: {
       bg: "#fffdf0",
@@ -280,6 +289,7 @@ export const STORE_AND_FUNNEL_TEMPLATES: TemplateData[] = [
     category: "Gaming & Périphériques",
     headline: "Latence basse, patience courte.",
     description: "Matériel gaming sans fil de pointe testé pour la compétition en tournoi.",
+    structureHint: "Dark gaming futuriste, lueurs cyan, bordures subtiles et buybox néon.",
     fonts: "Space Grotesk & Inter Tight",
     colors: {
       bg: "#08090d",
@@ -310,7 +320,8 @@ export const STORE_AND_FUNNEL_TEMPLATES: TemplateData[] = [
     category: "Cosmétique & Skincare",
     headline: "Prenez soin de votre peau comme d'un jardin.",
     description: "Formules douces dermatologiques formulées à la rose d'Atlas et extraits floraux.",
-    fonts: "Fraunces & Karla",
+    structureHint: "Élégance florale & cosmétique, Playfair Display raffiné, ombres diffuses lavande et cartes galbées.",
+    fonts: "Playfair Display & Karla",
     colors: {
       bg: "#fbf6fb",
       surface: "#ffffff",
@@ -334,8 +345,7 @@ export const STORE_AND_FUNNEL_TEMPLATES: TemplateData[] = [
   },
 ];
 
-export function getTemplatesForScope(scope: "boutique" | "funnel"): TemplateData[] {
-  return STORE_AND_FUNNEL_TEMPLATES.filter(
-    (t) => t.scope === scope || t.scope === "both"
-  );
+export function getTemplatesForScope(scope?: "boutique" | "funnel"): TemplateData[] {
+  // Tous les templates sont désormais disponibles pour funnel et boutique dans une vue unique
+  return STORE_AND_FUNNEL_TEMPLATES;
 }

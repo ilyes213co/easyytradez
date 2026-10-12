@@ -243,7 +243,15 @@ export default function FunnelPage({
       initialOverrides={(store as any)?.content_overrides || {}}
       isEditable={isEditable}
     >
-      <div className="pd-wrapper min-h-screen" data-theme={activeTheme} style={inlineBrandingStyles}>
+      <div
+        className="pd-wrapper min-h-screen bg-[var(--bg)] text-[var(--text)]"
+        data-theme={activeTheme}
+        style={{
+          backgroundColor: "var(--bg)",
+          color: "var(--text)",
+          ...inlineBrandingStyles,
+        }}
+      >
         {/* ── Injection dynamique du Pixel si renseigné ── */}
         {pixelId && (
           <Script id="facebook-pixel" strategy="afterInteractive">

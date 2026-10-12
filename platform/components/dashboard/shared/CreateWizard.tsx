@@ -21,6 +21,42 @@ import type { Store as StoreType, Product } from "@/types/database";
 import type { ProductOption, ProductOptionValue } from "@/types/product";
 import UpgradeModal from "../UpgradeModal";
 
+// ─── Contrast utility for template preview (WCAG AA compliance) ─────────────
+function hexToLuminance(hex: string): number {
+  const cleaned = hex.replace('#', '');
+  const r = parseInt(cleaned.substring(0, 2), 16) / 255;
+  const g = parseInt(cleaned.substring(2, 4), 16) / 255;
+  const b = parseInt(cleaned.substring(4, 6), 16) / 255;
+  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
+function contrastRatio(hex1: string, hex2: string): number {
+  const l1 = hexToLuminance(hex1);
+  const l2 = hexToLuminance(hex2);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function getReadableColor(fgCandidate: string, bg: string, fallback: string): string {
+  if (!fgCandidate || fgCandidate.startsWith('rgba') || fgCandidate.startsWith('var')) return fallback;
+  try {
+    return contrastRatio(fgCandidate, bg) >= 4.5 ? fgCandidate : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function getContrastInk(bgHex: string): string {
+  if (!bgHex || bgHex.startsWith('rgba') || bgHex.startsWith('var')) return '#000000';
+  try {
+    return hexToLuminance(bgHex) > 0.45 ? '#000000' : '#ffffff';
+  } catch {
+    return '#000000';
+  }
+}
+
 // ─── Constants & Types ────────────────────────────────────────────────────────
 
 const CATEGORIES = [
@@ -938,48 +974,14 @@ function Step2TemplatesAndFunnel({
         </div>
       </div>
 
-      {/* If Funnel: Switcher between "Ready Templates" and "Generate with Product Pic" */}
-      {isFunnel && (
-        <div className="flex p-1 rounded-2xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/15 max-w-md mx-auto">
-          <button
-            type="button"
-            onClick={() => setData((p: any) => ({ ...p, funnel_mode: "ready_template" }))}
-            className={cn(
-              "flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2",
-              data.funnel_mode === "ready_template"
-                ? "bg-accent text-white shadow-lg shadow-accent/40"
-                : "text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white"
-            )}
-          >
-            <Layers className="w-4 h-4" />
-            <span>Templates Prêts ({availableTemplates.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setData((p: any) => ({ ...p, funnel_mode: "generate_with_pic" }))}
-            className={cn(
-              "flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2",
-              data.funnel_mode === "generate_with_pic"
-                ? "bg-accent text-white shadow-lg shadow-accent/40"
-                : "text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white"
-            )}
-          >
-            <Wand2 className="w-4 h-4 text-[#93c5fd]" />
-            <span>Avec Photo Produit (Ayor)</span>
-          </button>
-        </div>
-      )}
-
-      {/* SUB-VIEW 1: Ready Templates Grid (for both Store and Funnel Mode A) */}
-      {(!isFunnel || data.funnel_mode === "ready_template") && (
-        <div className="space-y-4">
+      {/* Grille unifiée — tous les templates dans une seule fenêtre */}
+      <div className="space-y-4">
           <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-white/70">
             <span className="w-2 h-2 rounded-full bg-accent dark:bg-[#38bdf8] shrink-0" />
             <span>
               {isFunnel
-                ? "Thèmes calibrés Funnel (4) — Conçus pour les drops rapides, visuels immersifs et commande COD immédiate."
-                : "Thèmes calibrés Boutique (6) — Conçus pour les catalogues multi-produits, la navigation par rayons et les paniers."}
+                ? `Tous les templates (${availableTemplates.length}) — Conçus pour les drops rapides, visuels immersifs et commande COD immédiate.`
+                : `Tous les templates (${availableTemplates.length}) — Conçus pour les catalogues multi-produits, la navigation par rayons et les paniers.`}
             </span>
           </div>
 
@@ -1036,27 +1038,68 @@ function Step2TemplatesAndFunnel({
                   <p className="text-xs text-slate-500 dark:text-white/50">{tpl.category}</p>
                 </div>
 
-                {/* Visual Preview Box */}
+                {/* Visual Preview Box — mini storefront simulation */}
                 <div
-                  className="rounded-xl p-3 border mb-3 text-xs overflow-hidden shadow-xs"
+                  className="rounded-xl border mb-3 text-xs overflow-hidden shadow-xs"
                   style={{
                     backgroundColor: tpl.colors.bg,
                     borderColor: tpl.colors.border,
                     color: tpl.colors.text,
                   }}
                 >
-                  <p className="font-bold truncate text-[11px] opacity-90">{tpl.headline}</p>
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-black/10">
-                    <span className="text-[10px] opacity-70">
-                      {isFunnel ? tpl.demoProduct.name : tpl.sampleCategories.join(" · ")}
+                  {/* Mini nav bar */}
+                  <div
+                    className="px-3 py-1.5 flex items-center justify-between text-[9px]"
+                    style={{ borderBottom: `1px solid ${tpl.colors.border}`, backgroundColor: tpl.colors.surface }}
+                  >
+                    <span className="font-bold tracking-wide" style={{ fontSize: '9px' }}>{tpl.name}</span>
+                    <span style={{ opacity: 0.4, fontSize: '8px' }}>{isFunnel ? '✓ COD' : '🛒 0'}</span>
+                  </div>
+                  {/* Mini hero area */}
+                  <div className="px-3 py-2.5">
+                    <p className="font-bold truncate text-[11px] leading-tight" style={{ opacity: 0.9 }}>
+                      {tpl.headline}
+                    </p>
+                    <p className="text-[8px] mt-0.5 line-clamp-1" style={{ opacity: 0.5 }}>
+                      {tpl.description.slice(0, 55)}...
+                    </p>
+                    {/* Mini CTA button */}
+                    <div
+                      className="mt-2 inline-block px-2 py-0.5 text-[7px] font-bold"
+                      style={{
+                        backgroundColor: tpl.colors.accent,
+                        color: getContrastInk(tpl.colors.accent),
+                        borderRadius: tpl.id === 'neo-brutalist' || tpl.id === 'crimson' || tpl.id === 'monochrome' ? '2px'
+                          : tpl.id === 'blossom-lavender' || tpl.id === 'playful-pumpkin' || tpl.id === 'energetic' ? '999px'
+                          : '6px',
+                      }}
+                    >
+                      {isFunnel ? 'Commander' : 'Voir le catalogue'}
+                    </div>
+                  </div>
+                  {/* Mini product row / price */}
+                  <div className="px-3 pb-2 flex items-center justify-between" style={{ borderTop: `1px solid ${tpl.colors.border}`, paddingTop: '6px' }}>
+                    <span className="text-[9px]" style={{ opacity: 0.6 }}>
+                      {isFunnel ? tpl.demoProduct.name : tpl.sampleCategories.join(' · ')}
                     </span>
                     {isFunnel && (
-                      <span className="font-extrabold text-[11px]" style={{ color: tpl.colors.accent }}>
+                      <span
+                        className="font-extrabold text-[11px]"
+                        style={{ color: getReadableColor(tpl.colors.accent, tpl.colors.bg, tpl.colors.text) }}
+                      >
                         {formatPrice(tpl.demoProduct.price)}
                       </span>
                     )}
                   </div>
                 </div>
+
+                {/* Structural Personality Hint */}
+                {tpl.structureHint && (
+                  <p className="text-[11px] text-slate-500 dark:text-white/60 leading-snug mb-2.5 flex items-start gap-1.5">
+                    <span className="text-[10px] opacity-70 shrink-0">📐</span>
+                    <span>{tpl.structureHint}</span>
+                  </p>
+                )}
 
                 {/* Color swatches & font pill */}
                 <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-white/10 text-[11px] text-slate-400 dark:text-white/40">
@@ -1075,172 +1118,9 @@ function Step2TemplatesAndFunnel({
               </div>
             );
           })}
+            </div>
           </div>
         </div>
-      )}
-
-      {/* SUB-VIEW 2: Funnel Mode B - AI Atmosphere Picker */}
-      {isFunnel && data.funnel_mode === "generate_with_pic" && (
-        <FunnelAiAtmospherePicker
-          data={data}
-          setData={setData}
-        />
-      )}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// FUNNEL MODE B : Choix de l'ambiance visuelle IA
-// ─────────────────────────────────────────────────────────────────────────────
-
-function FunnelAiAtmospherePicker({
-  data,
-  setData,
-}: {
-  data: WizardState;
-  setData: any;
-}) {
-  const styles = [
-    {
-      id: "crimson",
-      name: "Audacieux & Mode",
-      subtitle: "Idéal vêtements, streetwear, maroquinerie de caractère",
-      tag: "Haute Conversion",
-      accent: "#9c1220",
-      bg: "#141113",
-      text: "#f9f8f6",
-    },
-    {
-      id: "energetic",
-      name: "Sport & Dynamique (Pulse)",
-      subtitle: "Idéal fitness, nutrition, gadgets high-tech & action",
-      tag: "Énergique",
-      accent: "#0284c7",
-      bg: "#0b1220",
-      text: "#f8fafc",
-    },
-    {
-      id: "natural",
-      name: "Organique & Terroir",
-      subtitle: "Idéal cosmétiques naturels, miels, huiles, artisanat",
-      tag: "Naturel",
-      accent: "#15803d",
-      bg: "#f4f1ea",
-      text: "#1c1917",
-    },
-    {
-      id: "luxe-noir",
-      name: "Luxe Sombre & Prestige",
-      subtitle: "Idéal haute horlogerie, parfums rares, maroquinerie prestige",
-      tag: "Prestige",
-      accent: "#d4af37",
-      bg: "#0a0a0c",
-      text: "#f5f5f7",
-    },
-    {
-      id: "monochrome",
-      name: "Minimaliste Épuré",
-      subtitle: "Idéal design sobre, ameublement scandinave, mode intemporelle",
-      tag: "Minimal",
-      accent: "#111827",
-      bg: "#ffffff",
-      text: "#000000",
-    },
-    {
-      id: "phantom",
-      name: "Cyber & Futuriste",
-      subtitle: "Idéal gaming, audio immersif, périphériques high-tech",
-      tag: "Cyber",
-      accent: "#8b5cf6",
-      bg: "#090912",
-      text: "#e2e8f0",
-    },
-  ];
-
-  return (
-    <div className="space-y-4 text-left animate-in fade-in duration-300">
-      <div className="p-4 rounded-2xl bg-accent/10 border border-accent/25 dark:border-[#2540ea]/30 flex items-start gap-3">
-        <Wand2 className="w-5 h-5 text-accent dark:text-[#93c5fd] shrink-0 mt-0.5" />
-        <div className="text-xs text-slate-700 dark:text-white/80 leading-relaxed">
-          <span className="font-bold text-slate-900 dark:text-white">Génération Intelligente IA : </span>
-          Sélectionnez l&apos;ambiance directrice de votre page. À l&apos;étape suivante (Étape 3), vous téléverserez
-          la photo de votre produit star et ses tarifs réels. Le moteur adaptera automatiquement les typographies,
-          les contrastes et la structure autour de votre article.
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {styles.map((s) => {
-          const isSelected = data.theme === s.id;
-          return (
-            <div
-              key={s.id}
-              onClick={() =>
-                setData((p: any) => ({
-                  ...p,
-                  theme: s.id,
-                  selected_template_id: s.id,
-                  primary_color: s.accent,
-                }))
-              }
-              className={cn(
-                "p-5 rounded-2xl border transition-all duration-200 cursor-pointer relative flex flex-col justify-between group",
-                isSelected
-                  ? "border-accent dark:border-[#60a5fa] bg-gradient-to-b from-accent/10 to-accent/5 dark:from-[#2540ea]/20 dark:to-[#0e1338] shadow-lg shadow-accent/20 dark:shadow-[#2540ea]/30 ring-2 ring-accent/60 scale-[1.01]"
-                  : "border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] hover:border-accent/40 dark:hover:border-white/25 hover:bg-white dark:hover:bg-white/[0.04] hover:shadow-md dark:hover:shadow-none"
-              )}
-            >
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <span
-                  className="text-[10px] font-bold px-2.5 py-1 rounded-md"
-                  style={{
-                    backgroundColor: `${s.accent}25`,
-                    color: s.accent,
-                    border: `1px solid ${s.accent}50`,
-                  }}
-                >
-                  {s.tag}
-                </span>
-
-                <div
-                  className={cn(
-                    "w-5 h-5 rounded-full flex items-center justify-center transition-all",
-                    isSelected
-                      ? "bg-accent text-white shadow-sm shadow-accent/60"
-                      : "border border-slate-300 dark:border-white/20 text-transparent"
-                  )}
-                >
-                  <Check className="w-3 h-3" />
-                </div>
-              </div>
-
-              <div className="space-y-1 mb-3">
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-accent dark:group-hover:text-[#93c5fd] transition-colors">
-                  {s.name}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-white/50">{s.subtitle}</p>
-              </div>
-
-              <div
-                className="rounded-xl p-3 border mb-2 text-xs overflow-hidden flex items-center justify-between shadow-xs"
-                style={{
-                  backgroundColor: s.bg,
-                  borderColor: `${s.accent}40`,
-                  color: s.text,
-                }}
-              >
-                <span className="font-bold text-[11px] truncate">Nuancier d&apos;ambiance</span>
-                <span
-                  className="w-4 h-4 rounded-full border border-black/20"
-                  style={{ backgroundColor: s.accent }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 

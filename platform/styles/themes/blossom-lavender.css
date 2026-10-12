@@ -37,14 +37,14 @@
   --chip-on:var(--accent-soft);
   --chip-on-ink:var(--text);
   --off-bg:var(--accent-soft);
-  --off-ink:var(--accent-text);
+  --off-ink:#5a3892;
   --flag-bg:var(--accent);
   --flag-ink:var(--accent-ink);
   --toast-bg:var(--text);
   --toast-ink:var(--bg);
   --focus:var(--accent);
   --accent-text:#6f49aa;
-  --font-display:'Fraunces','Iowan Old Style',Georgia,serif;
+  --font-display:'Playfair Display','Iowan Old Style',Georgia,serif;
   --font-body:'Karla',system-ui,sans-serif;
   --bg:#fbf6fb;
   --surface:#ffffff;

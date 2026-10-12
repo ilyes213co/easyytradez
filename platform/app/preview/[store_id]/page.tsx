@@ -134,7 +134,11 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
             brandAccent={search.color || store.brand_accent}
             logoUrl={store.logo_url}
           />
-          <div className="pd-shell min-h-[70vh] flex flex-col items-center justify-center text-center py-24" data-theme={activeTheme}>
+          <div
+            className="pd-shell min-h-[70vh] flex flex-col items-center justify-center text-center py-24 bg-[var(--bg)] text-[var(--text)]"
+            data-theme={activeTheme}
+            style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
+          >
             <h1 className="text-2xl font-bold uppercase mb-2">
               {store.name}
             </h1>
@@ -171,7 +175,11 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
           brandAccent={search.color || store.brand_accent}
           logoUrl={store.logo_url}
         />
-        <div className="preview-container min-h-screen" data-theme={activeTheme}>
+        <div
+          className="preview-container min-h-screen bg-[var(--bg)] text-[var(--text)]"
+          data-theme={activeTheme}
+          style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
+        >
           <FunnelPage
             store={genericStore}
             product={starProduct}
@@ -200,7 +208,11 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
         brandAccent={search.color || store.brand_accent}
         logoUrl={store.logo_url}
       />
-      <div className="storefront-wrapper min-h-screen" data-theme={activeTheme}>
+      <div
+        className="storefront-wrapper min-h-screen bg-[var(--bg)] text-[var(--text)]"
+        data-theme={activeTheme}
+        style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
+      >
       {/* 1. Header Navigation */}
       <nav className="st-nav">
         <div className="st-nav__in">

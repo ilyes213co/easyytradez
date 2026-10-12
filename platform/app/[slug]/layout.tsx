@@ -62,7 +62,11 @@ export default async function StoreLayout({ children, params }: LayoutProps) {
         brandAccent={store.primary_color}
         logoUrl={store.logo_url}
       />
-      <div data-theme={theme} className="min-h-screen">
+      <div
+        data-theme={theme}
+        className="min-h-screen bg-[var(--bg)] text-[var(--text)]"
+        style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
+      >
         {children}
       </div>
     </>
