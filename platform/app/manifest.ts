@@ -2,8 +2,8 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "EasyTrade — Plateforme E-Commerce Algérie",
-    short_name: "EasyTrade",
+    name: "EasyTradez — Plateforme E-Commerce Algérie",
+    short_name: "EasyTradez",
     description: "Créez votre boutique en ligne en 5 minutes avec paiement à la livraison (COD) et expédition 58 wilayas.",
     start_url: "/",
     display: "standalone",

@@ -219,7 +219,7 @@ export default function LandingPage() {
                 animation: "pulse-dot 2s ease infinite",
               }}
             />
-            <span>Plateforme E-Commerce Algérie 🇩🇿 · En ligne en 5 minutes</span>
+            <span>EasyTradez · Plateforme E-Commerce Algérie 🇩🇿</span>
           </div>
 
           {/* Hero H1 */}
@@ -242,7 +242,7 @@ export default function LandingPage() {
 
           {/* Subtitle */}
           <p className="text-base sm:text-lg md:text-xl text-white/70 max-w-2xl mx-auto leading-relaxed font-normal">
-            Une infrastructure e-commerce tout-en-un pensée pour le marché algérien :
+            EasyTradez est l&apos;infrastructure e-commerce tout-en-un pensée pour le marché algérien :
             paiement à la livraison (COD), intégration Yalidine & ZR Express, et boutique ultra-rapide sur mobile.
           </p>
 
@@ -581,9 +581,9 @@ export default function LandingPage() {
       >
         <div className="text-2xl">🇩🇿</div>
         <p className="text-sm text-white/60">
-          © 2026 <strong style={{ color: "var(--gl, #93c5fd)" }}>easytrade</strong> · Fait avec fierté à Oran, Algérie
+          © 2026 <strong style={{ color: "var(--gl, #93c5fd)" }}>EasyTradez</strong> · Fait avec fierté à Oran, Algérie
         </p>
-        <div className="flex items-center justify-center gap-6 text-xs text-white/40 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-white/40 pt-2">
           <Link href="/login" className="hover:text-white transition-colors">
             Connexion
           </Link>
@@ -593,6 +593,12 @@ export default function LandingPage() {
           <a href="#features" className="hover:text-white transition-colors">
             Fonctionnalités
           </a>
+          <Link href="/privacy" className="hover:text-white transition-colors">
+            Confidentialité
+          </Link>
+          <Link href="/terms" className="hover:text-white transition-colors">
+            Conditions d&apos;utilisation
+          </Link>
         </div>
       </footer>
 

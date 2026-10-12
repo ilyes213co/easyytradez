@@ -9,12 +9,16 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://easytradez.site";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "EasyTrade — Créer votre Boutique en Ligne en Algérie | E-Commerce 58 Wilayas",
-    template: "%s | EasyTrade Algérie",
+    default: "EasyTradez — Créer votre Boutique en Ligne en Algérie | E-Commerce 58 Wilayas",
+    template: "%s | EasyTradez Algérie",
   },
   description:
-    "La plateforme e-commerce n°1 en Algérie. Créez votre boutique en 5 minutes avec paiement à la livraison (COD), intégration Yalidine & ZR Express, passerelle BaridiMob/CIB et génération par IA.",
+    "EasyTradez (EasyTrade) est la plateforme e-commerce n°1 en Algérie. Créez votre boutique en 5 minutes avec paiement à la livraison (COD), intégration Yalidine & ZR Express, BaridiMob et IA.",
   keywords: [
+    "easytradez",
+    "EasyTradez",
+    "easy tradez",
+    "easytrade",
     "créer boutique en ligne algérie",
     "shopify algérie",
     "e-commerce algérie",
@@ -25,13 +29,12 @@ export const metadata: Metadata = {
     "baridimob e-commerce",
     "edahabia cib",
     "dropshipping algérie",
-    "easytrade",
     "easytradez.site",
   ],
-  authors: [{ name: "EasyTrade", url: siteUrl }],
-  creator: "EasyTrade",
-  publisher: "EasyTrade",
-  applicationName: "EasyTrade",
+  authors: [{ name: "EasyTradez", url: siteUrl }],
+  creator: "EasyTradez",
+  publisher: "EasyTradez",
+  applicationName: "EasyTradez",
   alternates: {
     canonical: siteUrl,
     languages: {
@@ -44,15 +47,15 @@ export const metadata: Metadata = {
     locale: "fr_DZ",
     alternateLocale: ["ar_DZ"],
     url: siteUrl,
-    siteName: "EasyTrade",
-    title: "EasyTrade — Créer votre Boutique en Ligne en Algérie",
+    siteName: "EasyTradez",
+    title: "EasyTradez — Créer votre Boutique en Ligne en Algérie",
     description:
-      "Votre boutique e-commerce professionnelle en 5 minutes. Paiement à la livraison (COD), expédition 58 wilayas, Yalidine & BaridiMob.",
+      "EasyTradez : Votre boutique e-commerce professionnelle en 5 minutes. Paiement à la livraison (COD), expédition 58 wilayas, Yalidine & BaridiMob.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "EasyTrade — Plateforme E-Commerce Algérie",
-    description: "Créez votre boutique en ligne en 5 minutes. 58 wilayas, COD et IA.",
+    title: "EasyTradez — Plateforme E-Commerce Algérie",
+    description: "EasyTradez : Créez votre boutique en ligne en 5 minutes. 58 wilayas, COD et IA.",
   },
   robots: {
     index: true,
@@ -76,7 +79,8 @@ const jsonLd = {
     {
       "@type": "Organization",
       "@id": `${siteUrl}/#organization`,
-      name: "EasyTrade",
+      name: "EasyTradez",
+      alternateName: ["EasyTrade", "Easy Tradez"],
       url: siteUrl,
       logo: `${siteUrl}/icon.svg`,
       description: "Plateforme SaaS e-commerce pour créateurs et marchands en Algérie.",
@@ -85,14 +89,15 @@ const jsonLd = {
       "@type": "WebSite",
       "@id": `${siteUrl}/#website`,
       url: siteUrl,
-      name: "EasyTrade",
+      name: "EasyTradez",
+      alternateName: ["EasyTrade", "Easy Tradez"],
       publisher: { "@id": `${siteUrl}/#organization` },
       inLanguage: ["fr-DZ", "ar-DZ"],
     },
     {
       "@type": "SoftwareApplication",
       "@id": `${siteUrl}/#application`,
-      name: "EasyTrade Platform",
+      name: "EasyTradez Platform",
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       offers: [
