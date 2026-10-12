@@ -85,7 +85,8 @@ a{color:inherit}
 .pd-ship__head{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text)}
 .pd-ship__head svg{width:18px;height:18px;flex:none;color:var(--accent)}
 .pd-select{width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);
-  border-radius:var(--radius-sm);background:var(--box-bg, #ffffff);color:var(--text);cursor:pointer}
+  border-radius:var(--radius-sm);background:var(--surface);color:var(--text);cursor:pointer}
+.pd-select option{background:var(--surface);color:var(--text)}
 .pd-select::placeholder{color:var(--muted);opacity:.75}
 .pd-modes{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
 .pd-mode{display:flex;gap:9px;align-items:flex-start;border:1.5px solid var(--border);
