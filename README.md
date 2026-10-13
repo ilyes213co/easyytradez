@@ -296,8 +296,7 @@ Les contributions sont les bienvenues ! Pour proposer une amélioration ou corri
 
 ## 11. Licence
 
-**Licence : à définir.**  
-*(Veuillez consulter l'auteur du projet ou ouvrir une issue pour toute question relative aux droits de réutilisation et de distribution du code).*
+Ce projet est sous licence **MIT**. Consultez le fichier [`LICENSE`](./LICENSE) pour plus de détails.
 
 ---
 

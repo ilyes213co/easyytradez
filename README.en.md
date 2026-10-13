@@ -296,8 +296,7 @@ Contributions are warmly welcomed! To submit an enhancement or bug fix:
 
 ## 11. License
 
-**License: to be determined.**  
-*(Please check with the repository owner or open an issue regarding usage and distribution rights).*
+This project is licensed under the **MIT License**. See the [`LICENSE`](./LICENSE) file for details.
 
 ---
 
