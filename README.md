@@ -1,265 +1,308 @@
-﻿# StoreGen â€” Plateforme de gÃ©nÃ©ration de boutiques e-commerce
+🇬🇧 [English version](./README.en.md)
 
-> CrÃ©ez et publiez une boutique e-commerce complÃ¨te en moins de 3 minutes grÃ¢ce Ã  l'IA (Claude API). Aucune compÃ©tence technique requise pour le marchand.
+# EasyTradez 🇩🇿
 
----
-
-## Architecture
-
-```
-/
-â”œâ”€â”€ platform/          â†’ Dashboard marchand (Next.js 14 + Tailwind)
-â”œâ”€â”€ api/               â†’ Backend (FastAPI Python)
-â””â”€â”€ store-template/    â†’ Template des boutiques gÃ©nÃ©rÃ©es (Next.js SSG)
-```
-
-## Stack technique (100% gratuit pour dÃ©marrer)
-
-| Service       | Usage                         | Plan gratuit             |
-|---------------|-------------------------------|--------------------------|
-| Supabase      | DB + Auth + Storage           | 500MB DB, 1GB storage    |
-| Cloudinary    | Images produits               | 25GB bandwidth/mois      |
-| Claude API    | GÃ©nÃ©ration IA boutique        | Free tier disponible     |
-| Vercel        | HÃ©bergement boutiques         | 100 deploys/jour         |
-| GitHub        | Repo par boutique             | IllimitÃ© public/privÃ©    |
-| Resend.com    | Emails transactionnels        | 3000 emails/mois         |
-| Cloudflare    | DNS + CDN sous-domaines       | Gratuit                  |
+> **Plateforme e-commerce open source et alternative à Shopify, spécialement conçue et optimisée pour le marché algérien.**
 
 ---
 
-## Installation
+## 1. Description & Problème Résolu
 
-### 1. Cloner et configurer l'environnement
+En Algérie, lancer une boutique e-commerce avec des plateformes internationales comme Shopify, WooCommerce ou Wix pose des obstacles majeurs :
+- **Absence de moyens de paiement internationaux généralisés** (cartes Visa/Mastercard peu accessibles au grand public).
+- **Dominance absolue du Paiement à la Livraison (Cash on Delivery - COD)** : plus de 95% des transactions s'effectuent en espèces à la réception du colis.
+- **Logistique spécifique aux 58 Wilayas** : tarifs d'expédition différenciés entre livraison à domicile et retrait en point relais (Stop-Desk) avec des transporteurs locaux (Yalidine, ZR Express, Procolis).
+- **Comptabilité en Dinar Algérien (DZD)** et utilisation des passerelles de paiement locales (Edahabia et BaridiMob).
 
-```bash
-git clone https://github.com/votreuser/storegen
-cd storegen
-cp .env.example .env.local
-# Remplissez toutes les variables dans .env.local
+**EasyTradez** résout ces problématiques en fournissant une solution tout-en-un, ultra-légère, mobile-first et pensée pour les réalités du marché algérien : n'importe quel commerçant ou créateur de marque peut lancer une boutique en ligne ou un tunnel de vente (funnel) haute conversion en quelques minutes.
+
+---
+
+## 2. Fonctionnalités Implémentées
+
+Les fonctionnalités suivantes sont **pleinement implémentées et fonctionnelles** dans le code actuel :
+
+### 🛍️ Vitrines et Tunnels de Vente
+- **Double format de vente** :
+  - **Boutique catalogue multi-produits** : affichage par catégories, fiches détaillées, navigation fluide.
+  - **Funnel mono-produit haute-conversion** : tunnel de vente direct dédié aux campagnes publicitaires (TikTok Ads, Meta Ads).
+- **10 Thèmes Graphiques Prêts à l'Emploi** : Neo-Brutalist, Playful Pumpkin, Blossom Lavender, Crimson, Natural, Tuareg Indigo, Energetic, Monochrome, Luxe Noir, Phantom (adaptation automatique des contrastes et de la typographie).
+- **Ultra Mobile-First** : Expérience d'achat fluide et chargement instantané même sur réseaux mobiles 3G/4G.
+- **Formulaire de commande COD sans friction** : saisie en 1 étape (Nom, Téléphone, Wilaya, Commune, Adresse) sans nécessiter de carte bancaire pour l'acheteur.
+
+### 📦 Gestion du Catalogue & Produits
+- Création, modification, archivage et suppression de produits.
+- Prix standard et prix barré promotionnel en Dinars Algériens (**DZD**).
+- Suivi des quantités en stock avec détection automatique de rupture.
+- Gestion des variantes (tailles, couleurs, options).
+- Upload d'images produits (via Supabase Storage ou Cloudinary).
+
+### 🚚 Logistique 58 Wilayas
+- Configuration personnalisée des frais d'expédition pour chaque Wilaya.
+- Prise en charge des deux modes de livraison : **Livraison à domicile** et **Point relais (Stop-Desk)**.
+- Affichage des délais de livraison indicatifs (ETA).
+
+### 📊 Tableau de Bord Marchand
+- Gestion complète des commandes avec cycle de vie (`En attente`, `Confirmée`, `Expédiée`, `Livrée`, `Annulée`).
+- Visualisation des coordonnées clients et détails des articles commandés.
+- Personnalisation de l'identité de marque (logo, photo de couverture, couleur d'accentuation, lien WhatsApp).
+
+### ⚡ SEO & Visibilité IA (GEO)
+- Rendu côté serveur (**SSR / Server Components**) pour une indexation immédiate par les moteurs de recherche.
+- Données structurées Schema.org JSON-LD complètes (`Organization`, `Product`, `Offer` en DZD, `Store`, `FAQPage`).
+- Génération automatique du sitemap XML (`/sitemap.xml`) avec actualisation dynamique des boutiques et produits publiés.
+- Directives de crawlers configurées (`/robots.txt`) autorisant explicitement les moteurs de recherche et les robots d'IA (GPTBot, ClaudeBot, PerplexityBot, etc.).
+- Support du standard `/llms.txt` pour la citation dans les moteurs de recherche génératifs.
+
+### 💳 Abonnements Marchands & Passerelle Locale
+- Gestion des plans d'abonnement (Gratuit, Pro, Business).
+- Intégration de la passerelle algérienne **Slick-Pay** pour les paiements en ligne par carte **Edahabia** et **BaridiMob**.
+
+### 🔔 Notifications
+- Support des notifications **Web Push** pour alerter le marchand en temps réel lors de la réception d'une nouvelle commande.
+
+---
+
+## 3. Stack Technique
+
+| Composant | Technologie | Version exacte | Rôle |
+| :--- | :--- | :--- | :--- |
+| **Frontend Platform** | Next.js (App Router) | `14.2.5` | Dashboard, vitrines publiques, checkout |
+| **UI & Styles** | Tailwind CSS / CSS Variables | `3.4.6` | Design system & gestion des thèmes |
+| **Langage Frontend** | TypeScript | `5.5.3` | Typage statique et robustesse |
+| **Bibliothèque UI** | React | `18.3.1` | Interface utilisateur réactive |
+| **State & Data Fetching** | Zustand / TanStack Query | `4.5.4` / `5.51.1` | Gestion de l'état global et cache client |
+| **Backend API** | FastAPI (Python) | `>=0.111.0` | API REST, traitement des données |
+| **Serveur ASGI** | Uvicorn | `>=0.29.0` | Serveur web Python haute performance |
+| **Base de Données & Auth** | Supabase (PostgreSQL) | `^2.44.4` (JS) / `>=2.4.6` (Py) | Authentification, base relationnelle, RLS, Storage |
+| **Validation Backend** | Pydantic | `>=2.7.1` | Validation stricte des schémas de données |
+| **IA (Optionnel)** | Google GenAI / Anthropic | `>=1.0.0` / API | Génération de contenu et d'assets |
+| **Hébergement** | Vercel | — | Déploiement cloud de la plateforme |
+
+---
+
+## 4. Structure du Projet
+
+```
+opensource-shopify/
+├── platform/               # Application principale Next.js 14 (Frontend & Storefronts)
+│   ├── app/                # Next.js App Router (pages, layouts, API routes)
+│   │   ├── [slug]/         # Vitrines publiques marchands (Boutique & Funnel)
+│   │   ├── dashboard/      # Tableau de bord marchand privé
+│   │   ├── sitemap.ts      # Génération dynamique du sitemap.xml
+│   │   └── robots.ts       # Règles robots.txt (moteurs de recherche + crawlers IA)
+│   ├── components/         # Composants React (funnels, checkout, dashboard)
+│   ├── lib/                # Clients Supabase, utilitaires, services API
+│   ├── public/             # Fichiers statiques (icônes, llms.txt)
+│   └── styles/themes/      # Feuilles de styles des 10 thèmes graphiques
+├── api/                    # Backend FastAPI (Python)
+│   ├── routes/             # Endpoints (stores, products, orders, payment, upload)
+│   ├── services/           # Logique métier (déploiement, IA, résilience DB)
+│   ├── models/             # Modèles de données Pydantic
+│   ├── dependencies.py     # Dépendances FastAPI (auth, injection client Supabase)
+│   ├── requirements.txt    # Dépendances Python
+│   └── main.py             # Point d'entrée de l'application FastAPI
+├── store-template/         # Template autonome Next.js pour prévisualisation locale (port 3001)
+├── supabase/               # Schémas SQL et scripts de migration
+│   ├── schema.sql          # Schéma complet de la base de données (source de vérité)
+│   └── migration_*.sql     # Migrations incrémentales
+├── scripts/                # Scripts utilitaires d'automatisation
+├── run.py                  # Script de démarrage rapide du backend FastAPI (port 8000)
+├── start.bat               # Script Windows pour lancer frontend + backend en 1 clic
+└── package.json            # Monorepo NPM root (workspaces platform & store-template)
 ```
 
-### 2. Supabase â€” CrÃ©er le schÃ©ma
+---
 
-Allez sur [supabase.com](https://supabase.com), crÃ©ez un projet, puis exÃ©cutez dans l'Ã©diteur SQL :
+## 5. Prérequis
 
-> Source of truth: use [`supabase/schema.sql`](./supabase/schema.sql).
-> If your DB already exists, run [`supabase/migration_stores.sql`](./supabase/migration_stores.sql) after it.
+Avant de lancer le projet, assurez-vous d'avoir installé sur votre machine :
+- **Node.js** : version `18.17.0` ou supérieure (version `20.x` recommandée).
+- **npm** : version `9.x` ou supérieure.
+- **Python** : version `3.10` ou `3.11` (recommandé).
+- **Git** : pour cloner et versionner le projet.
+- **Un compte Supabase gratuit** : pour héberger la base PostgreSQL, l'authentification et le stockage.
 
+---
 
-```sql
--- Profiles (extends auth.users)
-create table profiles (
-  id uuid references auth.users primary key,
-  full_name text,
-  phone text,
-  avatar_url text,
-  plan text default 'free',
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
+## 6. Installation
 
--- Stores
-create table stores (
-  id uuid primary key default gen_random_uuid(),
-  owner_id uuid references profiles(id) on delete cascade,
-  name text not null,
-  slug text unique not null,
-  description text,
-  primary_color text default '#534AB7',
-  font_family text default 'modern',
-  logo_url text,
-  whatsapp_phone text,
-  theme text default 'modern',
-  animation_style text default 'soft',
-  special_effects jsonb default '[]',
-  status text default 'draft',
-  subdomain text unique,
-  vercel_project_id text,
-  published_url text,
-  seo_metadata jsonb,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
--- Products
-create table products (
-  id uuid primary key default gen_random_uuid(),
-  store_id uuid references stores(id) on delete cascade,
-  name text not null,
-  description text,
-  price decimal(10,2) not null,
-  original_price decimal(10,2),
-  category text,
-  stock_quantity integer default 0,
-  images jsonb default '[]',
-  is_featured boolean default false,
-  position integer default 0,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
--- Orders
-create table orders (
-  id uuid primary key default gen_random_uuid(),
-  store_id uuid references stores(id),
-  customer_name text,
-  customer_phone text,
-  customer_address text,
-  items jsonb not null,
-  total_amount decimal(10,2),
-  status text default 'pending',
-  notes text,
-  created_at timestamptz default now()
-);
-
--- Analytics
-create table store_analytics (
-  id uuid primary key default gen_random_uuid(),
-  store_id uuid references stores(id) on delete cascade,
-  event_type text,
-  product_id uuid,
-  metadata jsonb default '{}',
-  created_at timestamptz default now()
-);
-
--- RLS Policies
-alter table profiles      enable row level security;
-alter table stores        enable row level security;
-alter table products      enable row level security;
-alter table orders        enable row level security;
-alter table store_analytics enable row level security;
-
--- Profiles: user can only see their own
-create policy "own profile" on profiles for all using (auth.uid() = id);
-
--- Stores: owner only
-create policy "own stores" on stores for all using (auth.uid() = owner_id);
-
--- Products: owner of the store
-create policy "own products" on products for all
-  using (exists (select 1 from stores where stores.id = products.store_id and stores.owner_id = auth.uid()));
-
--- Orders: owner of the store
-create policy "own orders" on orders for all
-  using (exists (select 1 from stores where stores.id = orders.store_id and stores.owner_id = auth.uid()));
-
--- Analytics: insert from public (store visitors), read by store owner
-create policy "public insert analytics" on store_analytics for insert with check (true);
-create policy "owner read analytics" on store_analytics for select
-  using (exists (select 1 from stores where stores.id = store_analytics.store_id and stores.owner_id = auth.uid()));
-
--- Trigger: updated_at auto-update
-create or replace function update_updated_at()
-returns trigger as $$ begin new.updated_at = now(); return new; end; $$ language plpgsql;
-create trigger stores_updated   before update on stores   for each row execute function update_updated_at();
-create trigger products_updated before update on products for each row execute function update_updated_at();
-create trigger profiles_updated before update on profiles for each row execute function update_updated_at();
-
--- Storage Buckets
-insert into storage.buckets (id, name, public) values ('store-logos', 'store-logos', true);
-insert into storage.buckets (id, name, public) values ('product-images', 'product-images', true);
-insert into storage.buckets (id, name, public) values ('store-builds', 'store-builds', false);
-
--- Storage policies
-create policy "authenticated upload logos"    on storage.objects for insert to authenticated with check (bucket_id = 'store-logos');
-create policy "public read logos"             on storage.objects for select using (bucket_id = 'store-logos');
-create policy "authenticated upload products" on storage.objects for insert to authenticated with check (bucket_id = 'product-images');
-create policy "public read products"          on storage.objects for select using (bucket_id = 'product-images');
+### Étape 1 : Cloner le dépôt
+```bash
+git clone https://github.com/ilyes213co/opensource-shopify.git
+cd opensource-shopify
 ```
 
-### 3. Installer les dÃ©pendances
-
+### Étape 2 : Installer les dépendances Frontend
+Depuis la racine du projet :
 ```bash
-# Depuis la racine du projet
-npm run install:all
-
-# (optionnel) installer API seule dans le venv local
-npm run install:api
+npm install
+cd platform && npm install
+cd ..
 ```
 
-### 4. Lancer en dÃ©veloppement
+### Étape 3 : Installer les dépendances Backend
+Créez et activez un environnement virtuel Python dans le dossier `api` :
 
+**Sur Windows (PowerShell / CMD) :**
 ```bash
-# Option recommandÃ©e (dashboard + API)
+cd api
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install --upgrade pip
+pip install -r requirements.txt
+cd ..
+```
+
+**Sur Linux / macOS :**
+```bash
+cd api
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+cd ..
+```
+
+### Étape 4 : Configurer la base de données Supabase
+1. Rendez-vous sur votre tableau de bord [Supabase](https://supabase.com) et créez un nouveau projet.
+2. Ouvrez l'onglet **SQL Editor**.
+3. Copiez et collez l'intégralité du contenu du fichier [`supabase/schema.sql`](./supabase/schema.sql) et exécutez-le.
+4. Activez l'authentification par e-mail dans **Authentication → Providers**.
+
+---
+
+## 7. Variables d'Environnement
+
+Créez un fichier `.env.local` dans le dossier `platform/` et un fichier `.env` dans le dossier `api/` (ou à la racine) en vous basant sur [`.env.example`](./.env.example).
+
+> ⚠️ **Important :** Ne committez jamais vos fichiers `.env` ou `.env.local`. Les valeurs ci-dessous sont des exemples de configuration.
+
+### Variables requises (Configuration minimale)
+
+| Nom de la variable | Composant | Description |
+| :--- | :--- | :--- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Frontend & Backend | URL de votre projet Supabase (`https://<project-ref>.supabase.co`) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Frontend | Clé publique anonyme Supabase (accessible côté client) |
+| `SUPABASE_URL` | Backend | URL de votre projet Supabase côté serveur Python |
+| `SUPABASE_SERVICE_KEY` | Frontend & Backend | Clé `service_role` Supabase avec droits d'administration |
+| `NEXT_PUBLIC_API_URL` | Frontend | URL de l'API backend FastAPI (ex: `http://localhost:8000`) |
+| `NEXT_PUBLIC_APP_URL` | Frontend | URL de base de la plateforme (ex: `http://localhost:3000` en local, `https://easytradez.site` en prod) |
+| `CORS_ALLOW_ORIGINS` | Backend | Origines autorisées pour les requêtes CORS (ex: `http://localhost:3000,http://127.0.0.1:3000`) |
+
+### Variables optionnelles (Fonctionnalités avancées)
+
+| Nom de la variable | Description |
+| :--- | :--- |
+| `GEMINI_API_KEY` | Clé API Google Gemini pour les fonctionnalités de génération IA |
+| `ANTHROPIC_API_KEY` | Clé API Anthropic (Claude) pour l'assistance IA |
+| `CLOUDINARY_CLOUD_NAME` / `_API_KEY` / `_API_SECRET` | Stockage externe Cloudinary pour les photos de produits |
+| `SLICKPAY_API_KEY` / `SLICKPAY_ENV` | Clé API pour la passerelle de paiement algérienne Slick-Pay (BaridiMob / Edahabia) |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_MAILTO` | Clés pour le serveur de notifications Web Push |
+| `RESEND_API_KEY` / `FROM_EMAIL` | Clé Resend pour l'envoi d'e-mails de confirmation |
+| `VERCEL_TOKEN` / `GITHUB_TOKEN` | Tokens pour le déploiement automatisé multi-projets |
+
+---
+
+## 8. Lancement en Local
+
+### Option A : Lancement en 1 clic (Windows)
+Si vous travaillez sous Windows, double-cliquez simplement sur le fichier :
+```cmd
+start.bat
+```
+Ce script ouvre automatiquement deux terminaux :
+1. Le backend FastAPI sur `http://127.0.0.1:8000`
+2. Le frontend Next.js sur `http://localhost:3000`
+
+---
+
+### Option B : Lancement via script NPM (Recommandé)
+Depuis la racine du projet, lancez les deux serveurs en parallèle :
+```bash
 npm run dev
-
-# Option complÃ¨te (dashboard + API + store-template)
-npm run dev:full
-
-# Option manuelle (3 terminaux)
-# Terminal 1 â€” Dashboard (port 3000)
-cd platform && npm run dev
-
-# Terminal 2 â€” API FastAPI (port 8000, via venv local)
-cd ../api && .\.venv\Scripts\python -m uvicorn main:app --reload --port 8000
-
-# Terminal 3 â€” Store preview (port 3001)
-cd ../store-template && npm run dev
 ```
-
-### 5. Variables d'environnement requises
-
-Copiez `.env.example` vers `.env.local` dans `/platform` et `.env` dans `/api` puis remplissez :
-
-| Variable                      | OÃ¹ trouver                                      |
-|-------------------------------|------------------------------------------------|
-| `NEXT_PUBLIC_SUPABASE_URL`    | Supabase â†’ Settings â†’ API                     |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase â†’ Settings â†’ API                   |
-| `SUPABASE_SERVICE_KEY`        | Supabase â†’ Settings â†’ API (service_role key)  |
-| `ANTHROPIC_API_KEY`           | console.anthropic.com                          |
-| `VERCEL_TOKEN`                | vercel.com â†’ Settings â†’ Tokens                |
-| `GITHUB_TOKEN`                | github.com â†’ Settings â†’ Developer settings    |
-| `CLOUDINARY_*`                | cloudinary.com â†’ Dashboard                    |
-| `RESEND_API_KEY`              | resend.com â†’ API Keys                         |
 
 ---
 
-## Flux de crÃ©ation d'une boutique
+### Option C : Lancement manuel (2 terminaux séparés)
 
+**Terminal 1 — Backend FastAPI :**
+```bash
+python run.py
+# Ou alternativement :
+cd api
+uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
-Marchand remplit le wizard (5 Ã©tapes)
-        â†“
-POST /stores â†’ Supabase (status: draft)
-POST /products â†’ upload photos Cloudinary
-        â†“
-Clic "Publier" â†’ POST /deploy/:store_id
-        â†“
-AIStoreGenerator.generate_store() â€” Claude API
-        â†“
-StoreDeployer:
-  1. Push HTML â†’ GitHub repo
-  2. Vercel crÃ©e le projet + dÃ©ploie
-  3. Ajoute sous-domaine slug.platform.dz
-        â†“
-Supabase: status = "published", published_url = "https://slug.platform.dz"
-        â†“
-Email + SMS de confirmation au marchand
+L'API est accessible sur `http://127.0.0.1:8000` et la documentation Swagger interactive est disponible sur `http://127.0.0.1:8000/docs`.
+
+**Terminal 2 — Frontend Next.js :**
+```bash
+cd platform
+npm run dev
 ```
-
-## Fichiers clÃ©s
-
-| Fichier | RÃ´le |
-|---------|------|
-| `api/services/ai_generator.py` | Prompt Claude pour gÃ©nÃ©rer le HTML complet de la boutique |
-| `api/services/deployer.py` | Pipeline GitHub + Vercel auto-deployment |
-| `store-template/components/store/StoreShell.tsx` | Root de la boutique gÃ©nÃ©rÃ©e avec Context |
-| `store-template/lib/cart.ts` | Panier localStorage + message WhatsApp |
-| `platform/app/dashboard/` | Toutes les pages du dashboard marchand |
+La plateforme est accessible sur `http://localhost:3000`.
 
 ---
 
-## Ã‰tapes suivantes (Phase 2)
+## 9. Parcours d'Utilisation Marchand
 
-- [ ] Wizard de crÃ©ation complet (5 Ã©tapes)
-- [ ] ProductModal avec upload Cloudinary
-- [ ] SÃ©lecteur de thÃ¨mes visuels avec preview live
-- [ ] Dashboard analytics avec Recharts
-- [ ] SystÃ¨me de notifications email (Resend.com)
-- [ ] Support multi-langue (arabe RTL + franÃ§ais + anglais)
+Voici le parcours standard d'un commerçant, entièrement testé et opérationnel :
+
+```
+1. Inscription marchand (/register)
+       ↓
+2. Création de boutique (/dashboard/boutique/create ou /dashboard/funnel/create)
+   - Choix du nom commercial et du sous-identifiant unique (slug)
+   - Sélection parmi 10 thèmes visuels calibrés
+       ↓
+3. Gestion des produits (/dashboard/products)
+   - Ajout d'articles avec titre, description, prix en DZD et photos
+   - Définition des stocks disponibles
+       ↓
+4. Configuration de la livraison (/dashboard/delivery)
+   - Personnalisation des frais Domicile / Stop-Desk pour les 58 Wilayas
+       ↓
+5. Partage du lien public (https://easytradez.site/[slug] ou http://localhost:3000/[slug])
+   - Les clients passent commande en 1 clic via le formulaire COD
+       ↓
+6. Traitement des commandes (/dashboard/orders)
+   - Suivi, confirmation téléphonique et expédition
+```
 
 ---
 
-*Construit avec â¤ï¸ pour les e-commerÃ§ants algÃ©riens*
-#   S h o p i f y c l o n e  
- #   S h o p i f y c l o n e  
- 
+## 10. Contribution
+
+Les contributions sont les bienvenues ! Pour proposer une amélioration ou corriger une anomalie :
+
+1. **Forkez** le projet.
+2. Créez une branche dédiée à votre fonctionnalité :
+   ```bash
+   git checkout -b feat/nom-de-votre-fonctionnalite
+   ```
+3. Respectez la convention de commits du projet (**Conventional Commits**) :
+   - `feat(scope): ...` pour une nouvelle fonctionnalité
+   - `fix(scope): ...` pour une correction de bug
+   - `docs(scope): ...` pour la documentation
+   - `chore(scope): ...` pour la maintenance ou les dépendances
+4. Assurez-vous que le projet compile sans erreur :
+   ```bash
+   cd platform && npm run build
+   ```
+5. Poussez votre branche et ouvrez une **Pull Request** claire et détaillée.
+
+---
+
+## 11. Licence
+
+**Licence : à définir.**  
+*(Veuillez consulter l'auteur du projet ou ouvrir une issue pour toute question relative aux droits de réutilisation et de distribution du code).*
+
+---
+
+## 12. Auteur & Contact
+
+- **Créateur & Mainteneur** : [@ilyes213co](https://github.com/ilyes213co)
+- **Dépôt officiel** : [https://github.com/ilyes213co/opensource-shopify](https://github.com/ilyes213co/opensource-shopify)
+- **Site officiel en production** : [https://easytradez.site](https://easytradez.site)
