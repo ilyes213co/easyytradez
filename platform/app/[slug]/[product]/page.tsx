@@ -58,13 +58,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ? typeof p.images[0] === "string" ? p.images[0] : p.images[0].url
     : null;
 
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://easytradez.site";
+  const productCanonical = `${siteUrl}/${slug}/${p.slug || p.id}`;
+
   return {
     title: `${p.name} — ${s.name}`,
     description: p.description ?? `${p.name} à ${p.price?.toLocaleString()} DZD`,
+    alternates: {
+      canonical: productCanonical,
+    },
     openGraph: {
       title: `${p.name} — ${s.name}`,
       description: p.description ?? undefined,
+      url: productCanonical,
       images: firstImage ? [{ url: firstImage }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${p.name} — ${s.name}`,
+      description: p.description ?? undefined,
+      images: firstImage ? [firstImage] : [],
     },
   };
 }
@@ -168,5 +181,41 @@ export default async function ProductDetailsPage({ params }: PageProps) {
     brand_accent: storeRaw.primary_color || storeRaw.brand_accent,
   };
 
-  return <ProductPage product={genericProduct} store={genericStore} wilayas={wilayas} />;
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://easytradez.site";
+  const productUrl = `${siteUrl}/${storeRaw.slug}/${genericProduct.slug || genericProduct.id}`;
+
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: genericProduct.name,
+    description:
+      genericProduct.description ||
+      `${genericProduct.name} disponible à la commande chez ${storeRaw.name}`,
+    image: genericProduct.images,
+    sku: genericProduct.id,
+    offers: {
+      "@type": "Offer",
+      url: productUrl,
+      priceCurrency: "DZD",
+      price: genericProduct.price,
+      availability:
+        (genericProduct.stock_quantity ?? 0) > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      seller: {
+        "@type": "Organization",
+        name: storeRaw.name,
+      },
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <ProductPage product={genericProduct} store={genericStore} wilayas={wilayas} />
+    </>
+  );
 }

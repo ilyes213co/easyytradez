@@ -286,8 +286,14 @@ export default function FunnelPage({
           <div className="pd-shell py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {store.logo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={resolveImageUrl(store.logo_url)} alt={store.name} className="h-8 object-contain" />
+                <Image
+                  src={resolveImageUrl(store.logo_url)}
+                  alt={store.name}
+                  width={120}
+                  height={32}
+                  className="h-8 w-auto object-contain"
+                  unoptimized={!store.logo_url.startsWith("http")}
+                />
               ) : (
                 <Editable
                   field="brand_name"

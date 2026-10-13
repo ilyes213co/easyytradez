@@ -23,16 +23,29 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
 
   if (!store) return { title: "Boutique introuvable" };
 
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://easytradez.site";
+  const storeUrl = `${siteUrl}/${slug}`;
+  const storeImg = store.cover_url || store.logo_url;
+
   return {
     title: store.name,
     description: store.description ?? `Découvrez les produits de ${store.name}`,
+    alternates: {
+      canonical: storeUrl,
+    },
     openGraph: {
       title: store.name,
       description: store.description ?? `Découvrez les produits de ${store.name}`,
-      images: store.cover_url ? [{ url: store.cover_url }] : store.logo_url ? [{ url: store.logo_url }] : [],
+      url: storeUrl,
+      images: storeImg ? [{ url: storeImg }] : [],
       type: "website",
     },
-    twitter: { card: "summary_large_image", title: store.name },
+    twitter: {
+      card: "summary_large_image",
+      title: store.name,
+      description: store.description ?? `Découvrez les produits de ${store.name}`,
+      images: storeImg ? [storeImg] : [],
+    },
   };
 }
 

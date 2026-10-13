@@ -5,6 +5,7 @@ import ProductPage, { DEFAULT_WILAYAS } from "@/components/ProductPage";
 import FunnelPage from "@/components/FunnelPage";
 import type { Product as GenericProduct, Store as GenericStore, Wilaya } from "@/types/product";
 import Link from "next/link";
+import Image from "next/image";
 
 interface PageProps {
   params: Promise<{ slug: string }> | { slug: string };
@@ -120,15 +121,49 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
         }))
       : DEFAULT_WILAYAS;
 
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://easytradez.site";
+    const funnelUrl = `${siteUrl}/${store.slug}`;
+
+    const funnelJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: starProduct.name,
+      description:
+        starProduct.description ||
+        `${starProduct.name} disponible chez ${store.name}`,
+      image: starProduct.images,
+      sku: starProduct.id,
+      offers: {
+        "@type": "Offer",
+        url: funnelUrl,
+        priceCurrency: "DZD",
+        price: starProduct.price,
+        availability:
+          (starProduct.stock_quantity ?? 0) > 0
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+        seller: {
+          "@type": "Organization",
+          name: store.name,
+        },
+      },
+    };
+
     return (
-      <FunnelPage
-        store={genericStore}
-        product={starProduct}
-        theme={(store.theme as any) || "crimson"}
-        wilayas={storeWilayas}
-        storePixelId={(store as any).facebook_pixel_id}
-        isEditable={false}
-      />
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(funnelJsonLd) }}
+        />
+        <FunnelPage
+          store={genericStore}
+          product={starProduct}
+          theme={(store.theme as any) || "crimson"}
+          wilayas={storeWilayas}
+          storePixelId={(store as any).facebook_pixel_id}
+          isEditable={false}
+        />
+      </>
     );
   }
 
@@ -150,19 +185,45 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
     return new Intl.NumberFormat("fr-DZ").format(amount) + " DA";
   };
 
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://easytradez.site";
+  const storeJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Store",
+    name: store.name,
+    description: store.description || `Boutique en ligne ${store.name} sur EasyTradez`,
+    url: `${siteUrl}/${store.slug}`,
+    image: store.logo_url || store.cover_url || undefined,
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "DZ",
+      addressLocality: store.city || "Algérie",
+    },
+  };
+
   return (
-    <div
-      className="storefront-wrapper min-h-screen bg-[var(--bg)] text-[var(--text)]"
-      data-theme={store.theme || "crimson"}
-      style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
-    >
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(storeJsonLd) }}
+      />
+      <div
+        className="storefront-wrapper min-h-screen bg-[var(--bg)] text-[var(--text)]"
+        data-theme={store.theme || "crimson"}
+        style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
+      >
       {/* 1. Header Navigation */}
       <nav className="st-nav">
         <div className="st-nav__in">
           <Link href={`/${slug}`} className="st-nav__brand">
             {store.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={store.logo_url} alt={store.name} className="h-8 object-contain" />
+              <Image
+                src={store.logo_url}
+                alt={store.name}
+                width={120}
+                height={32}
+                className="h-8 w-auto object-contain"
+                unoptimized={!store.logo_url.startsWith("http")}
+              />
             ) : (
               store.name
             )}
@@ -209,20 +270,30 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
             </a>
           </div>
 
-          <div className="st-hero__art">
-            {store.cover_url || products[0]?.images?.[0] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={store.cover_url || products[0]?.images?.[0]}
-                alt={store.name}
-              />
-            ) : (
-              <svg viewBox="0 0 400 400" role="img" aria-label="Vitrine">
-                <rect width="400" height="400" fill="var(--stage)" />
-                <circle cx="200" cy="196" r="104" fill="var(--accent)" opacity="0.3" />
-                <rect x="152" y="118" width="96" height="150" rx="10" fill="var(--accent)" />
-              </svg>
-            )}
+          <div className="st-hero__art relative overflow-hidden" style={{ minHeight: "300px" }}>
+            {(() => {
+              const heroImg = store.cover_url || products[0]?.images?.[0];
+              if (heroImg) {
+                return (
+                  <Image
+                    src={heroImg}
+                    alt={store.name}
+                    fill
+                    priority
+                    className="object-cover"
+                    sizes="(max-width: 860px) 100vw, 50vw"
+                    unoptimized={!heroImg.startsWith("http")}
+                  />
+                );
+              }
+              return (
+                <svg viewBox="0 0 400 400" role="img" aria-label="Vitrine">
+                  <rect width="400" height="400" fill="var(--stage)" />
+                  <circle cx="200" cy="196" r="104" fill="var(--accent)" opacity="0.3" />
+                  <rect x="152" y="118" width="96" height="150" rx="10" fill="var(--accent)" />
+                </svg>
+              );
+            })()}
           </div>
         </div>
       </header>
@@ -279,13 +350,19 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
                     href={`/${slug}/${p.slug || p.id}`}
                     className="st-card"
                   >
-                    <span className="st-card__art">
+                    <span className="st-card__art relative overflow-hidden">
                       {p.category && (
-                        <span className="st-card__cat">{p.category}</span>
+                        <span className="st-card__cat z-10">{p.category}</span>
                       )}
                       {img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={img} alt={p.name} />
+                        <Image
+                          src={img}
+                          alt={p.name}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 50vw, (max-width: 980px) 33vw, 25vw"
+                          unoptimized={!img.startsWith("http")}
+                        />
                       ) : (
                         <svg viewBox="0 0 400 400" role="img" aria-label={p.name}>
                           <rect width="400" height="400" fill="var(--stage)" />
@@ -384,5 +461,6 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
         </div>
       </footer>
     </div>
+    </>
   );
 }

@@ -213,8 +213,14 @@ export default function ProductPage({
         <div className="pd-top__in">
           <a className="pd-brand" href={`/${store.slug}`}>
             {store.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={resolveImageUrl(store.logo_url)} alt={store.name} className="h-8 object-contain inline-block" />
+              <Image
+                src={resolveImageUrl(store.logo_url)}
+                alt={store.name}
+                width={120}
+                height={32}
+                className="h-8 w-auto object-contain inline-block"
+                unoptimized={!store.logo_url.startsWith("http")}
+              />
             ) : (
               store.name
             )}

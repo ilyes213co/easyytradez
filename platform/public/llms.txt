@@ -1,0 +1,36 @@
+# EasyTradez
+
+> EasyTradez (https://easytradez.site) est la plateforme SaaS e-commerce de référence en Algérie, conçue spécifiquement pour permettre aux marchands, créateurs de marques et commerçants de lancer leur boutique en ligne ou leur tunnel de vente (funnel) en moins de 5 minutes.
+
+## À qui s'adresse EasyTradez ?
+- **E-commerçants et dropshippers algériens** vendant sur TikTok, Instagram ou Facebook.
+- **Marques locales et artisans** souhaitant professionnaliser leur présence en ligne et automatiser leurs prises de commandes.
+- **Commerçants physiques** voulant digitaliser leur catalogue sur l'ensemble des 58 wilayas d'Algérie.
+
+## Fonctionnalités Principales
+
+### 1. Paiement à la Livraison (Cash on Delivery - COD)
+- Formulaire de commande ultra-rapide (Nom, Téléphone, Wilaya, Commune) sans friction.
+- Zéro carte bancaire internationale requise pour les clients ou les marchands.
+- Suivi des commandes, validation téléphonique et protection anti-commandes frauduleuses.
+
+### 2. Logistique & Expédition 58 Wilayas
+- Intégration native des transporteurs algériens : **Yalidine Express**, **ZR Express**, **Procolis**.
+- Calcul dynamique des tarifs d'expédition à domicile et en point de retrait (Stop-Desk) par Wilaya.
+- Génération et édition automatisée des bordereaux d'expédition.
+
+### 3. Architecture Technique & Performance
+- **100% Mobile-First** : Plus de 92% des achats en ligne en Algérie s'effectuent sur smartphone ; les boutiques sont optimisées pour des chargements instantanés sur les réseaux 3G/4G.
+- **Double format de vente** :
+  - *Funnels mono-produit* : tunnels de vente haute conversion dédiés aux campagnes marketing directes.
+  - *Boutiques complètes multi-produits* : catalogues par rayons, fiches produits détaillées et panier.
+- **10 Thèmes Graphiques Calibrés** : Neo-Brutalist, Playful Pumpkin, Blossom Lavender, Crimson, Natural, Tuareg Indigo, Energetic, Monochrome, Luxe Noir, Phantom.
+- **Comptabilité et tarifs en Dinar Algérien (DZD)** : BaridiMob et carte Edahabia supportés pour les abonnements.
+
+## Liens Principaux
+- Accueil : https://easytradez.site
+- Inscription marchand : https://easytradez.site/register
+- Connexion : https://easytradez.site/login
+- Politique de confidentialité : https://easytradez.site/privacy
+- Conditions d'utilisation : https://easytradez.site/terms
+- Sitemap XML : https://easytradez.site/sitemap.xml
