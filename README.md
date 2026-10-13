@@ -304,4 +304,5 @@ Ce projet est sous licence **MIT**. Consultez le fichier [`LICENSE`](./LICENSE) 
 
 - **Créateur & Mainteneur** : [@ilyes213co](https://github.com/ilyes213co)
 - **Dépôt officiel** : [https://github.com/ilyes213co/opensource-shopify](https://github.com/ilyes213co/opensource-shopify)
-- **Site officiel en production** : [https://easytradez.site](https://easytradez.site)
+- **Site officiel en production** : [https://easytradez.site](https://easytradez.site)#   e a s y t r a d e z  
+ 
