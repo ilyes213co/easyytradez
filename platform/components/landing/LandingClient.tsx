@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ArrowRight, ChevronDown, CheckCircle2, Plus, Minus } from "lucide-react";
 import EasyTradeLogo from "@/components/brand/EasyTradeLogo";
 import ThreeAmbientScene from "@/components/brand/ThreeAmbientScene";
-import StyleStudio from "@/components/brand/StyleStudio";
 
 import {
   TICKER_ITEMS,
@@ -614,8 +613,6 @@ export default function LandingClient() {
         </div>
       </footer>
 
-      {/* ── INTERACTIVE FLOATING STYLE STUDIO ── */}
-      <StyleStudio />
     </div>
   );
 }
