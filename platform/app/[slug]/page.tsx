@@ -6,7 +6,7 @@ import FunnelPage from "@/components/FunnelPage";
 import type { Product as GenericProduct, Store as GenericStore, Wilaya } from "@/types/product";
 import Link from "next/link";
 import Image from "next/image";
-import { generateWhatsAppUrl } from "@/lib/utils";
+import { generateWhatsAppUrl, extractImageUrl } from "@/lib/utils";
 import NoticeBar from "@/components/store/NoticeBar";
 import type { StoreContentOverrides } from "@/types/store";
 
@@ -297,7 +297,7 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
 
           <div className="st-hero__art relative overflow-hidden" style={{ minHeight: "300px" }}>
             {(() => {
-              const heroImg = heroConfig.media_url || store.cover_url || products[0]?.images?.[0];
+              const heroImg = extractImageUrl(heroConfig.media_url) || extractImageUrl(store.cover_url) || extractImageUrl(products[0]?.images?.[0]);
               if (heroImg) {
                 return (
                   <Image

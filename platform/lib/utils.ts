@@ -128,3 +128,35 @@ export function truncate(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str;
   return str.slice(0, maxLength).trimEnd() + "…";
 }
+
+/**
+ * Safely extracts a valid image URL from diverse input types:
+ * - String URL: "https://..."
+ * - Cloudinary or Supabase image object: { url: "https://..." } or { src: "..." }
+ * - Filters out corrupted values like "[object Object]".
+ */
+export function extractImageUrl(val: any): string {
+  if (!val) return "";
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (trimmed === "[object Object]" || trimmed === "undefined" || trimmed === "null") return "";
+    return trimmed;
+  }
+  if (typeof val === "object") {
+    if (typeof val.url === "string") return extractImageUrl(val.url);
+    if (typeof val.src === "string") return extractImageUrl(val.src);
+    if (typeof val.image === "string") return extractImageUrl(val.image);
+    if (Array.isArray(val) && val.length > 0) return extractImageUrl(val[0]);
+  }
+  return "";
+}
+
+export function safeString(val: any, fallback = ""): string {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === "string") {
+    if (val === "[object Object]") return fallback;
+    return val;
+  }
+  if (typeof val === "number" || typeof val === "boolean") return String(val);
+  return fallback;
+}

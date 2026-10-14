@@ -7,7 +7,7 @@ import FunnelPage from "@/components/FunnelPage";
 import BrandInjector from "@/components/BrandInjector";
 import { STORE_AND_FUNNEL_TEMPLATES } from "@/lib/templates/data";
 import type { Product as GenericProduct, Store as GenericStore } from "@/types/product";
-import { generateWhatsAppUrl } from "@/lib/utils";
+import { generateWhatsAppUrl, extractImageUrl } from "@/lib/utils";
 import NoticeBar from "@/components/store/NoticeBar";
 import type { StoreContentOverrides } from "@/types/store";
 
@@ -290,19 +290,28 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
           </div>
 
           <div className="st-hero__art">
-            {heroConfig.media_url || store.cover_url || products[0]?.images?.[0] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={heroConfig.media_url || store.cover_url || products[0]?.images?.[0]}
-                alt={store.name}
-              />
-            ) : (
-              <svg viewBox="0 0 400 400" role="img" aria-label="Vitrine">
-                <rect width="400" height="400" fill="var(--stage)" />
-                <circle cx="200" cy="196" r="104" fill="var(--accent)" opacity="0.3" />
-                <rect x="152" y="118" width="96" height="150" rx="10" fill="var(--accent)" />
-              </svg>
-            )}
+            {(() => {
+              const previewHeroImg =
+                extractImageUrl(heroConfig.media_url) ||
+                extractImageUrl(store.cover_url) ||
+                extractImageUrl(products[0]?.images?.[0]);
+              if (previewHeroImg) {
+                return (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={previewHeroImg}
+                    alt={store.name}
+                  />
+                );
+              }
+              return (
+                <svg viewBox="0 0 400 400" role="img" aria-label="Vitrine">
+                  <rect width="400" height="400" fill="var(--stage)" />
+                  <circle cx="200" cy="196" r="104" fill="var(--accent)" opacity="0.3" />
+                  <rect x="152" y="118" width="96" height="150" rx="10" fill="var(--accent)" />
+                </svg>
+              );
+            })()}
           </div>
         </div>
       </header>

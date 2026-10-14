@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { storesApi, productsApi } from "@/lib/api";
 import type { Product } from "@/types/database";
 import type { Store, StoreContentOverrides } from "@/types/store";
+import { extractImageUrl, safeString } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -94,6 +95,7 @@ export default function TemplateEditorView({ storeId, type = "boutique" }: Templ
   const previewScrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Initialize from store content overrides
+  // Initialize from store content overrides safely
   useEffect(() => {
     if (!store) return;
     const overrides = (store.content_overrides || {}) as StoreContentOverrides;
@@ -101,15 +103,23 @@ export default function TemplateEditorView({ storeId, type = "boutique" }: Templ
     const notice = overrides.notice_bar || {};
 
     setKickerEnabled(hero.kicker_enabled !== false);
-    setKickerText(hero.kicker_text || "Sélection officielle");
-    setTitleText(hero.title_text || store.description || "Des créations uniques pensées pour vous.");
+    setKickerText(safeString(hero.kicker_text, "Sélection officielle"));
+    setTitleText(safeString(hero.title_text, safeString(store.description, "Des créations uniques pensées pour vous.")));
     setDescriptionText(
-      hero.description_text ||
+      safeString(
+        hero.description_text,
         "Commandez en quelques clics avec paiement à la livraison dans les 58 Wilayas d'Algérie."
+      )
     );
-    setCtaLabel(hero.cta_label || "Découvrir la collection");
-    setCtaTarget(hero.cta_target || "#catalogue");
-    setMediaUrl(hero.media_url || store.cover_url || products[0]?.images?.[0] || "");
+    setCtaLabel(safeString(hero.cta_label, "Découvrir la collection"));
+    setCtaTarget(safeString(hero.cta_target, "#catalogue"));
+
+    const initialMedia =
+      extractImageUrl(hero.media_url) ||
+      extractImageUrl(store.cover_url) ||
+      extractImageUrl(products[0]?.images?.[0]) ||
+      "";
+    setMediaUrl(initialMedia);
 
     setNoticeEnabled(notice.enabled !== false);
     setNoticeSticky(notice.sticky !== false);
@@ -118,12 +128,12 @@ export default function TemplateEditorView({ storeId, type = "boutique" }: Templ
     const productsLink = notice.links?.find((l) => l.id === "products");
     const contactLink = notice.links?.find((l) => l.id === "contact");
 
-    if (homeLink?.label) setHomeLabel(homeLink.label);
-    if (productsLink?.label) setProductsLabel(productsLink.label);
-    if (contactLink?.label) setContactLabel(contactLink.label);
+    if (homeLink?.label) setHomeLabel(safeString(homeLink.label, "Accueil"));
+    if (productsLink?.label) setProductsLabel(safeString(productsLink.label, "Produits"));
+    if (contactLink?.label) setContactLabel(safeString(contactLink.label, "Contact"));
 
     setToggleEnabled(notice.categories_toggle?.enabled !== false);
-    setToggleButtonText(notice.categories_toggle?.button_text || "Rayons");
+    setToggleButtonText(safeString(notice.categories_toggle?.button_text, "Rayons"));
   }, [store, products]);
 
   // Save mutation
@@ -131,27 +141,29 @@ export default function TemplateEditorView({ storeId, type = "boutique" }: Templ
     mutationFn: async () => {
       if (!store?.id) throw new Error("Boutique introuvable");
 
+      const cleanMedia = extractImageUrl(mediaUrl);
+
       const payload: StoreContentOverrides = {
         hero: {
           kicker_enabled: kickerEnabled,
-          kicker_text: kickerText.trim(),
-          title_text: titleText.trim(),
-          description_text: descriptionText.trim(),
-          cta_label: ctaLabel.trim(),
-          cta_target: ctaTarget.trim(),
-          media_url: mediaUrl.trim() || undefined,
+          kicker_text: safeString(kickerText).trim(),
+          title_text: safeString(titleText).trim(),
+          description_text: safeString(descriptionText).trim(),
+          cta_label: safeString(ctaLabel).trim(),
+          cta_target: safeString(ctaTarget).trim(),
+          media_url: cleanMedia || undefined,
         },
         notice_bar: {
           enabled: noticeEnabled,
           sticky: noticeSticky,
           links: [
-            { id: "home", label: homeLabel.trim() || "Accueil", target_anchor: "#top", enabled: true },
-            { id: "products", label: productsLabel.trim() || "Produits", target_anchor: "#catalogue", enabled: true },
-            { id: "contact", label: contactLabel.trim() || "Contact", target_anchor: "#contact", enabled: true },
+            { id: "home", label: safeString(homeLabel).trim() || "Accueil", target_anchor: "#top", enabled: true },
+            { id: "products", label: safeString(productsLabel).trim() || "Produits", target_anchor: "#catalogue", enabled: true },
+            { id: "contact", label: safeString(contactLabel).trim() || "Contact", target_anchor: "#contact", enabled: true },
           ],
           categories_toggle: {
             enabled: toggleEnabled,
-            button_text: toggleButtonText.trim() || "Rayons",
+            button_text: safeString(toggleButtonText).trim() || "Rayons",
           },
         },
       };
@@ -189,15 +201,23 @@ export default function TemplateEditorView({ storeId, type = "boutique" }: Templ
     const notice = overrides.notice_bar || {};
 
     setKickerEnabled(hero.kicker_enabled !== false);
-    setKickerText(hero.kicker_text || "Sélection officielle");
-    setTitleText(hero.title_text || store.description || "Des créations uniques pensées pour vous.");
+    setKickerText(safeString(hero.kicker_text, "Sélection officielle"));
+    setTitleText(safeString(hero.title_text, safeString(store.description, "Des créations uniques pensées pour vous.")));
     setDescriptionText(
-      hero.description_text ||
+      safeString(
+        hero.description_text,
         "Commandez en quelques clics avec paiement à la livraison dans les 58 Wilayas d'Algérie."
+      )
     );
-    setCtaLabel(hero.cta_label || "Découvrir la collection");
-    setCtaTarget(hero.cta_target || "#catalogue");
-    setMediaUrl(hero.media_url || store.cover_url || products[0]?.images?.[0] || "");
+    setCtaLabel(safeString(hero.cta_label, "Découvrir la collection"));
+    setCtaTarget(safeString(hero.cta_target, "#catalogue"));
+
+    const initialMedia =
+      extractImageUrl(hero.media_url) ||
+      extractImageUrl(store.cover_url) ||
+      extractImageUrl(products[0]?.images?.[0]) ||
+      "";
+    setMediaUrl(initialMedia);
 
     setNoticeEnabled(notice.enabled !== false);
     setNoticeSticky(notice.sticky !== false);
@@ -512,7 +532,7 @@ export default function TemplateEditorView({ storeId, type = "boutique" }: Templ
                   </div>
                   <input
                     type="url"
-                    value={mediaUrl}
+                    value={safeString(mediaUrl)}
                     onChange={(e) => setMediaUrl(e.target.value)}
                     placeholder="https://... URL de votre visuel"
                     className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-accent"
@@ -526,16 +546,20 @@ export default function TemplateEditorView({ storeId, type = "boutique" }: Templ
                       </p>
                       <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
                         {products
-                          .filter((p) => p.images && p.images.length > 0)
-                          .slice(0, 6)
+                          .map((p) => ({
+                            id: p.id,
+                            name: p.name,
+                            imgUrl: extractImageUrl(p.images?.[0]),
+                          }))
+                          .filter((p) => Boolean(p.imgUrl))
+                          .slice(0, 8)
                           .map((p) => {
-                            const img = p.images?.[0];
-                            const isSelected = mediaUrl === img;
+                            const isSelected = mediaUrl === p.imgUrl;
                             return (
                               <button
                                 key={p.id}
                                 type="button"
-                                onClick={() => setMediaUrl(img || "")}
+                                onClick={() => setMediaUrl(p.imgUrl)}
                                 className={`relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
                                   isSelected
                                     ? "border-accent ring-2 ring-accent/30"
@@ -543,9 +567,7 @@ export default function TemplateEditorView({ storeId, type = "boutique" }: Templ
                                 }`}
                                 title={`Utiliser l'image de "${p.name}"`}
                               >
-                                {img ? (
-                                  <img src={img} alt={p.name} className="w-full h-full object-cover" />
-                                ) : null}
+                                <img src={p.imgUrl} alt={p.name} className="w-full h-full object-cover" />
                                 {isSelected && (
                                   <div className="absolute inset-0 bg-accent/40 flex items-center justify-center text-white">
                                     <Check className="w-3.5 h-3.5 stroke-[3]" />
@@ -939,9 +961,9 @@ export default function TemplateEditorView({ storeId, type = "boutique" }: Templ
                 </div>
 
                 <div className="st-hero__art relative overflow-hidden flex items-center justify-center">
-                  {mediaUrl ? (
+                  {extractImageUrl(mediaUrl) ? (
                     <img
-                      src={mediaUrl}
+                      src={extractImageUrl(mediaUrl)}
                       alt={store.name}
                       className="w-full h-full object-cover transition-all"
                     />
