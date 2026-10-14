@@ -1,7 +1,10 @@
 import axios from "axios";
 import { createBrowserClient } from "@supabase/ssr";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+const API_URL =
+  typeof window !== "undefined"
+    ? ""
+    : (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000");
 
 // Client standard — requêtes courtes (30s)
 export const api = axios.create({

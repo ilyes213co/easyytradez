@@ -19,13 +19,22 @@ import type { Store as StoreType } from "@/types/database";
 type Period = "today" | "7d" | "30d" | "3m";
 
 interface KPI {
+  total_sales?: number;
+  delivered_sales?: number;
+  total_orders?: number;
+  delivered_orders?: number;
+  confirmed_orders: number;
+  pure_confirmed_orders?: number;
+  returned_orders?: number;
+  cancelled_orders?: number;
+  pending_orders?: number;
+  avg_order_value?: number;
   views: number;
   views_prev: number;
   whatsapp_clicks: number;
   whatsapp_clicks_prev: number;
   conversion_rate: number;
   conversion_rate_prev: number;
-  confirmed_orders: number;
   confirmed_orders_prev: number;
 }
 
@@ -123,10 +132,10 @@ const PieTooltip = ({ active, payload }: any) => {
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 
 function KpiCard({
-  label, value, prev, unit = "", icon, color,
+  label, value, prev = 0, unit = "", icon, color, formattedValue, subtitle,
 }: {
-  label: string; value: number; prev: number;
-  unit?: string; icon: string; color: string;
+  label: string; value: number; prev?: number;
+  unit?: string; icon: string; color: string; formattedValue?: string; subtitle?: string;
 }) {
   const { value: pctVal, up } = pct(value, prev);
   return (
@@ -143,10 +152,11 @@ function KpiCard({
           </span>
         )}
       </div>
-      <p className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-        {fmt(value)}<span className="text-lg text-slate-400 dark:text-white/40 ml-1">{unit}</span>
+      <p className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+        {formattedValue ?? fmt(value)}<span className="text-sm sm:text-base text-slate-400 dark:text-white/40 ml-1.5">{unit}</span>
       </p>
-      <p className="text-slate-500 dark:text-white/40 text-sm mt-1">{label}</p>
+      <p className="text-slate-500 dark:text-white/50 text-xs sm:text-sm mt-1">{label}</p>
+      {subtitle && <p className="text-[11px] text-slate-400 dark:text-white/30 mt-0.5">{subtitle}</p>}
     </div>
   );
 }
@@ -319,36 +329,86 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* ── KPI Cards ───────────────────────────────────────────────────────── */}
+      {/* ── KPI Cards: Row 1 - Transactions ──────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Sales */}
         <KpiCard
-          label="Vues boutique"
+          label="Chiffre d'Affaires"
+          value={kpi.total_sales || 0}
+          formattedValue={Number(kpi.total_sales || 0).toLocaleString("fr-DZ")}
+          unit="DZD"
+          icon="💰"
+          color="bg-emerald-500"
+          subtitle={`${kpi.total_orders || 0} commande${(kpi.total_orders || 0) > 1 ? "s" : ""} au total`}
+        />
+
+        {/* Commandes Livrées */}
+        <KpiCard
+          label="Commandes livrées"
+          value={kpi.delivered_orders || 0}
+          icon="📦"
+          color="bg-indigo-500"
+          subtitle={kpi.delivered_sales ? `${Number(kpi.delivered_sales).toLocaleString("fr-DZ")} DZD livrés` : "0 DZD"}
+        />
+
+        {/* Commandes Confirmées */}
+        <KpiCard
+          label="Commandes confirmées"
+          value={kpi.confirmed_orders || 0}
+          prev={kpi.confirmed_orders_prev}
+          icon="✅"
+          color="bg-cyan-500"
+          subtitle={`${kpi.pure_confirmed_orders || 0} en attente de livraison`}
+        />
+
+        {/* Retours Colis & Annulations */}
+        <KpiCard
+          label="Retours & Annulations"
+          value={(kpi.returned_orders || 0) + (kpi.cancelled_orders || 0)}
+          icon="🔄"
+          color="bg-rose-500"
+          subtitle={`${kpi.returned_orders || 0} retour · ${kpi.cancelled_orders || 0} annulée`}
+        />
+      </div>
+
+      {/* ── KPI Cards: Row 2 - Performance & Trafic ────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Panier Moyen */}
+        <KpiCard
+          label="Panier Moyen"
+          value={kpi.avg_order_value || 0}
+          formattedValue={Number(kpi.avg_order_value || 0).toLocaleString("fr-DZ")}
+          unit="DZD"
+          icon="🏷️"
+          color="bg-amber-500"
+        />
+
+        {/* Vues boutique / funnel */}
+        <KpiCard
+          label={isFunnel ? "Vues du funnel" : "Vues boutique"}
           value={kpi.views}
           prev={kpi.views_prev}
           icon="👁️"
-          color="bg-indigo-500"
+          color="bg-violet-500"
         />
+
+        {/* Clics WhatsApp */}
         <KpiCard
           label="Clics WhatsApp"
           value={kpi.whatsapp_clicks}
           prev={kpi.whatsapp_clicks_prev}
           icon="💬"
-          color="bg-emerald-500"
+          color="bg-teal-500"
         />
+
+        {/* Taux de conversion */}
         <KpiCard
           label="Taux de conversion"
           value={kpi.conversion_rate}
           prev={kpi.conversion_rate_prev}
           unit="%"
           icon="🎯"
-          color="bg-violet-500"
-        />
-        <KpiCard
-          label="Commandes confirmées"
-          value={kpi.confirmed_orders}
-          prev={kpi.confirmed_orders_prev}
-          icon="✅"
-          color="bg-cyan-500"
+          color="bg-sky-500"
         />
       </div>
 

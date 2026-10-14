@@ -121,15 +121,27 @@ async def get_analytics(
     }
 
     # ── 5. Aggregate KPIs ─────────────────────────────────────────────────────
+    total_orders      = len(orders)
+    delivered_orders  = sum(1 for o in orders if o.get("status") == "delivered")
+    pure_confirmed    = sum(1 for o in orders if o.get("status") == "confirmed")
+    confirmed_orders  = sum(1 for o in orders if o.get("status") in ("confirmed", "delivered"))
+    returned_orders   = sum(1 for o in orders if str(o.get("status")).lower() in ("returned", "retour", "retourne"))
+    cancelled_orders  = sum(1 for o in orders if str(o.get("status")).lower() in ("cancelled", "canceled", "annule", "annulée"))
+    pending_orders    = sum(1 for o in orders if o.get("status") == "pending")
+
+    valid_orders      = [o for o in orders if str(o.get("status")).lower() not in ("cancelled", "canceled", "returned", "retour")]
+    total_sales       = sum(float(o.get("total_amount") or 0.0) for o in valid_orders)
+    delivered_sales   = sum(float(o.get("total_amount") or 0.0) for o in orders if o.get("status") == "delivered")
+    avg_order_value   = round(total_sales / len(valid_orders)) if valid_orders else 0
+
     views             = sum(1 for e in events if e["event_type"] == "view")
     wa_clicks         = sum(1 for e in events if e["event_type"] == "whatsapp_click")
     conversion_rate   = round(wa_clicks / views * 100, 1) if views > 0 else 0.0
-    confirmed_orders  = sum(1 for o in orders if o["status"] == "confirmed")
 
     prev_views        = sum(1 for e in prev_events if e["event_type"] == "view")
     prev_wa           = sum(1 for e in prev_events if e["event_type"] == "whatsapp_click")
     prev_conversion   = round(prev_wa / prev_views * 100, 1) if prev_views > 0 else 0.0
-    prev_confirmed    = 0  # quick — add prev orders query if needed
+    prev_confirmed    = 0
 
     # ── 6. Daily views ────────────────────────────────────────────────────────
     days = PERIOD_DAYS[period]
@@ -199,13 +211,22 @@ async def get_analytics(
         "store_id": store_id,
         "period":   period,
         "kpi": {
+            "total_sales":              total_sales,
+            "delivered_sales":          delivered_sales,
+            "total_orders":             total_orders,
+            "delivered_orders":         delivered_orders,
+            "confirmed_orders":         confirmed_orders,
+            "pure_confirmed_orders":    pure_confirmed,
+            "returned_orders":          returned_orders,
+            "cancelled_orders":         cancelled_orders,
+            "pending_orders":           pending_orders,
+            "avg_order_value":          avg_order_value,
             "views":                    views,
             "views_prev":               prev_views,
             "whatsapp_clicks":          wa_clicks,
             "whatsapp_clicks_prev":     prev_wa,
             "conversion_rate":          conversion_rate,
             "conversion_rate_prev":     prev_conversion,
-            "confirmed_orders":         confirmed_orders,
             "confirmed_orders_prev":    prev_confirmed,
         },
         "daily_views":     daily_views,

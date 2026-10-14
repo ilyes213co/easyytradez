@@ -51,8 +51,21 @@ export async function GET(
 
     const views = events.filter((e) => e.event_type === "view").length;
     const waClicks = events.filter((e) => e.event_type === "whatsapp_click").length;
-    const confirmedOrders = orders.filter((o) => o.status === "confirmed").length;
-    const conversionRate = views > 0 ? Math.round((waClicks / views) * 1000) / 10 : 0;
+    
+    // Quantitative order metrics
+    const totalOrders = orders.length;
+    const deliveredOrders = orders.filter((o) => o.status === "delivered").length;
+    const pureConfirmedOrders = orders.filter((o) => o.status === "confirmed").length;
+    const confirmedOrders = orders.filter((o) => o.status === "confirmed" || o.status === "delivered").length;
+    const returnedOrders = orders.filter((o) => ["returned", "retour", "retourne"].includes(String(o.status).toLowerCase())).length;
+    const cancelledOrders = orders.filter((o) => ["cancelled", "canceled", "annule", "annulée"].includes(String(o.status).toLowerCase())).length;
+    const pendingOrders = orders.filter((o) => o.status === "pending").length;
+
+    const validOrders = orders.filter((o) => !["cancelled", "canceled", "returned", "retour"].includes(String(o.status).toLowerCase()));
+    const totalSales = validOrders.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+    const deliveredSales = orders.filter((o) => o.status === "delivered").reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+    const avgOrderValue = validOrders.length > 0 ? Math.round(totalSales / validOrders.length) : 0;
+    const conversionRate = views > 0 ? Math.round((confirmedOrders / views) * 1000) / 10 : 0;
 
     // Daily views
     const dailyMap: Record<string, number> = {};
@@ -103,23 +116,61 @@ export async function GET(
 
     const trafficSources = Object.entries(sourceMap).map(([source, count]) => ({ source, count }));
 
+    // Normalize recent orders items
+    const parsedRecentOrders = orders.slice(0, 20).map((o: any) => {
+      let itemsList: { name: string; qty: number }[] = [];
+      if (Array.isArray(o.items)) {
+        itemsList = o.items.map((it: any) => ({
+          name: it?.name || "Article",
+          qty: Number(it?.quantity || it?.qty || 1),
+        }));
+      } else if (typeof o.items === "string") {
+        try {
+          const parsed = JSON.parse(o.items);
+          if (Array.isArray(parsed)) {
+            itemsList = parsed.map((it: any) => ({
+              name: it?.name || "Article",
+              qty: Number(it?.quantity || it?.qty || 1),
+            }));
+          }
+        } catch {}
+      }
+      return {
+        id: o.id,
+        created_at: o.created_at,
+        customer_name: o.customer_name || "Client",
+        items: itemsList,
+        total_amount: Number(o.total_amount) || 0,
+        status: o.status || "pending",
+      };
+    });
+
     return NextResponse.json({
       store_id: storeId,
       period,
       kpi: {
+        total_sales: totalSales,
+        delivered_sales: deliveredSales,
+        total_orders: totalOrders,
+        delivered_orders: deliveredOrders,
+        confirmed_orders: confirmedOrders,
+        pure_confirmed_orders: pureConfirmedOrders,
+        returned_orders: returnedOrders,
+        cancelled_orders: cancelledOrders,
+        pending_orders: pendingOrders,
+        avg_order_value: avgOrderValue,
         views,
         views_prev: 0,
         whatsapp_clicks: waClicks,
         whatsapp_clicks_prev: 0,
         conversion_rate: conversionRate,
         conversion_rate_prev: 0,
-        confirmed_orders: confirmedOrders,
         confirmed_orders_prev: 0,
       },
       daily_views: dailyViews,
       top_products: topProducts,
       traffic_sources: trafficSources,
-      recent_orders: orders.slice(0, 20),
+      recent_orders: parsedRecentOrders,
     });
   } catch (err: any) {
     console.error("GET /api/analytics/[storeId] error:", err);
