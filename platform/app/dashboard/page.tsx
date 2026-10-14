@@ -26,18 +26,27 @@ export default function DashboardPage() {
 
   const searchParams = useSearchParams();
   const sectionParam = searchParams.get("section");
+  const [sectionOverride, setSectionOverride] = useState<"funnel" | "boutique" | null>(null);
+
+  // Sync / reset override if URL sectionParam changes
+  useEffect(() => {
+    if (sectionParam) {
+      setSectionOverride(null);
+    }
+  }, [sectionParam]);
 
   // Determine active section type ("funnel" or "boutique")
   const activeType: "funnel" | "boutique" = useMemo(() => {
     if (sectionParam === "boutique") return "boutique";
     if (sectionParam === "funnel") return "funnel";
+    if (sectionOverride) return sectionOverride;
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("active_section");
       if (saved === "boutiques") return "boutique";
       if (saved === "funnels") return "funnel";
     }
     return "funnel";
-  }, [sectionParam]);
+  }, [sectionParam, sectionOverride]);
 
   const isFunnel = activeType === "funnel";
 
@@ -58,14 +67,37 @@ export default function DashboardPage() {
 
     try {
       // 1. Fetch user's stores strictly filtered by activeType
-      const { data: storesData, error: storesError } = await supabase
+      let targetType = activeType;
+      let { data: storesData, error: storesError } = await supabase
         .from("stores")
         .select("*")
         .eq("owner_id", user.id)
-        .eq("type", activeType)
+        .eq("type", targetType)
         .order("created_at", { ascending: false });
 
       if (storesError) throw storesError;
+
+      // Smart auto-detection: if default section has 0 stores and no section was explicitly chosen in URL / localStorage,
+      // check if the user actually has stores in the other section (e.g. boutiques instead of funnels)
+      if (!sectionParam && !localStorage.getItem("active_section") && (!storesData || storesData.length === 0)) {
+        const altType = targetType === "funnel" ? "boutique" : "funnel";
+        const { data: altStores, error: altError } = await supabase
+          .from("stores")
+          .select("*")
+          .eq("owner_id", user.id)
+          .eq("type", altType)
+          .order("created_at", { ascending: false });
+
+        if (!altError && altStores && altStores.length > 0) {
+          targetType = altType;
+          storesData = altStores;
+          setSectionOverride(altType);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("active_section", altType === "boutique" ? "boutiques" : "funnels");
+          }
+        }
+      }
+
       const storeList = (storesData ?? []) as unknown as StoreType[];
       setStores(storeList);
 
@@ -100,7 +132,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, supabase, activeType]);
+  }, [user, supabase, activeType, sectionParam]);
 
   useEffect(() => {
     loadDashboardData();

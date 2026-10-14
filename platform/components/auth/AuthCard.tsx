@@ -82,7 +82,7 @@ function AuthCardContent({ initialMode = "login" }: AuthCardProps) {
           redirectTo,
           queryParams: {
             access_type: "offline",
-            prompt: "consent",
+            prompt: "select_account",
           },
         },
       });
