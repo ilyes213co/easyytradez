@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getAdminClient, getAuthUser, verifyStoreOwner, safeUpdate } from "@/lib/api-auth";
 
 export async function GET(
@@ -62,6 +63,15 @@ export async function PATCH(
     if (error) {
       console.error("Update store error:", error);
       return NextResponse.json({ detail: error.message }, { status: 500 });
+    }
+
+    if (updated?.slug) {
+      try {
+        revalidatePath(`/${updated.slug}`);
+        revalidatePath(`/${updated.slug}/[product]`, "page");
+      } catch (e) {
+        // Cache revalidation failure ignored
+      }
     }
 
     return NextResponse.json(updated);

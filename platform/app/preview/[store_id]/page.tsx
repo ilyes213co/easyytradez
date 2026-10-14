@@ -20,6 +20,8 @@ interface PageProps {
 }
 
 export const metadata: Metadata = { title: "Aperçu de la boutique" };
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function getSupabase() {
   return createClient(

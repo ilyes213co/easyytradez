@@ -8,6 +8,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { generateWhatsAppUrl } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface PageProps {
   params: Promise<{ slug: string }> | { slug: string };
   searchParams: Promise<{ category?: string }> | { category?: string };

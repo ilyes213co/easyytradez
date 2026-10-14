@@ -180,7 +180,7 @@ export default function OrdersView({ type }: OrdersViewProps) {
     loadData();
   }, [loadData]);
 
-  // Realtime subscription
+  // Realtime subscription + Guaranteed polling fallback
   useEffect(() => {
     if (stores.length === 0) return;
 
@@ -188,8 +188,10 @@ export default function OrdersView({ type }: OrdersViewProps) {
       supabase.removeChannel(channelRef.current);
     }
 
+    const storeIds = stores.map((s) => s.id);
+
     const channel = supabase
-      .channel(`orders:${type}:${user?.id ?? "global"}`)
+      .channel(`orders:${type}:${user?.id ?? "global"}:${Date.now()}`)
       .on(
         "postgres_changes",
         {
@@ -198,29 +200,36 @@ export default function OrdersView({ type }: OrdersViewProps) {
           table: "orders",
         },
         (payload) => {
+          if (payload.eventType === "DELETE") {
+            const deletedId = (payload.old as any)?.id;
+            if (deletedId) {
+              setOrders((prev) => prev.filter((o) => o.id !== deletedId));
+            }
+            return;
+          }
+
           const raw = payload.new as any;
-          const storeIds = stores.map((s) => s.id);
-          if (raw && !storeIds.includes(raw.store_id)) return;
+          if (!raw || (raw.store_id && !storeIds.includes(raw.store_id))) return;
+
+          const formattedOrder: Order = {
+            ...raw,
+            total: raw.total ?? raw.total_amount ?? 0,
+            subtotal: raw.subtotal ?? raw.total_amount ?? 0,
+            shipping_address: raw.shipping_address ?? raw.customer_address ?? null,
+          };
 
           if (payload.eventType === "INSERT") {
-            const newOrder: Order = {
-              ...raw,
-              total: raw.total ?? raw.total_amount ?? 0,
-              subtotal: raw.subtotal ?? raw.total_amount ?? 0,
-              shipping_address: raw.shipping_address ?? raw.customer_address ?? null,
-            };
-            setOrders((prev) => [newOrder, ...prev]);
+            setOrders((prev) => {
+              if (prev.some((o) => o.id === formattedOrder.id)) return prev;
+              return [formattedOrder, ...prev];
+            });
           } else if (payload.eventType === "UPDATE") {
-            const updated: Order = {
-              ...raw,
-              total: raw.total ?? raw.total_amount ?? 0,
-              subtotal: raw.subtotal ?? raw.total_amount ?? 0,
-              shipping_address: raw.shipping_address ?? raw.customer_address ?? null,
-            };
-            setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
-            setSelectedOrder((prev) => (prev?.id === updated.id ? updated : prev));
-          } else if (payload.eventType === "DELETE") {
-            setOrders((prev) => prev.filter((o) => o.id !== (payload.old as any).id));
+            setOrders((prev) =>
+              prev.map((o) => (o.id === formattedOrder.id ? { ...o, ...formattedOrder } : o))
+            );
+            setSelectedOrder((prev) =>
+              prev?.id === formattedOrder.id ? { ...prev, ...formattedOrder } : prev
+            );
           }
         }
       )
@@ -228,10 +237,18 @@ export default function OrdersView({ type }: OrdersViewProps) {
 
     channelRef.current = channel;
 
+    // Guaranteed polling fallback every 8 seconds so modifications are ALWAYS in real time
+    const pollTimer = setInterval(() => {
+      loadData();
+    }, 8000);
+
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(pollTimer);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
     };
-  }, [stores, supabase, type, user?.id]);
+  }, [stores, supabase, type, user?.id, loadData]);
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {

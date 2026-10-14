@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 import ProductPage, { DEFAULT_WILAYAS } from "@/components/ProductPage";
 import type { Product as GenericProduct, Store as GenericStore, Wilaya } from "@/types/product";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface PageProps {
   params: Promise<{ slug: string; product: string }> | { slug: string; product: string };
 }

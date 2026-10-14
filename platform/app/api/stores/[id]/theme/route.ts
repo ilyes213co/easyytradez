@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getAdminClient, getAuthUser, verifyStoreOwner } from "@/lib/api-auth";
 
 const ALLOWED_THEMES = new Set([
@@ -35,6 +36,15 @@ export async function PATCH(
 
     if (error) {
       return NextResponse.json({ detail: error.message }, { status: 500 });
+    }
+
+    if (updated?.slug) {
+      try {
+        revalidatePath(`/${updated.slug}`);
+        revalidatePath(`/${updated.slug}/[product]`, "page");
+      } catch (e) {
+        // Cache revalidation failure ignored
+      }
     }
 
     return NextResponse.json({ message: "Thème mis à jour avec succès", theme, store: updated });

@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { getAdminClient } from "@/lib/api-auth";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface LayoutProps {
   children: React.ReactNode;
   params: Promise<{ slug: string }> | { slug: string };
