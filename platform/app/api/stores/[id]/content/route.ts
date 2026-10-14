@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getAdminClient, getAuthUser, verifyStoreOwner } from "@/lib/api-auth";
 
 export async function PATCH(
@@ -45,6 +46,15 @@ export async function PATCH(
 
     if (error) {
       return NextResponse.json({ detail: error.message }, { status: 500 });
+    }
+
+    if (check.store?.slug) {
+      try {
+        revalidatePath(`/${check.store.slug}`);
+        revalidatePath(`/${check.store.slug}/[product]`, "page");
+      } catch (e) {
+        // Cache revalidation error ignored
+      }
     }
 
     return NextResponse.json({

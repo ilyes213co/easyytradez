@@ -7,6 +7,8 @@ import type { Product as GenericProduct, Store as GenericStore, Wilaya } from "@
 import Link from "next/link";
 import Image from "next/image";
 import { generateWhatsAppUrl } from "@/lib/utils";
+import NoticeBar from "@/components/store/NoticeBar";
+import type { StoreContentOverrides } from "@/types/store";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -204,6 +206,10 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
     },
   };
 
+  const contentOverrides = ((store as any).content_overrides || {}) as StoreContentOverrides;
+  const heroConfig = contentOverrides.hero || {};
+  const noticeConfig = contentOverrides.notice_bar || {};
+
   return (
     <>
       <script
@@ -211,7 +217,8 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
         dangerouslySetInnerHTML={{ __html: JSON.stringify(storeJsonLd) }}
       />
       <div
-        className="storefront-wrapper min-h-screen bg-[var(--bg)] text-[var(--text)]"
+        id="top"
+        className="storefront-wrapper min-h-screen bg-[var(--bg)] text-[var(--text)] scroll-smooth"
         data-theme={store.theme || "crimson"}
         style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
       >
@@ -258,25 +265,39 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
         </div>
       </nav>
 
+      {/* Notice Navigation Bar avec défilement fluide et sélecteur triangulaire de catégories */}
+      {noticeConfig.enabled !== false && (
+        <NoticeBar
+          slug={slug}
+          categories={categories}
+          activeCategory={category}
+          config={noticeConfig}
+        />
+      )}
+
       {/* 2. Hero Section */}
       <header className="st-hero">
         <div className="st-hero__in">
           <div>
-            <p className="st-hero__kicker">Sélection officielle</p>
+            {heroConfig.kicker_enabled !== false && (
+              <p className="st-hero__kicker">
+                {heroConfig.kicker_text || "Sélection officielle"}
+              </p>
+            )}
             <h1 className="st-hero__title">
-              {store.description || "Des créations uniques pensées pour vous."}
+              {heroConfig.title_text || store.description || "Des créations uniques pensées pour vous."}
             </h1>
             <p className="st-hero__sub">
-              Commandez en quelques clics avec paiement à la livraison dans les 58 Wilayas d&apos;Algérie.
+              {heroConfig.description_text || "Commandez en quelques clics avec paiement à la livraison dans les 58 Wilayas d'Algérie."}
             </p>
-            <a href="#catalogue" className="st-hero__cta">
-              Découvrir la collection
+            <a href={heroConfig.cta_target || "#catalogue"} className="st-hero__cta">
+              {heroConfig.cta_label || "Découvrir la collection"}
             </a>
           </div>
 
           <div className="st-hero__art relative overflow-hidden" style={{ minHeight: "300px" }}>
             {(() => {
-              const heroImg = store.cover_url || products[0]?.images?.[0];
+              const heroImg = heroConfig.media_url || store.cover_url || products[0]?.images?.[0];
               if (heroImg) {
                 return (
                   <Image
@@ -423,8 +444,8 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
         </div>
       </section>
 
-      {/* 5. Trust Band */}
-      <div className="st-band">
+      {/* 5. Trust Band & Contact Information */}
+      <div id="contact" className="st-band scroll-mt-20">
         <ul className="st-band__in">
           <li>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

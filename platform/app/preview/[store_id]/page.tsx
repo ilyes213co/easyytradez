@@ -8,6 +8,8 @@ import BrandInjector from "@/components/BrandInjector";
 import { STORE_AND_FUNNEL_TEMPLATES } from "@/lib/templates/data";
 import type { Product as GenericProduct, Store as GenericStore } from "@/types/product";
 import { generateWhatsAppUrl } from "@/lib/utils";
+import NoticeBar from "@/components/store/NoticeBar";
+import type { StoreContentOverrides } from "@/types/store";
 
 interface PageProps {
   params: Promise<{ store_id: string }>;
@@ -204,6 +206,10 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
     return new Intl.NumberFormat("fr-DZ").format(amount) + " DA";
   };
 
+  const contentOverrides = ((store as any).content_overrides || {}) as StoreContentOverrides;
+  const heroConfig = contentOverrides.hero || {};
+  const noticeConfig = contentOverrides.notice_bar || {};
+
   return (
     <>
       <BrandInjector
@@ -212,7 +218,8 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
         logoUrl={store.logo_url}
       />
       <div
-        className="storefront-wrapper min-h-screen bg-[var(--bg)] text-[var(--text)]"
+        id="top"
+        className="storefront-wrapper min-h-screen bg-[var(--bg)] text-[var(--text)] scroll-smooth"
         data-theme={activeTheme}
         style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
       >
@@ -253,27 +260,40 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
         </div>
       </nav>
 
+      {/* Notice Navigation Bar avec défilement fluide et sélecteur triangulaire de catégories */}
+      {noticeConfig.enabled !== false && (
+        <NoticeBar
+          slug={store.slug}
+          categories={categories}
+          config={noticeConfig}
+        />
+      )}
+
       {/* 2. Hero Section */}
       <header className="st-hero">
         <div className="st-hero__in">
           <div>
-            <p className="st-hero__kicker">Sélection officielle</p>
+            {heroConfig.kicker_enabled !== false && (
+              <p className="st-hero__kicker">
+                {heroConfig.kicker_text || "Sélection officielle"}
+              </p>
+            )}
             <h1 className="st-hero__title">
-              {store.description || store.name}
+              {heroConfig.title_text || store.description || store.name}
             </h1>
             <p className="st-hero__sub">
-              Commandez en quelques clics avec paiement à la livraison dans les 58 Wilayas d&apos;Algérie.
+              {heroConfig.description_text || "Commandez en quelques clics avec paiement à la livraison dans les 58 Wilayas d'Algérie."}
             </p>
-            <a href="#catalogue" className="st-hero__cta">
-              Découvrir la collection
+            <a href={heroConfig.cta_target || "#catalogue"} className="st-hero__cta">
+              {heroConfig.cta_label || "Découvrir la collection"}
             </a>
           </div>
 
           <div className="st-hero__art">
-            {store.cover_url || products[0]?.images?.[0] ? (
+            {heroConfig.media_url || store.cover_url || products[0]?.images?.[0] ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={store.cover_url || products[0]?.images?.[0]}
+                src={heroConfig.media_url || store.cover_url || products[0]?.images?.[0]}
                 alt={store.name}
               />
             ) : (
@@ -385,8 +405,8 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
         </div>
       </section>
 
-      {/* 5. Trust Band */}
-      <div className="st-band">
+      {/* 5. Trust Band & Contact */}
+      <div id="contact" className="st-band scroll-mt-20">
         <ul className="st-band__in">
           <li>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

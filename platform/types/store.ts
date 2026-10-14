@@ -54,9 +54,38 @@ export interface Store {
   type?: 'boutique' | 'funnel';
   facebook_pixel_id?: string | null;
   tiktok_pixel_id?: string | null;
-  content_overrides?: Record<string, any> | null;
+  content_overrides?: StoreContentOverrides | null;
   published_url?: string | null;
   status?: 'active' | 'suspended' | 'draft';
   created_at?: string;
   updated_at?: string;
+}
+
+export interface StoreContentOverrides {
+  hero?: {
+    kicker_enabled?: boolean;
+    kicker_text?: string;
+    title_text?: string;
+    description_text?: string;
+    cta_label?: string;
+    cta_target?: string;
+    alignment?: "left" | "center";
+    media_url?: string;
+  };
+  notice_bar?: {
+    enabled?: boolean;
+    sticky?: boolean;
+    links?: {
+      id: "home" | "products" | "contact" | string;
+      label: string;
+      target_anchor: string;
+      enabled: boolean;
+    }[];
+    categories_toggle?: {
+      enabled?: boolean;
+      button_text?: string;
+      max_inline_items?: number;
+      show_counts?: boolean;
+    };
+  };
 }
