@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ProductPage, { DEFAULT_WILAYAS } from "@/components/ProductPage";
 import type { Product as GenericProduct, Store as GenericStore, Wilaya } from "@/types/product";
+import StoreAnalyticsTracker from "@/components/analytics/StoreAnalyticsTracker";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -214,6 +215,11 @@ export default async function ProductDetailsPage({ params }: PageProps) {
 
   return (
     <>
+      <StoreAnalyticsTracker
+        storeId={storeRaw.id}
+        productId={genericProduct.id}
+        isFunnel={false}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}

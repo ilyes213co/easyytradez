@@ -77,8 +77,8 @@ export async function GET(
     }
 
     const dailyViews = [];
-    for (let i = 0; i < days; i++) {
-      const dt = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
+    for (let i = days - 1; i >= 0; i--) {
+      const dt = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
       const dayKey = dt.toISOString().slice(0, 10);
       const label = `${String(dt.getDate()).padStart(2, "0")}/${String(dt.getMonth() + 1).padStart(2, "0")}`;
       dailyViews.push({ date: label, views: dailyMap[dayKey] || 0 });

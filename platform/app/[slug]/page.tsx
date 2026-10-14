@@ -9,6 +9,7 @@ import Image from "next/image";
 import { generateWhatsAppUrl, extractImageUrl } from "@/lib/utils";
 import NoticeBar from "@/components/store/NoticeBar";
 import type { StoreContentOverrides } from "@/types/store";
+import StoreAnalyticsTracker from "@/components/analytics/StoreAnalyticsTracker";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -157,6 +158,11 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
 
     return (
       <>
+        <StoreAnalyticsTracker
+          storeId={store.id}
+          productId={starProduct.id}
+          isFunnel={true}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(funnelJsonLd) }}
@@ -212,6 +218,10 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
 
   return (
     <>
+      <StoreAnalyticsTracker
+        storeId={store.id}
+        isFunnel={false}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(storeJsonLd) }}
