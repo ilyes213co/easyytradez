@@ -7,6 +7,7 @@ import FunnelPage from "@/components/FunnelPage";
 import BrandInjector from "@/components/BrandInjector";
 import { STORE_AND_FUNNEL_TEMPLATES } from "@/lib/templates/data";
 import type { Product as GenericProduct, Store as GenericStore } from "@/types/product";
+import { generateWhatsAppUrl } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ store_id: string }>;
@@ -238,7 +239,7 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
           <div className="st-nav__actions">
             {store.whatsapp_phone && (
               <a
-                href={`https://wa.me/${store.whatsapp_phone.replace(/\D/g, "")}`}
+                href={generateWhatsAppUrl(store.whatsapp_phone)}
                 target="_blank"
                 rel="noreferrer"
                 className="st-nav__cart"

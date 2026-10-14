@@ -1,8 +1,17 @@
-"use client";
-
 import { useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import type { Order } from "@/lib/supabase";
+import {
+  generateWhatsAppUrl,
+  formatWhatsAppPhone,
+  extractWilaya,
+  extractDeliveryMethod,
+} from "@/lib/utils";
+import {
+  ShippingSlipModal,
+  printShippingSlip,
+} from "@/components/orders/ShippingSlipModal";
+import { Printer } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +47,7 @@ interface OrderDrawerProps {
   onClose: () => void;
   order: Order | null;
   onUpdated: (updated: Order) => void;
+  storeName?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -261,10 +271,11 @@ function StatusStepper({
 
 // ─── Main Drawer ──────────────────────────────────────────────────────────────
 
-export function OrderDrawer({ open, onClose, order, onUpdated }: OrderDrawerProps) {
+export function OrderDrawer({ open, onClose, order, onUpdated, storeName = "EasyTradez Store" }: OrderDrawerProps) {
   const supabase = getSupabaseBrowserClient();
   const [updating, setUpdating] = useState(false);
   const [payUpdating, setPayUpdating] = useState(false);
+  const [slipModalOpen, setSlipModalOpen] = useState(false);
 
   if (!order) return null;
 
@@ -328,11 +339,18 @@ export function OrderDrawer({ open, onClose, order, onUpdated }: OrderDrawerProp
     }
   };
 
-  // ── WhatsApp & Tel links ──────────────────────────────────────────────────
-  const cleanPhone = order.customer_phone ? order.customer_phone.replace(/\D/g, "") : "";
-  const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
-    `Bonjour ${order.customer_name} ! Votre commande #${order.id.slice(-6).toUpperCase()} est ${statusCfg.label.toLowerCase()}.`
-  )}`;
+  // ── WhatsApp & Tel links (Proper Algerian international format) ──────────
+  const cleanPhone = order.customer_phone ? formatWhatsAppPhone(order.customer_phone) : "";
+  const waLink = cleanPhone
+    ? generateWhatsAppUrl(
+        order.customer_phone,
+        `Bonjour ${order.customer_name} ! Votre commande #${order.id.slice(-6).toUpperCase()} est ${statusCfg.label.toLowerCase()}.`
+      )
+    : "";
+
+  const isValidated = order.status !== "pending" && order.status !== "cancelled";
+  const wilaya = extractWilaya(order);
+  const delivery = extractDeliveryMethod(order);
 
   return (
     <>
@@ -366,15 +384,27 @@ export function OrderDrawer({ open, onClose, order, onUpdated }: OrderDrawerProp
               Commande de {order.customer_name}
             </h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/[0.06] transition-all"
-            title="Fermer"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-1">
+            {isValidated && (
+              <button
+                type="button"
+                onClick={() => setSlipModalOpen(true)}
+                className="p-2 rounded-xl text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all"
+                title="Imprimer le bordereau d'expédition"
+              >
+                <Printer className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/[0.06] transition-all"
+              title="Fermer"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Scrollable content */}
@@ -390,6 +420,78 @@ export function OrderDrawer({ open, onClose, order, onUpdated }: OrderDrawerProp
               onAdvance={handleStatusAdvance}
               loading={updating}
             />
+          </section>
+
+          {/* ── Bordereau d'expédition (Bordereau de livraison C.O.D) ────────── */}
+          <section className="rounded-xl border border-white/[0.08] bg-white/[0.025] p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/50 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                <Printer className="w-3.5 h-3.5 text-indigo-400" />
+                Bordereau d&apos;expédition (C.O.D)
+              </span>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                  isValidated
+                    ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/25"
+                    : "bg-amber-500/15 text-amber-300 border border-amber-500/25"
+                }`}
+              >
+                {isValidated ? "Commande Validée" : "Validation requise"}
+              </span>
+            </div>
+
+            <div className="text-xs text-white/60 space-y-1 bg-black/20 p-2.5 rounded-lg border border-white/[0.04]">
+              <div className="flex justify-between">
+                <span className="text-white/40">Mode de livraison :</span>
+                <span className="font-semibold text-white/90">{delivery.label}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/40">Wilaya de destination :</span>
+                <span className="font-semibold text-white/90">{wilaya}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/40">Montant à encaisser :</span>
+                <span className="font-bold font-mono text-emerald-400">
+                  {totalAmount.toLocaleString("fr-DZ")} DZD
+                </span>
+              </div>
+            </div>
+
+            {isValidated ? (
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setSlipModalOpen(true)}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/30"
+                  title="Ouvrir l'aperçu et imprimer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Imprimer bordereau</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => printShippingSlip(order, storeName)}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/[0.06] hover:bg-white/10 active:scale-95 text-white/90 text-xs font-semibold border border-white/10 transition-all"
+                  title="Impression directe instantanée"
+                >
+                  <span>Impression rapide</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-[11px] text-white/40 italic">
+                  Validez la commande pour imprimer le bordereau.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleStatusAdvance("confirmed")}
+                  disabled={updating}
+                  className="px-2.5 py-1 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition-all active:scale-95"
+                >
+                  Valider
+                </button>
+              </div>
+            )}
           </section>
 
           <div className="h-px bg-white/[0.05]" />
@@ -578,6 +680,14 @@ export function OrderDrawer({ open, onClose, order, onUpdated }: OrderDrawerProp
           </section>
         </div>
       </div>
+
+      {/* Shipping Slip Preview & Print Modal */}
+      <ShippingSlipModal
+        isOpen={slipModalOpen}
+        onClose={() => setSlipModalOpen(false)}
+        order={order}
+        storeName={storeName}
+      />
     </>
   );
 }

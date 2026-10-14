@@ -10,6 +10,7 @@ import {
   timeAgo,
   formatFullDateTime,
 } from "@/components/orders/OrderDrawer";
+import { ShippingSlipModal } from "@/components/orders/ShippingSlipModal";
 import type { Order, Store } from "@/lib/supabase";
 import {
   ShoppingBag,
@@ -20,6 +21,7 @@ import {
   Check,
   CheckCheck,
   Clock,
+  Printer,
 } from "lucide-react";
 
 type StatusFilter = "all" | Order["status"];
@@ -111,6 +113,7 @@ export default function OrdersView({ type }: OrdersViewProps) {
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [slipOrder, setSlipOrder] = useState<Order | null>(null);
 
   // Sélections multiples & actions rapides (Point 5)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -508,6 +511,22 @@ export default function OrdersView({ type }: OrdersViewProps) {
                             )}
                           </button>
                         )}
+
+                        {order.status !== "pending" && order.status !== "cancelled" && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSlipOrder(order);
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25 text-xs font-bold transition-all shadow-xs active:scale-95"
+                            title="Imprimer le bordereau d'expédition"
+                          >
+                            <Printer className="w-3 h-3" />
+                            <span>Bordereau</span>
+                          </button>
+                        )}
+
                         <div className="p-1 rounded-lg bg-slate-100 dark:bg-white/[0.04] text-slate-400">
                           <ChevronRight className="w-4 h-4" />
                         </div>
@@ -649,6 +668,21 @@ export default function OrdersView({ type }: OrdersViewProps) {
                               </button>
                             )}
 
+                            {order.status !== "pending" && order.status !== "cancelled" && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSlipOrder(order);
+                                }}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25 text-xs font-bold transition-all shadow-xs active:scale-95"
+                                title="Imprimer le bordereau d'expédition (Bordereau C.O.D)"
+                              >
+                                <Printer className="w-3.5 h-3.5" />
+                                <span className="hidden lg:inline">Bordereau</span>
+                              </button>
+                            )}
+
                             <button
                               type="button"
                               className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/[0.04] text-slate-500 dark:text-white/50 group-hover:text-accent dark:group-hover:text-white group-hover:bg-accent/10 dark:group-hover:bg-accent/20 transition-colors"
@@ -713,10 +747,19 @@ export default function OrdersView({ type }: OrdersViewProps) {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         order={selectedOrder}
+        storeName={stores.find((s) => s.id === selectedOrder?.store_id)?.name}
         onUpdated={(updated) => {
           setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
           setSelectedOrder(updated);
         }}
+      />
+
+      {/* Shipping Slip Preview & Print Modal */}
+      <ShippingSlipModal
+        isOpen={!!slipOrder}
+        onClose={() => setSlipOrder(null)}
+        order={slipOrder}
+        storeName={stores.find((s) => s.id === slipOrder?.store_id)?.name}
       />
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import type { Product, Store } from "@/lib/supabase";
+import { generateWhatsAppUrl } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -285,7 +286,7 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
     setLoading(false);
 
     // Build WhatsApp message for optional confirmation link
-    const phone = (store.whatsapp_phone ?? store.whatsapp_number ?? "").replace(/\D/g, "");
+    const phone = store.whatsapp_phone || store.whatsapp_number || "";
     const currentRate = rates.find(
       (r) => String(r.wilaya_id) === selectedWilaya || r.code === selectedWilaya
     );
@@ -307,9 +308,7 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
       `Réf. commande : #${finalOrderId.slice(-6).toUpperCase()}`,
     ].filter(Boolean).join("\n");
 
-    const wa = phone
-      ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
-      : "";
+    const wa = phone ? generateWhatsAppUrl(phone, message) : "";
 
     setOrderId(finalOrderId);
     setWaLink(wa);
@@ -564,9 +563,12 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
       </button>
 
       {/* WhatsApp direct */}
-      {store.whatsapp_number && (
+      {(store.whatsapp_phone || store.whatsapp_number) && (
         <a
-          href={`https://wa.me/${store.whatsapp_number.replace(/\D/g, "")}?text=${encodeURIComponent(`Bonjour, je suis intéressé par "${product.name}" à ${product.price.toLocaleString("fr-DZ")} DZD.`)}`}
+          href={generateWhatsAppUrl(
+            store.whatsapp_phone || store.whatsapp_number || "",
+            `Bonjour, je suis intéressé par "${product.name}" à ${product.price.toLocaleString("fr-DZ")} DZD.`
+          )}
           target="_blank" rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 w-full rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 py-3 text-sm font-semibold text-emerald-700 transition-all"
         >

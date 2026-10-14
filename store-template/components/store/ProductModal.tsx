@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useStore } from "./StoreShell";
+import { generateWhatsAppUrl } from "@/lib/cart";
 
 export default function ProductModal() {
   const { selectedProduct: product, closeProduct, addToCart, store, theme, primary } = useStore();
@@ -26,10 +27,9 @@ export default function ProductModal() {
 
   const buildWaUrl = () => {
     if (!store.whatsapp_phone) return "#";
-    const phone = store.whatsapp_phone.replace(/\D/g, "");
     const total = (product.price * qty).toLocaleString("fr-DZ");
     const msg = `Bonjour ${store.name} ! 👋\nJe veux commander :\n🛍️ ${qty}x ${product.name} — ${total} DZD\n\nMon nom : \nMon adresse : `;
-    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    return generateWhatsAppUrl(store.whatsapp_phone, msg) || "#";
   };
 
   const overlay: React.CSSProperties = {

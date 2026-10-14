@@ -1,6 +1,7 @@
 "use client";
 
 import { useStore } from "./StoreShell";
+import { generateWhatsAppUrl } from "@/lib/cart";
 
 export default function Hero() {
   const { store, primary, theme } = useStore();
@@ -144,7 +145,7 @@ export default function Hero() {
 
           {store.whatsapp_phone && (
             <a
-              href={`https://wa.me/${store.whatsapp_phone.replace(/\D/g, "")}`}
+              href={generateWhatsAppUrl(store.whatsapp_phone)}
               target="_blank" rel="noreferrer"
               style={ctaSecStyle}
             >

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Product } from "../../app/types";
 import { useStore } from "./StoreShell";
+import { generateWhatsAppUrl } from "@/lib/cart";
 
 function hexToLuminance(hex: string): number {
   const cleaned = hex.replace("#", "");
@@ -121,9 +122,8 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const buildDirectWaUrl = () => {
     if (!store.whatsapp_phone) return "#";
-    const phone = store.whatsapp_phone.replace(/\D/g, "");
     const msg = `Bonjour ${store.name} ! 👋\nJe veux commander :\n🛍️ 1x ${product.name} — ${product.price.toLocaleString("fr-DZ")} DZD\n\nMon nom : \nMon adresse : `;
-    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    return generateWhatsAppUrl(store.whatsapp_phone, msg) || "#";
   };
 
   return (

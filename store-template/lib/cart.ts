@@ -92,10 +92,36 @@ export class Cart {
   }
 
   buildWhatsAppUrl(phone: string, storeName: string): string {
-    const cleaned = phone.replace(/\D/g, "");
     const message = this.buildWhatsAppMessage(storeName);
-    return `https://wa.me/${cleaned}?text=${encodeURIComponent(message)}`;
+    return generateWhatsAppUrl(phone, message);
   }
+}
+
+export function formatWhatsAppPhone(phone: string): string {
+  if (!phone) return "";
+  let cleaned = phone.replace(/\D/g, "");
+  if (!cleaned) return "";
+
+  if (cleaned.startsWith("00")) {
+    cleaned = cleaned.slice(2);
+  }
+
+  if (cleaned.startsWith("0") && cleaned.length >= 9 && cleaned.length <= 11) {
+    cleaned = `213${cleaned.slice(1)}`;
+  } else if (cleaned.startsWith("2130") && cleaned.length >= 12) {
+    cleaned = `213${cleaned.slice(4)}`;
+  } else if (/^[567]\d{8}$/.test(cleaned)) {
+    cleaned = `213${cleaned}`;
+  }
+
+  return cleaned;
+}
+
+export function generateWhatsAppUrl(phone: string, message?: string): string {
+  const formatted = formatWhatsAppPhone(phone);
+  if (!formatted) return "";
+  const query = message ? `?text=${encodeURIComponent(message)}` : "";
+  return `https://wa.me/${formatted}${query}`;
 }
 
 // Singleton per store (client-side only)

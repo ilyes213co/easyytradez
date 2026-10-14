@@ -27,9 +27,91 @@ export function formatPrice(amount: number, currency = "DZD"): string {
   }).format(amount);
 }
 
-export function generateWhatsAppUrl(phone: string, message: string): string {
-  const cleaned = phone.replace(/\D/g, "");
-  return `https://wa.me/${cleaned}?text=${encodeURIComponent(message)}`;
+/**
+ * Formats a phone number to WhatsApp international standard format (E.164 digits without +).
+ * Fixes Algerian numbers (e.g., "0550123456" -> "213550123456") to prevent
+ * "nom de profil @05xxxxxxxx n'existe pas" errors on WhatsApp Web/Mobile.
+ */
+export function formatWhatsAppPhone(phone: string): string {
+  if (!phone) return "";
+  let cleaned = phone.replace(/\D/g, "");
+  if (!cleaned) return "";
+
+  // Strip international exit codes (00)
+  if (cleaned.startsWith("00")) {
+    cleaned = cleaned.slice(2);
+  }
+
+  // Algerian local format starting with 0 (e.g. 05xx, 06xx, 07xx, 02xx, 03xx, 04xx)
+  // 10 digits in Algeria: 05 50 12 34 56 -> 213 550 12 34 56
+  if (cleaned.startsWith("0") && cleaned.length >= 9 && cleaned.length <= 11) {
+    cleaned = `213${cleaned.slice(1)}`;
+  }
+  // Algerian format with country code but redundant trunk prefix 0 (e.g. 2130550123456)
+  else if (cleaned.startsWith("2130") && cleaned.length >= 12) {
+    cleaned = `213${cleaned.slice(4)}`;
+  }
+  // 9 digits starting with 5, 6, 7 (Algerian mobile without 0 or +213)
+  else if (/^[567]\d{8}$/.test(cleaned)) {
+    cleaned = `213${cleaned}`;
+  }
+
+  return cleaned;
+}
+
+export function generateWhatsAppUrl(phone: string, message?: string): string {
+  const formatted = formatWhatsAppPhone(phone);
+  if (!formatted) return "";
+  const query = message ? `?text=${encodeURIComponent(message)}` : "";
+  return `https://wa.me/${formatted}${query}`;
+}
+
+export function extractWilaya(order: {
+  wilaya?: string | null;
+  shipping_address?: string | null;
+  customer_address?: string | null;
+}): string {
+  if (order.wilaya && order.wilaya.trim()) return order.wilaya.trim();
+  const addr = order.shipping_address || order.customer_address || "";
+  if (!addr) return "Algérie";
+
+  const match = addr.match(/Wilaya:\s*([^(—-]+)/i);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  return "Algérie";
+}
+
+export function extractDeliveryMethod(order: {
+  shipping_address?: string | null;
+  customer_address?: string | null;
+  notes?: string | null;
+}): {
+  mode: "stopdesk" | "domicile";
+  label: string;
+  type: "office" | "hand-to-hand";
+  shortLabel: string;
+} {
+  const text = `${order.shipping_address || ""} ${order.customer_address || ""} ${order.notes || ""}`.toLowerCase();
+  if (
+    text.includes("stop desk") ||
+    text.includes("stopdesk") ||
+    text.includes("bureau") ||
+    text.includes("guichet")
+  ) {
+    return {
+      mode: "stopdesk",
+      label: "Bureau (Stop Desk)",
+      type: "office",
+      shortLabel: "Bureau",
+    };
+  }
+  return {
+    mode: "domicile",
+    label: "À domicile (Main à main)",
+    type: "hand-to-hand",
+    shortLabel: "À domicile",
+  };
 }
 
 export function buildStoreUrl(slug: string, domain?: string): string {

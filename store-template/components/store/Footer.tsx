@@ -1,6 +1,7 @@
 "use client";
 
 import { useStore } from "./StoreShell";
+import { generateWhatsAppUrl } from "@/lib/cart";
 
 export default function Footer() {
   const { store, theme, primary } = useStore();
@@ -60,7 +61,7 @@ export default function Footer() {
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {store.whatsapp_phone && (
                 <a
-                  href={`https://wa.me/${store.whatsapp_phone.replace(/\D/g, "")}`}
+                  href={generateWhatsAppUrl(store.whatsapp_phone)}
                   target="_blank" rel="noreferrer"
                   style={{ display: "flex", alignItems: "center", gap: "10px", color: "#25D366", textDecoration: "none", fontSize: "14px", fontWeight: 500 }}
                 >
