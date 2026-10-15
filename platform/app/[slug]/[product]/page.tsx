@@ -179,6 +179,7 @@ export default async function ProductDetailsPage({ params }: PageProps) {
     description: storeRaw.description,
     slogan: storeRaw.slogan,
     whatsapp_phone: storeRaw.whatsapp_phone,
+    phone: storeRaw.phone,
     city: storeRaw.city,
     logo_url: storeRaw.logo_url,
     cover_url: storeRaw.cover_url,

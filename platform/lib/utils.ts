@@ -34,7 +34,7 @@ export function formatPrice(amount: number, currency = "DZD"): string {
  */
 export function formatWhatsAppPhone(phone: string): string {
   if (!phone) return "";
-  let cleaned = phone.replace(/\D/g, "");
+  let cleaned = String(phone).replace(/\D/g, "");
   if (!cleaned) return "";
 
   // Strip international exit codes (00)
@@ -42,19 +42,33 @@ export function formatWhatsAppPhone(phone: string): string {
     cleaned = cleaned.slice(2);
   }
 
+  // If user entered 0213... instead of +213...
+  if (cleaned.startsWith("0213") && cleaned.length >= 12) {
+    cleaned = cleaned.slice(1);
+  }
+
+  // Algerian format with country code but redundant trunk prefix 0 (e.g. 2130550123456)
+  if (cleaned.startsWith("2130") && cleaned.length >= 12) {
+    cleaned = `213${cleaned.slice(4)}`;
+  }
+
   // Algerian local format starting with 0 (e.g. 05xx, 06xx, 07xx, 02xx, 03xx, 04xx)
   // 10 digits in Algeria: 05 50 12 34 56 -> 213 550 12 34 56
   if (cleaned.startsWith("0") && cleaned.length >= 9 && cleaned.length <= 11) {
     cleaned = `213${cleaned.slice(1)}`;
   }
-  // Algerian format with country code but redundant trunk prefix 0 (e.g. 2130550123456)
-  else if (cleaned.startsWith("2130") && cleaned.length >= 12) {
-    cleaned = `213${cleaned.slice(4)}`;
-  }
   // 9 digits starting with 5, 6, 7 (Algerian mobile without 0 or +213)
   else if (/^[567]\d{8}$/.test(cleaned)) {
     cleaned = `213${cleaned}`;
   }
+
+  // Extra safety: any remaining Algerian mobile starting with 05, 06, 07
+  if (/^0[567]\d+$/.test(cleaned)) {
+    cleaned = `213${cleaned.slice(1)}`;
+  }
+
+  // Clean any leading zeros if somehow left before country code
+  cleaned = cleaned.replace(/^0+/, "");
 
   return cleaned;
 }

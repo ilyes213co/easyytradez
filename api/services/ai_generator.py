@@ -1738,10 +1738,31 @@ Le slogan doit refléter l'identité de la boutique et donner envie d'acheter.""
             except (TypeError, ValueError):
                 return 0
 
+        def format_whatsapp_phone(raw_phone: Any) -> str:
+            if not raw_phone:
+                return ""
+            cleaned = re.sub(r"\D", "", str(raw_phone))
+            if not cleaned:
+                return ""
+            if cleaned.startswith("00"):
+                cleaned = cleaned[2:]
+            if cleaned.startswith("0213") and len(cleaned) >= 12:
+                cleaned = cleaned[1:]
+            if cleaned.startswith("2130") and len(cleaned) >= 12:
+                cleaned = f"213{cleaned[4:]}"
+            if cleaned.startswith("0") and 9 <= len(cleaned) <= 11:
+                cleaned = f"213{cleaned[1:]}"
+            elif re.match(r"^[567]\d{8}$", cleaned):
+                cleaned = f"213{cleaned}"
+            if re.match(r"^0[567]\d+$", cleaned):
+                cleaned = f"213{cleaned[1:]}"
+            cleaned = cleaned.lstrip("0")
+            return cleaned
+
         name    = html_module.escape(_s(store.get("name"), "Ma Boutique"))
         desc    = html_module.escape(_s(store.get("description"), "Bienvenue dans notre boutique."))
         color   = _s(store.get("primary_color"), "#534AB7")
-        phone   = _s(store.get("whatsapp_phone"), "")
+        phone   = format_whatsapp_phone(store.get("whatsapp_phone") or "")
         slug    = _s(store.get("slug"), "boutique")
         anim    = _s(store.get("animation_style"), "soft")
 

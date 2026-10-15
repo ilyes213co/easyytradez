@@ -96,8 +96,22 @@ function buildWhatsAppMessage(storeName, items, total) {
   );
 }
 
+function formatWhatsAppPhone(phone) {
+  if (!phone) return '';
+  let cleaned = String(phone).replace(/\D/g, '');
+  if (!cleaned) return '';
+  if (cleaned.startsWith('00')) cleaned = cleaned.slice(2);
+  if (cleaned.startsWith('0213') && cleaned.length >= 12) cleaned = cleaned.slice(1);
+  if (cleaned.startsWith('2130') && cleaned.length >= 12) cleaned = '213' + cleaned.slice(4);
+  if (cleaned.startsWith('0') && cleaned.length >= 9 && cleaned.length <= 11) cleaned = '213' + cleaned.slice(1);
+  else if (/^[567]\d{8}$/.test(cleaned)) cleaned = '213' + cleaned;
+  if (/^0[567]\d+$/.test(cleaned)) cleaned = '213' + cleaned.slice(1);
+  cleaned = cleaned.replace(/^0+/, '');
+  return cleaned;
+}
+
 function buildWhatsAppURL(phone, message) {
-  const clean = phone.replace(/\D/g, '');
+  const clean = formatWhatsAppPhone(phone);
   return `https://wa.me/${clean}?text=${encodeURIComponent(message)}`;
 }
 
