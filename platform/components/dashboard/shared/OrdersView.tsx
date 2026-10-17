@@ -12,6 +12,7 @@ import {
 } from "@/components/orders/OrderDrawer";
 import { ShippingSlipModal } from "@/components/orders/ShippingSlipModal";
 import type { Order, Store } from "@/lib/supabase";
+import { useUserRole } from "@/lib/use-user-role";
 import {
   ShoppingBag,
   Search,
@@ -138,6 +139,7 @@ export function StatusBadge({ status }: { status: Order["status"] }) {
 
 export default function OrdersView({ type }: OrdersViewProps) {
   const { user } = useAuth();
+  const userRole = useUserRole();
   const supabase = getSupabaseBrowserClient();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
@@ -242,9 +244,20 @@ export default function OrdersView({ type }: OrdersViewProps) {
       };
     }) as Order[];
 
-    setOrders(mappedOrders);
+    // Pour un employé / confirmateur : ne voir que les commandes qui lui sont assignées
+    const isMemberUser = memberRole || userRole.isMember;
+    let effectiveOrders = mappedOrders;
+    if (isMemberUser) {
+      const myUserId = user.id;
+      const myMemberId = userRole.memberId;
+      effectiveOrders = mappedOrders.filter(
+        (o) => o.assigned_to === myUserId || (myMemberId && o.assigned_to === myMemberId)
+      );
+    }
+
+    setOrders(effectiveOrders);
     setLoading(false);
-  }, [user, supabase, type, selectedStoreId]);
+  }, [user, supabase, type, selectedStoreId, userRole.isMember, userRole.memberId]);
 
   useEffect(() => {
     loadData();
@@ -281,6 +294,15 @@ export default function OrdersView({ type }: OrdersViewProps) {
 
           const raw = payload.new as any;
           if (!raw || (raw.store_id && !storeIds.includes(raw.store_id))) return;
+
+          // Si employé, ignorer les commandes non assignées à cet employé
+          const isMemberUser = isMember || userRole.isMember;
+          if (isMemberUser) {
+            const isMine =
+              raw.assigned_to === user?.id ||
+              (userRole.memberId && raw.assigned_to === userRole.memberId);
+            if (!isMine) return;
+          }
 
           const st = storesMap.get(raw.store_id);
           const formattedOrder: Order = {
@@ -451,6 +473,90 @@ export default function OrdersView({ type }: OrdersViewProps) {
           </button>
         </div>
       </div>
+
+      {/* KPI Call Center pour les Employés / Confirmateurs */}
+      {(isMember || userRole.isMember) && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="p-4 rounded-2xl bg-white dark:bg-[#0c0d1e] border border-slate-200/90 dark:border-white/[0.08] shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 dark:text-white/50">Mes Commandes</span>
+              <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                <Phone className="w-4 h-4" />
+              </span>
+            </div>
+            <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">{orders.length}</p>
+            <p className="text-[11px] text-slate-400 dark:text-white/40 mt-0.5">Assignées à votre compte</p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-[#0c0d1e] border border-slate-200/90 dark:border-white/[0.08] shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 dark:text-white/50">À Appeler</span>
+              <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <Clock className="w-4 h-4" />
+              </span>
+            </div>
+            <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-2">
+              {orders.filter((o) => ["pending", "no_answer", "callback"].includes(o.status)).length}
+            </p>
+            <p className="text-[11px] text-slate-400 dark:text-white/40 mt-0.5">En attente ou à rappeler</p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-[#0c0d1e] border border-slate-200/90 dark:border-white/[0.08] shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 dark:text-white/50">Mes Confirmations</span>
+              <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <CheckCheck className="w-4 h-4" />
+              </span>
+            </div>
+            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-2">
+              {orders.filter((o) => ["confirmed", "shipped", "delivered"].includes(o.status)).length}
+            </p>
+            <p className="text-[11px] text-slate-400 dark:text-white/40 mt-0.5">Validées par vous</p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-[#0c0d1e] border border-slate-200/90 dark:border-white/[0.08] shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 dark:text-white/50">Taux de Réussite</span>
+              <span className="text-xs font-bold text-accent dark:text-sky">
+                {orders.length > 0
+                  ? Math.round(
+                      (orders.filter((o) => ["confirmed", "shipped", "delivered"].includes(o.status)).length /
+                        orders.length) *
+                        100
+                    )
+                  : 0}
+                %
+              </span>
+            </div>
+            <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">
+              {orders.length > 0
+                ? Math.round(
+                    (orders.filter((o) => ["confirmed", "shipped", "delivered"].includes(o.status)).length /
+                      orders.length) *
+                      100
+                  )
+                : 0}
+              %
+            </p>
+            <div className="w-full bg-slate-100 dark:bg-white/10 h-1.5 rounded-full mt-2 overflow-hidden">
+              <div
+                className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${
+                    orders.length > 0
+                      ? Math.round(
+                          (orders.filter((o) => ["confirmed", "shipped", "delivered"].includes(o.status)).length /
+                            orders.length) *
+                            100
+                        )
+                      : 0
+                  }%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Focused Search & Status Bar */}
       <div className="flex flex-col md:flex-row gap-3">

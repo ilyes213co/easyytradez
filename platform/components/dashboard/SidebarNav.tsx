@@ -24,6 +24,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useUserPlan } from "@/lib/use-user-plan";
+import { useUserRole } from "@/lib/use-user-role";
+import { PhoneCall } from "lucide-react";
 
 interface NavItemConfig {
   label: string;
@@ -94,6 +96,8 @@ export default function SidebarNav({ onNavigate }: SidebarNavProps = {}) {
   const router = useRouter();
   const { user, signOut } = useAuth();
   const userPlan = useUserPlan();
+  const userRole = useUserRole();
+  const isMember = userRole.isMember;
 
   const sectionParam = searchParams.get("section");
 
@@ -244,134 +248,168 @@ export default function SidebarNav({ onNavigate }: SidebarNavProps = {}) {
     <div className="flex-1 flex flex-col justify-between overflow-hidden">
       {/* Top Controls & Navigation Items */}
       <div className="flex-1 flex flex-col px-3 py-3 space-y-3 overflow-y-auto custom-scrollbar">
-        {/* Top Segmented Switcher */}
-        <div className="p-1 rounded-2xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.08] flex items-center gap-1 shadow-inner shrink-0">
-          <button
-            type="button"
-            onClick={() => handleTabChange("funnels")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-150 ${
-              activeTab === "funnels"
-                ? "bg-accent text-white shadow-md shadow-accent/20 border border-accent/30"
-                : "text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/[0.03]"
-            }`}
-          >
-            <Layers className={`w-3.5 h-3.5 ${activeTab === "funnels" ? "text-white dark:text-sky-light" : "text-slate-400 dark:text-white/40"}`} />
-            <span>Funnels</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTabChange("boutiques")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-150 ${
-              activeTab === "boutiques"
-                ? "bg-accent text-white shadow-md shadow-accent/20 border border-accent/30"
-                : "text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/[0.03]"
-            }`}
-          >
-            <Store className={`w-3.5 h-3.5 ${activeTab === "boutiques" ? "text-white dark:text-sky-light" : "text-slate-400 dark:text-white/40"}`} />
-            <span>Boutiques</span>
-          </button>
-        </div>
-
-
-        {/* Navigation Links - Solid rendering with no disappearing items */}
-        <nav className="space-y-0.5 pt-1">
-          <div className="space-y-0.5">
-            {navItems.map(renderNavItem)}
+        {/* Top Header / Switcher */}
+        {isMember ? (
+          <div className="p-3 rounded-2xl bg-gradient-to-r from-accent/15 via-indigo-500/10 to-accent/5 border border-accent/20 flex items-center gap-2.5 shadow-xs shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-accent text-white flex items-center justify-center shrink-0 shadow-sm shadow-accent/25">
+              <PhoneCall className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">Call Center COD</p>
+              <p className="text-[10px] text-accent dark:text-sky font-semibold truncate">Confirmation Téléphonique</p>
+            </div>
           </div>
-
-          {/* Divider */}
-          <div className="border-t border-slate-200/80 dark:border-white/[0.07] my-2 mx-1" />
-
-          {/* Paramètres Expandable Item with Sub-menu */}
-          <div className="space-y-0.5">
+        ) : (
+          <div className="p-1 rounded-2xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.08] flex items-center gap-1 shadow-inner shrink-0">
             <button
               type="button"
-              onClick={() => {
-                if (!isSettingsActive) {
-                  setSettingsOpen(true);
-                  router.push(buildSettingsUrl(currentSettingsTab));
-                  onNavigate?.();
-                } else {
-                  setSettingsOpen((prev) => !prev);
-                }
-              }}
-              className={`w-full group relative flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 ${
-                isSettingsActive
-                  ? "bg-accent/10 dark:bg-accent/20 text-accent dark:text-white font-semibold border border-accent/25 dark:border-sky/30 shadow-sm"
-                  : "text-slate-600 dark:text-white/60 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:translate-x-0.5"
+              onClick={() => handleTabChange("funnels")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-150 ${
+                activeTab === "funnels"
+                  ? "bg-accent text-white shadow-md shadow-accent/20 border border-accent/30"
+                  : "text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/[0.03]"
               }`}
             >
-              {isSettingsActive && (
-                <div className="absolute left-0 w-1 h-4 bg-accent dark:bg-gradient-to-b dark:from-sky dark:via-accent dark:to-accent rounded-r-full shadow-[0_0_8px_rgba(37,64,234,0.4)] dark:shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+              <Layers className={`w-3.5 h-3.5 ${activeTab === "funnels" ? "text-white dark:text-sky-light" : "text-slate-400 dark:text-white/40"}`} />
+              <span>Funnels</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange("boutiques")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-150 ${
+                activeTab === "boutiques"
+                  ? "bg-accent text-white shadow-md shadow-accent/20 border border-accent/30"
+                  : "text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/[0.03]"
+              }`}
+            >
+              <Store className={`w-3.5 h-3.5 ${activeTab === "boutiques" ? "text-white dark:text-sky-light" : "text-slate-400 dark:text-white/40"}`} />
+              <span>Boutiques</span>
+            </button>
+          </div>
+        )}
+
+        {/* Navigation Links */}
+        {isMember ? (
+          <nav className="space-y-1 pt-1">
+            <Link
+              href="/dashboard/orders"
+              onClick={() => onNavigate?.()}
+              className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ${
+                pathname.includes("/orders")
+                  ? "bg-accent/15 dark:bg-accent/25 text-accent dark:text-white border border-accent/25 dark:border-sky/30 shadow-sm"
+                  : "text-slate-600 dark:text-white/60 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]"
+              }`}
+            >
+              {pathname.includes("/orders") && (
+                <div className="absolute left-0 w-1 h-5 bg-accent dark:bg-gradient-to-b dark:from-sky dark:via-accent dark:to-accent rounded-r-full shadow-[0_0_8px_rgba(37,64,234,0.4)]" />
               )}
-              <div className="flex items-center gap-3 min-w-0">
-                <Settings
-                  className={`w-4 h-4 transition-transform duration-150 group-hover:scale-105 shrink-0 ${
-                    isSettingsActive
-                      ? "text-accent dark:text-sky"
-                      : "text-slate-400 dark:text-white/45 group-hover:text-slate-700 dark:group-hover:text-white/80"
+              <Package className="w-4 h-4 text-accent dark:text-sky shrink-0" />
+              <span className="truncate">Commandes (Confirmation)</span>
+              <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 tracking-wide shrink-0">
+                Espace Confirmateur
+              </span>
+            </Link>
+          </nav>
+        ) : (
+          <nav className="space-y-0.5 pt-1">
+            <div className="space-y-0.5">
+              {navItems.map(renderNavItem)}
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-slate-200/80 dark:border-white/[0.07] my-2 mx-1" />
+
+            {/* Paramètres Expandable Item with Sub-menu */}
+            <div className="space-y-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isSettingsActive) {
+                    setSettingsOpen(true);
+                    router.push(buildSettingsUrl(currentSettingsTab));
+                    onNavigate?.();
+                  } else {
+                    setSettingsOpen((prev) => !prev);
+                  }
+                }}
+                className={`w-full group relative flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 ${
+                  isSettingsActive
+                    ? "bg-accent/10 dark:bg-accent/20 text-accent dark:text-white font-semibold border border-accent/25 dark:border-sky/30 shadow-sm"
+                    : "text-slate-600 dark:text-white/60 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:translate-x-0.5"
+                }`}
+              >
+                {isSettingsActive && (
+                  <div className="absolute left-0 w-1 h-4 bg-accent dark:bg-gradient-to-b dark:from-sky dark:via-accent dark:to-accent rounded-r-full shadow-[0_0_8px_rgba(37,64,234,0.4)] dark:shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+                )}
+                <div className="flex items-center gap-3 min-w-0">
+                  <Settings
+                    className={`w-4 h-4 transition-transform duration-150 group-hover:scale-105 shrink-0 ${
+                      isSettingsActive
+                        ? "text-accent dark:text-sky"
+                        : "text-slate-400 dark:text-white/45 group-hover:text-slate-700 dark:group-hover:text-white/80"
+                    }`}
+                  />
+                  <span className="truncate">Paramètres</span>
+                </div>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
+                    settingsOpen
+                      ? "rotate-0 text-accent dark:text-sky"
+                      : "-rotate-90 text-slate-400 dark:text-white/40"
                   }`}
                 />
-                <span className="truncate">Paramètres</span>
-              </div>
-              <ChevronDown
-                className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
-                  settingsOpen
-                    ? "rotate-0 text-accent dark:text-sky"
-                    : "-rotate-90 text-slate-400 dark:text-white/40"
-                }`}
-              />
-            </button>
+              </button>
 
-            {/* Sub-menu tree */}
-            <AnimatePresence initial={false}>
-              {settingsOpen && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.18, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
-                  <div className="ml-4 pl-2.5 border-l-2 border-slate-200/90 dark:border-white/10 space-y-0.5 py-1">
-                    {SETTINGS_SUBITEMS.map((sub) => {
-                      const SubIcon = sub.icon;
-                      const isSubActive = isSettingsActive && currentSettingsTab === sub.tab;
-                      return (
-                        <Link
-                          key={sub.id}
-                          href={buildSettingsUrl(sub.tab)}
-                          onClick={() => onNavigate?.()}
-                          className={`group flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-150 ${
-                            isSubActive
-                              ? "bg-accent/15 dark:bg-accent/25 text-accent dark:text-sky font-bold border border-accent/25 dark:border-sky/30 shadow-xs"
-                              : "text-slate-600 dark:text-white/60 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:translate-x-0.5"
-                          }`}
-                        >
-                          <SubIcon
-                            className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+              {/* Sub-menu tree */}
+              <AnimatePresence initial={false}>
+                {settingsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.18, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="ml-4 pl-2.5 border-l-2 border-slate-200/90 dark:border-white/10 space-y-0.5 py-1">
+                      {SETTINGS_SUBITEMS.map((sub) => {
+                        const SubIcon = sub.icon;
+                        const isSubActive = isSettingsActive && currentSettingsTab === sub.tab;
+                        return (
+                          <Link
+                            key={sub.id}
+                            href={buildSettingsUrl(sub.tab)}
+                            onClick={() => onNavigate?.()}
+                            className={`group flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-150 ${
                               isSubActive
-                                ? "text-accent dark:text-sky"
-                                : "text-slate-400 dark:text-white/40 group-hover:text-slate-700 dark:group-hover:text-white/80"
+                                ? "bg-accent/15 dark:bg-accent/25 text-accent dark:text-sky font-bold border border-accent/25 dark:border-sky/30 shadow-xs"
+                                : "text-slate-600 dark:text-white/60 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:translate-x-0.5"
                             }`}
-                          />
-                          <span className="truncate text-[11px]">{sub.label}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </nav>
+                          >
+                            <SubIcon
+                              className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                                isSubActive
+                                  ? "text-accent dark:text-sky"
+                                  : "text-slate-400 dark:text-white/40 group-hover:text-slate-700 dark:group-hover:text-white/80"
+                              }`}
+                            />
+                            <span className="truncate text-[11px]">{sub.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </nav>
+        )}
       </div>
 
       {/* Bottom Upgrade Card & User Profile */}
       <div className="p-3 border-t border-slate-200/80 dark:border-white/[0.07] bg-slate-50/50 dark:bg-white/[0.015] relative z-10 shrink-0">
         <div className="rounded-2xl p-2.5 bg-gradient-to-b from-indigo-50/80 dark:from-accent/15 via-white/50 dark:via-accent/5 to-slate-50/50 dark:to-white/[0.02] border border-indigo-100 dark:border-sky/20 shadow-sm dark:shadow-lg space-y-2">
-          {/* Upgrade button - Masqué dès que l'utilisateur est Pro ou Business */}
-          {userPlan.isFree && (
+          {/* Upgrade button - Masqué pour les confirmateurs et pour Pro/Business */}
+          {!isMember && userPlan.isFree && (
             <Link
               href="/dashboard/upgrade"
               onClick={() => onNavigate?.()}
@@ -395,23 +433,29 @@ export default function SidebarNav({ onNavigate }: SidebarNavProps = {}) {
                   <p className="text-xs font-semibold text-slate-800 dark:text-white/90 truncate leading-tight">
                     {displayName}
                   </p>
-                  {!userPlan.isFree && (
+                  {isMember ? (
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
+                      Confirmateur
+                    </span>
+                  ) : !userPlan.isFree ? (
                     <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-accent/15 text-accent dark:text-sky border border-accent/20 shrink-0">
                       {userPlan.plan}
                     </span>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              <Link
-                href="/dashboard/settings"
-                onClick={() => onNavigate?.()}
-                title="Paramètres"
-                className="text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white p-1 rounded-md transition-colors"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Link>
+              {!isMember && (
+                <Link
+                  href="/dashboard/settings"
+                  onClick={() => onNavigate?.()}
+                  title="Paramètres"
+                  className="text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white p-1 rounded-md transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              )}
               <button
                 onClick={() => signOut()}
                 className="text-slate-400 dark:text-white/40 hover:text-rose-500 p-1 rounded-md transition-colors"

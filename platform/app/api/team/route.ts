@@ -22,22 +22,22 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const storeId = searchParams.get("store_id");
-    if (!storeId) {
-      return NextResponse.json({ detail: "store_id est requis" }, { status: 400 });
-    }
 
     const admin = getAdminClient();
-    const check = await verifyStoreOwner(storeId, user.id, admin);
-    if (!check.ok) {
-      return NextResponse.json({ detail: check.message }, { status: check.status });
+
+    let query = admin.from("store_members").select("*");
+
+    if (storeId && storeId !== "all") {
+      const check = await verifyStoreOwner(storeId, user.id, admin);
+      if (!check.ok) {
+        return NextResponse.json({ detail: check.message }, { status: check.status });
+      }
+      query = query.or(`owner_id.eq.${user.id},store_id.eq.${storeId}`);
+    } else {
+      query = query.eq("owner_id", user.id);
     }
 
-    const { data: members, error } = await admin
-      .from("store_members")
-      .select("*")
-      .or(`owner_id.eq.${user.id},store_id.eq.${storeId}`)
-      .order("created_at", { ascending: false });
-
+    const { data: members, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
       if (isTableMissingError(error)) {
@@ -67,16 +67,18 @@ export async function POST(req: NextRequest) {
     const userEmail = (body.user_email || body.email || "").trim().toLowerCase();
     const role = body.role || "manager";
 
-    if (!storeId || !userEmail) {
-      return NextResponse.json({ detail: "store_id et email sont requis" }, { status: 400 });
+    if (!userEmail) {
+      return NextResponse.json({ detail: "email est requis" }, { status: 400 });
     }
 
     const admin = getAdminClient();
 
-    // 1. Vérification de propriété
-    const check = await verifyStoreOwner(storeId, user.id, admin);
-    if (!check.ok) {
-      return NextResponse.json({ detail: check.message }, { status: check.status });
+    // 1. Vérification de propriété si storeId fourni
+    if (storeId) {
+      const check = await verifyStoreOwner(storeId, user.id, admin);
+      if (!check.ok) {
+        return NextResponse.json({ detail: check.message }, { status: check.status });
+      }
     }
 
     // 2. Gating Plan Business
@@ -98,7 +100,7 @@ export async function POST(req: NextRequest) {
 
     const memberPayload = {
       owner_id: user.id,
-      store_id: storeId,
+      store_id: storeId || null,
       email: userEmail,
       user_email: userEmail,
       role,
@@ -111,13 +113,12 @@ export async function POST(req: NextRequest) {
       const { data: existing } = await admin
         .from("store_members")
         .select("id")
-        .or(`owner_id.eq.${user.id},store_id.eq.${storeId}`)
+        .eq("owner_id", user.id)
         .or(`email.eq.${userEmail},user_email.eq.${userEmail}`);
-
 
       if (existing && existing.length > 0) {
         return NextResponse.json(
-          { detail: "Ce collaborateur est déjà invité ou associé à cette boutique." },
+          { detail: "Ce collaborateur est déjà invité ou membre de votre équipe globale." },
           { status: 400 }
         );
       }
@@ -152,10 +153,80 @@ export async function POST(req: NextRequest) {
     if (isTableMissingError(err)) {
       return NextResponse.json({
         success: true,
-        member: { id: "simulated-" + Date.now(), ...req, created_at: new Date().toISOString() },
+        member: { id: "simulated-" + Date.now(), created_at: new Date().toISOString() },
         simulated: true,
       });
     }
+    return NextResponse.json({ detail: err.message || "Erreur interne" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await getAuthUser(req);
+    if (!user) {
+      return NextResponse.json({ detail: "Non authentifié" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const memberId = body.member_id || body.id;
+    if (!memberId) {
+      return NextResponse.json({ detail: "member_id est requis" }, { status: 400 });
+    }
+
+    const updateData: Record<string, any> = {};
+    if (typeof body.is_active === "boolean") {
+      updateData.is_active = body.is_active;
+    }
+    if (body.role) {
+      updateData.role = body.role;
+    }
+
+    const admin = getAdminClient();
+    const { data, error } = await admin
+      .from("store_members")
+      .update(updateData)
+      .eq("id", memberId)
+      .eq("owner_id", user.id)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ detail: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, member: data });
+  } catch (err: any) {
+    return NextResponse.json({ detail: err.message || "Erreur interne" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const user = await getAuthUser(req);
+    if (!user) {
+      return NextResponse.json({ detail: "Non authentifié" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const memberId = searchParams.get("member_id") || searchParams.get("id");
+    if (!memberId) {
+      return NextResponse.json({ detail: "member_id est requis" }, { status: 400 });
+    }
+
+    const admin = getAdminClient();
+    const { error } = await admin
+      .from("store_members")
+      .delete()
+      .eq("id", memberId)
+      .eq("owner_id", user.id);
+
+    if (error) {
+      return NextResponse.json({ detail: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
     return NextResponse.json({ detail: err.message || "Erreur interne" }, { status: 500 });
   }
 }

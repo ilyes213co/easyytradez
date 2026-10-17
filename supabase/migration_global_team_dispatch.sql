@@ -34,8 +34,11 @@ WHERE sm.store_id = s.id AND sm.owner_id IS NULL;
 UPDATE public.store_members sm
 SET user_id = u.id
 FROM auth.users u
-WHERE (LOWER(TRIM(sm.email)) = LOWER(TRIM(u.email)) OR LOWER(TRIM(sm.user_email)) = LOWER(TRIM(u.email)))
-  AND sm.user_id IS NULL;
+WHERE (
+    (sm.email IS NOT NULL AND LOWER(TRIM(sm.email)) = LOWER(TRIM(u.email)))
+    OR (sm.user_email IS NOT NULL AND LOWER(TRIM(sm.user_email)) = LOWER(TRIM(u.email)))
+)
+AND sm.user_id IS NULL;
 
 -- 2. ÉVOLUTION DE LA TABLE orders (Champs Call Center & Dispatch)
 ALTER TABLE IF EXISTS public.orders
@@ -71,98 +74,138 @@ ALTER TABLE IF EXISTS public.orders
         'duplicate'      -- Doublon
     ));
 
--- 3. POLITIQUES RLS SUR public.stores (Accès aux boutiques pour l'équipe)
+-- ==============================================================================
+-- 3. FONCTION DE SÉCURITÉ SANS RÉCURSION (SECURITY DEFINER)
+-- Bypasse le RLS sur store_members pour éliminer à 100% toute récursion PostgreSQL
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.get_accessible_owner_ids()
+RETURNS SETOF UUID
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT owner_id FROM public.store_members
+  WHERE is_active = true
+    AND owner_id IS NOT NULL
+    AND (
+      user_id = auth.uid()
+      OR (email IS NOT NULL AND LOWER(email) = LOWER(COALESCE(auth.jwt() ->> 'email', '')))
+      OR (user_email IS NOT NULL AND LOWER(user_email) = LOWER(COALESCE(auth.jwt() ->> 'email', '')))
+    );
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_accessible_owner_ids() TO authenticated, service_role, anon;
+
+-- Helper pour les IDs des boutiques accessibles
+CREATE OR REPLACE FUNCTION public.get_accessible_store_ids()
+RETURNS SETOF UUID
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT id FROM public.stores
+  WHERE owner_id = auth.uid()
+     OR owner_id IN (SELECT public.get_accessible_owner_ids());
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_accessible_store_ids() TO authenticated, service_role, anon;
+
+-- ==============================================================================
+-- 4. POLITIQUES RLS SUR public.store_members (ZÉRO RÉFÉRENCE À public.stores)
+-- ==============================================================================
+ALTER TABLE public.store_members ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "store_members_owner_all" ON public.store_members;
+DROP POLICY IF EXISTS "store_members_user_read" ON public.store_members;
+DROP POLICY IF EXISTS "store_members_owner_manage" ON public.store_members;
+DROP POLICY IF EXISTS "store_members_self_read" ON public.store_members;
+
+-- Le propriétaire gère tous les membres de son équipe directement via owner_id
+CREATE POLICY "store_members_owner_manage" ON public.store_members
+FOR ALL TO authenticated
+USING (
+    owner_id = auth.uid()
+)
+WITH CHECK (
+    owner_id = auth.uid()
+);
+
+-- L'employé peut lire sa propre fiche membre
+CREATE POLICY "store_members_self_read" ON public.store_members
+FOR SELECT TO authenticated
+USING (
+    user_id = auth.uid()
+    OR (email IS NOT NULL AND LOWER(email) = LOWER(COALESCE(auth.jwt() ->> 'email', '')))
+    OR (user_email IS NOT NULL AND LOWER(user_email) = LOWER(COALESCE(auth.jwt() ->> 'email', '')))
+);
+
+-- ==============================================================================
+-- 5. POLITIQUES RLS SUR public.stores (SANS RÉCURSION VIA SECURITY DEFINER)
+-- ==============================================================================
 ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "stores_team_member_read" ON public.stores;
+DROP POLICY IF EXISTS "stores owner full access" ON public.stores;
+DROP POLICY IF EXISTS "stores public read published" ON public.stores;
+DROP POLICY IF EXISTS "stores_owner_manage" ON public.stores;
+DROP POLICY IF EXISTS "stores_select_policy" ON public.stores;
+DROP POLICY IF EXISTS "stores_modify_policy" ON public.stores;
+
+-- Le propriétaire gère ses boutiques (SELECT, INSERT, UPDATE, DELETE)
+CREATE POLICY "stores_owner_manage" ON public.stores
+FOR ALL TO authenticated
+USING (
+    owner_id = auth.uid()
+)
+WITH CHECK (
+    owner_id = auth.uid()
+);
+
+-- Les employés peuvent lire les boutiques/funnels de leur propriétaire
 CREATE POLICY "stores_team_member_read" ON public.stores
 FOR SELECT TO authenticated
 USING (
-    stores.owner_id = auth.uid()
-    OR EXISTS (
-        SELECT 1 FROM public.store_members sm
-        WHERE sm.owner_id = stores.owner_id
-        AND (
-            sm.user_id = auth.uid() 
-            OR LOWER(sm.email) = LOWER(auth.jwt() ->> 'email') 
-            OR LOWER(sm.user_email) = LOWER(auth.jwt() ->> 'email')
-        )
-        AND sm.status IN ('active', 'invited')
-    )
+    owner_id IN (SELECT public.get_accessible_owner_ids())
 );
 
--- 4. POLITIQUES RLS SUR public.orders (Accès lecture & mise à jour pour l'équipe)
+-- Public / clients : lecture des boutiques actives
+CREATE POLICY "stores_public_read_published" ON public.stores
+FOR SELECT TO anon, authenticated
+USING (
+    status = 'active' OR status = 'published'
+);
+
+-- ==============================================================================
+-- 6. POLITIQUES RLS SUR public.orders (SANS RÉCURSION VIA SECURITY DEFINER)
+-- ==============================================================================
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "orders owner read" ON public.orders;
 DROP POLICY IF EXISTS "orders owner update" ON public.orders;
 DROP POLICY IF EXISTS "orders_team_member_read" ON public.orders;
 DROP POLICY IF EXISTS "orders_team_member_update" ON public.orders;
+DROP POLICY IF EXISTS "orders public insert" ON public.orders;
 
+-- Insertion publique pour les formulaires de commande COD
+CREATE POLICY "orders public insert" ON public.orders
+FOR INSERT WITH CHECK (true);
+
+-- Lecture des commandes : propriétaire ou employé assigné ou membre de l'équipe
 CREATE POLICY "orders_team_member_read" ON public.orders
 FOR SELECT TO authenticated
 USING (
-    EXISTS (
-        SELECT 1 FROM public.stores s
-        WHERE s.id = orders.store_id
-        AND (
-            s.owner_id = auth.uid()
-            OR EXISTS (
-                SELECT 1 FROM public.store_members sm
-                WHERE sm.owner_id = s.owner_id
-                AND (
-                    sm.user_id = auth.uid() 
-                    OR LOWER(sm.email) = LOWER(auth.jwt() ->> 'email') 
-                    OR LOWER(sm.user_email) = LOWER(auth.jwt() ->> 'email')
-                )
-                AND sm.status IN ('active', 'invited')
-            )
-        )
-    )
+    assigned_to = auth.uid()
+    OR store_id IN (SELECT public.get_accessible_store_ids())
 );
 
+-- Mise à jour des commandes : confirmation statut / notes par propriétaire ou employé
 CREATE POLICY "orders_team_member_update" ON public.orders
 FOR UPDATE TO authenticated
 USING (
-    EXISTS (
-        SELECT 1 FROM public.stores s
-        WHERE s.id = orders.store_id
-        AND (
-            s.owner_id = auth.uid()
-            OR EXISTS (
-                SELECT 1 FROM public.store_members sm
-                WHERE sm.owner_id = s.owner_id
-                AND (
-                    sm.user_id = auth.uid() 
-                    OR LOWER(sm.email) = LOWER(auth.jwt() ->> 'email') 
-                    OR LOWER(sm.user_email) = LOWER(auth.jwt() ->> 'email')
-                )
-                AND sm.status IN ('active', 'invited')
-            )
-        )
-    )
-);
-
--- 5. POLITIQUES RLS SUR public.store_members
-DROP POLICY IF EXISTS "store_members_owner_all" ON public.store_members;
-CREATE POLICY "store_members_owner_all" ON public.store_members
-FOR ALL TO authenticated
-USING (
-    owner_id = auth.uid()
-    OR EXISTS (
-        SELECT 1 FROM public.stores s
-        WHERE s.id = store_members.store_id
-        AND s.owner_id = auth.uid()
-    )
-);
-
-DROP POLICY IF EXISTS "store_members_user_read" ON public.store_members;
-CREATE POLICY "store_members_user_read" ON public.store_members
-FOR SELECT TO authenticated
-USING (
-    user_id = auth.uid()
-    OR LOWER(email) = LOWER(auth.jwt() ->> 'email')
-    OR LOWER(user_email) = LOWER(auth.jwt() ->> 'email')
+    assigned_to = auth.uid()
+    OR store_id IN (SELECT public.get_accessible_store_ids())
 );
 
 -- Recharger le schéma PostgREST

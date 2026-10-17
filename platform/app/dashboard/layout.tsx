@@ -10,9 +10,11 @@ import { Menu, X } from "lucide-react";
 import EasyTradeLogo from "@/components/brand/EasyTradeLogo";
 import SidebarNav from "@/components/dashboard/SidebarNav";
 import ThemeToggle from "@/components/theme/ThemeToggle";
+import { useUserRole } from "@/lib/use-user-role";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
+  const userRole = useUserRole();
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,6 +24,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push("/login");
     }
   }, [user, loading, router]);
+
+  // Verrouillage d'accès strict pour les confirmateurs / employés :
+  // Redirection automatique vers /dashboard/orders si tentative d'accès à une autre route
+  useEffect(() => {
+    if (!loading && !userRole.isLoading && userRole.isMember) {
+      const isAllowed =
+        pathname === "/dashboard/orders" ||
+        pathname === "/dashboard/funnel/orders" ||
+        pathname === "/dashboard/boutique/orders";
+
+      if (!isAllowed) {
+        router.replace("/dashboard/orders");
+      }
+    }
+  }, [userRole, loading, pathname, router]);
 
   // Close mobile drawer on route changes
   useEffect(() => {

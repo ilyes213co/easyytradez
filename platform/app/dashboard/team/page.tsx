@@ -8,17 +8,21 @@ import {
   Shield,
   Mail,
   Crown,
-  Lock,
-  ArrowRight,
   Check,
-  Sparkles,
   Trash2,
   Loader2,
   AlertTriangle,
-  Store as StoreIcon,
-  UserCheck,
   Clock,
   X,
+  Zap,
+  Award,
+  TrendingUp,
+  PhoneCall,
+  CheckCircle2,
+  XCircle,
+  ToggleLeft,
+  ToggleRight,
+  UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -32,14 +36,22 @@ interface StoreOption {
   type: string;
 }
 
-interface TeamMember {
+interface MemberPerformanceStats {
   id: string;
-  store_id: string;
+  user_id?: string | null;
   email: string;
-  user_email?: string;
-  role: "admin" | "manager" | "editor" | "support" | "viewer";
-  status: "active" | "invited" | "pending";
+  role: string;
+  is_active: boolean;
+  last_assigned_at: string | null;
   created_at: string;
+  total_assigned: number;
+  pending_calls: number;
+  confirmed: number;
+  cancelled: number;
+  postponed: number;
+  confirmation_rate: number;
+  cancellation_rate: number;
+  is_top_performer: boolean;
 }
 
 const ROLE_CONFIGS: Record<
@@ -52,7 +64,7 @@ const ROLE_CONFIGS: Record<
     badge: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
   },
   manager: {
-    label: "Gestionnaire",
+    label: "Gestionnaire (Confirmation COD)",
     desc: "Confirmation des commandes COD et gestion du stock",
     badge: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
   },
@@ -79,9 +91,17 @@ export default function TeamPage() {
   const userPlan = useUserPlan();
 
   const [stores, setStores] = useState<StoreOption[]>([]);
-  const [selectedStoreId, setSelectedStoreId] = useState<string>("");
-  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>("all");
+  const [teamStats, setTeamStats] = useState<MemberPerformanceStats[]>([]);
+  const [summary, setSummary] = useState({
+    totalPending: 0,
+    totalAssigned: 0,
+    activeAgents: 0,
+    totalConfirmed: 0,
+  });
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [isRebalancing, setIsRebalancing] = useState(false);
+  const [togglingMemberId, setTogglingMemberId] = useState<string | null>(null);
 
   // Invite Modal State
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -90,10 +110,10 @@ export default function TeamPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Delete Confirmation State
-  const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
+  const [memberToDelete, setMemberToDelete] = useState<MemberPerformanceStats | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Upgrade Modal State (for non-business accounts clicking CTA)
+  // Upgrade Modal State
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // 1. Fetch user's stores
@@ -110,9 +130,6 @@ export default function TeamPage() {
         if (error) throw error;
         const list = (data || []) as StoreOption[];
         setStores(list);
-        if (list.length > 0 && list[0]) {
-          setSelectedStoreId(list[0].id);
-        }
       } catch (err) {
         console.warn("Could not load user stores:", err);
       }
@@ -120,45 +137,103 @@ export default function TeamPage() {
     loadStores();
   }, [user, supabase]);
 
-  // 2. Fetch team members when store is selected and user is Business
+  // 2. Fetch team members and performance stats when user is Business
   const loadMembers = useCallback(async () => {
-    if (!selectedStoreId || !userPlan.isBusiness) return;
+    if (!userPlan.isBusiness) return;
     setLoadingMembers(true);
     try {
-      const res = await fetch(`/api/team?store_id=${selectedStoreId}`);
+      const res = await fetch("/api/team/stats");
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail || "Erreur lors du chargement des membres");
+        throw new Error(errJson.detail || "Erreur lors du chargement des statistiques de l'équipe");
       }
       const data = await res.json();
-      setMembers(data.members || []);
+      setTeamStats(data.stats || []);
+      if (data.summary) {
+        setSummary(data.summary);
+      }
     } catch (err: any) {
-      console.warn("Error loading team members:", err.message);
-      setMembers([]);
+      console.warn("Error loading team stats:", err.message);
+      setTeamStats([]);
     } finally {
       setLoadingMembers(false);
     }
-  }, [selectedStoreId, userPlan.isBusiness]);
+  }, [userPlan.isBusiness]);
 
   useEffect(() => {
     loadMembers();
   }, [loadMembers]);
 
-  // 3. Handle Add Member
+  // 3. Smart Dispatch: Rebalance Orders across active members
+  const handleRebalance = async () => {
+    setIsRebalancing(true);
+    try {
+      const res = await fetch("/api/team/rebalance", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || "Erreur lors du ré-équilibrage");
+      }
+      toast.success(
+        data.message ||
+          `${data.rebalanced_count ?? 0} commande(s) redistribuée(s) équitablement entre vos téléopérateurs disponibles !`
+      );
+      loadMembers();
+    } catch (err: any) {
+      toast.error(err.message || "Échec du ré-équilibrage");
+    } finally {
+      setIsRebalancing(false);
+    }
+  };
+
+  // 4. Toggle Employee Active / Paused status
+  const handleToggleActive = async (memberId: string, currentStatus: boolean) => {
+    setTogglingMemberId(memberId);
+    const newStatus = !currentStatus;
+    // Optimistic UI update
+    setTeamStats((prev) =>
+      prev.map((m) => (m.id === memberId ? { ...m, is_active: newStatus } : m))
+    );
+    try {
+      const res = await fetch("/api/team", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ member_id: memberId, is_active: newStatus }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Erreur de mise à jour");
+      }
+      toast.success(
+        newStatus
+          ? "Confirmateur activé (disponible pour Smart Dispatch)"
+          : "Confirmateur mis en pause (plus de nouvelles attributions)"
+      );
+      loadMembers();
+    } catch (err: any) {
+      toast.error(err.message || "Impossible de changer le statut");
+      loadMembers();
+    } finally {
+      setTogglingMemberId(null);
+    }
+  };
+
+  // 5. Handle Invite Member
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteEmail.trim() || !selectedStoreId) {
+    if (!inviteEmail.trim()) {
       toast.error("Veuillez saisir une adresse email valide");
       return;
     }
 
     setIsSubmitting(true);
     try {
+      const targetStoreId = selectedStoreId !== "all" ? selectedStoreId : stores[0]?.id || null;
+
       const res = await fetch("/api/team", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          store_id: selectedStoreId,
+          store_id: targetStoreId,
           user_email: inviteEmail.trim(),
           role: inviteRole,
         }),
@@ -186,12 +261,12 @@ export default function TeamPage() {
     }
   };
 
-  // 4. Handle Delete Member
+  // 6. Handle Delete Member
   const handleDeleteMember = async () => {
     if (!memberToDelete) return;
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/team/${memberToDelete.id}`, {
+      const res = await fetch(`/api/team?id=${memberToDelete.id}`, {
         method: "DELETE",
       });
 
@@ -200,8 +275,8 @@ export default function TeamPage() {
         throw new Error(errJson.detail || "Erreur lors de la suppression");
       }
 
-      toast.success("Collaborateur retiré de la boutique");
-      setMembers((prev) => prev.filter((m) => m.id !== memberToDelete.id));
+      toast.success("Collaborateur retiré de l'équipe");
+      setTeamStats((prev) => prev.filter((m) => m.id !== memberToDelete.id));
       setMemberToDelete(null);
     } catch (err: any) {
       toast.error(err.message || "Erreur de suppression");
@@ -214,12 +289,12 @@ export default function TeamPage() {
 
   return (
     <div className="space-y-6 pb-16">
-      {/* ── En-tête ──────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* ── En-tête avec Actions Propriétaire ──────────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Mon Équipe
+              Équipe & Performance Téléopérateurs
             </h1>
             <span
               className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
@@ -232,37 +307,35 @@ export default function TeamPage() {
             </span>
           </div>
           <p className="text-slate-500 dark:text-white/60 text-sm mt-1">
-            Gérez les accès, rôles et permissions des collaborateurs de vos boutiques.
+            Smart Dispatch global multi-boutiques, suivi des appels COD et pilotage des confirmateurs.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {stores.length > 1 && isBusiness && (
-            <select
-              value={selectedStoreId}
-              onChange={(e) => setSelectedStoreId(e.target.value)}
-              className="bg-white dark:bg-[#0c0d1c] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-white/80 focus:border-purple-500 outline-none shadow-sm"
+        <div className="flex flex-wrap items-center gap-2.5">
+          {isBusiness && (
+            <button
+              onClick={handleRebalance}
+              disabled={isRebalancing || teamStats.length === 0}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-slate-800 dark:text-white bg-white dark:bg-white/[0.06] hover:bg-slate-50 dark:hover:bg-white/[0.1] border border-slate-200 dark:border-white/10 shadow-sm active:scale-95 transition-all disabled:opacity-50"
+              title="Redistribue équitablement toutes les commandes en attente entre les confirmateurs disponibles"
             >
-              {stores.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} ({s.type === "funnel" ? "Funnel" : "Boutique"})
-                </option>
-              ))}
-            </select>
+              <Zap className={`w-4 h-4 text-amber-500 ${isRebalancing ? "animate-spin" : ""}`} />
+              <span>{isRebalancing ? "Ré-équilibrage..." : "⚡ Ré-équilibrer en attente"}</span>
+            </button>
           )}
 
           {isBusiness ? (
             <button
               onClick={() => setIsInviteModalOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-500/25 active:scale-95 transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-500/25 active:scale-95 transition-all"
             >
               <UserPlus className="w-4 h-4" />
-              <span>Inviter un collaborateur</span>
+              <span>Inviter un confirmateur</span>
             </button>
           ) : (
             <button
               onClick={() => setShowUpgradeModal(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-500/25 active:scale-95 transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-500/25 active:scale-95 transition-all"
             >
               <Crown className="w-4 h-4" />
               <span>Passer au Pack Business</span>
@@ -270,6 +343,82 @@ export default function TeamPage() {
           )}
         </div>
       </div>
+
+      {/* ── Cartes de Synthèse Performance Propriétaire ────────────────────── */}
+      {isBusiness && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className="p-4 rounded-2xl bg-white dark:bg-[#0c0d1c] border border-slate-200/90 dark:border-white/[0.08] shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 dark:text-white/50">
+                En attente globale
+              </span>
+              <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <Clock className="w-4 h-4" />
+              </span>
+            </div>
+            <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">
+              {summary.totalPending}
+            </p>
+            <p className="text-[11px] text-slate-400 dark:text-white/40 mt-0.5">
+              Commandes pending à distribuer
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-[#0c0d1c] border border-slate-200/90 dark:border-white/[0.08] shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 dark:text-white/50">
+                Confirmateurs actifs
+              </span>
+              <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <Users className="w-4 h-4" />
+              </span>
+            </div>
+            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-2">
+              {summary.activeAgents} / {teamStats.length}
+            </p>
+            <p className="text-[11px] text-slate-400 dark:text-white/40 mt-0.5">
+              Prêts pour Smart Dispatch
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-[#0c0d1c] border border-slate-200/90 dark:border-white/[0.08] shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 dark:text-white/50">
+                Total Confirmations
+              </span>
+              <span className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <CheckCircle2 className="w-4 h-4" />
+              </span>
+            </div>
+            <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">
+              {summary.totalConfirmed}
+            </p>
+            <p className="text-[11px] text-slate-400 dark:text-white/40 mt-0.5">
+              Commandes validées par l&apos;équipe
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-[#0c0d1c] border border-slate-200/90 dark:border-white/[0.08] shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 dark:text-white/50">
+                Taux de Réussite Équipe
+              </span>
+              <span className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                <TrendingUp className="w-4 h-4" />
+              </span>
+            </div>
+            <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">
+              {summary.totalAssigned > 0
+                ? Math.round((summary.totalConfirmed / summary.totalAssigned) * 100)
+                : 0}
+              %
+            </p>
+            <p className="text-[11px] text-slate-400 dark:text-white/40 mt-0.5">
+              Sur {summary.totalAssigned} commandes traitées
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Paywall si l'utilisateur n'a pas le Pack Business ───────────────── */}
       {!isBusiness && (
@@ -282,10 +431,10 @@ export default function TeamPage() {
 
             <div className="space-y-2">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                Déléguez et pilotez vos ventes avec votre équipe 👥
+                Déléguez et pilotez vos ventes avec votre équipe COD 👥
               </h2>
               <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                Le Pack Business vous permet d&apos;inviter vos associés, gestionnaires de commandes (confirmation COD), et agents de support sans jamais partager votre mot de passe ni vos coordonnées bancaires.
+                Le Pack Business vous permet d&apos;inviter vos téléopérateurs de confirmation COD, de répartir automatiquement les commandes via le Smart Dispatch multi-funnels, et de mesurer le taux de confirmation de chaque employé en temps réel.
               </p>
             </div>
 
@@ -293,68 +442,61 @@ export default function TeamPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                 <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Membres & Rôles illimités</span>
+                <span>Smart Dispatch Call Center Algérie</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                 <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Boutiques & Tunnels illimités</span>
+                <span>Membres & Confirmateurs illimités</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                 <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Accès restreint aux commandes COD</span>
+                <span>Accès isolé aux commandes (zéro fuite financière)</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                 <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Gestionnaire de compte VIP 24/7</span>
+                <span>Classement et statistiques de performance</span>
               </div>
             </div>
 
-            {/* Bouton d'action */}
-            <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <Link
                 href="/dashboard/upgrade"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-bold text-sm text-white bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/25 transition-all"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-accent shadow-lg shadow-purple-500/25 hover:opacity-95 active:scale-95 transition-all text-center"
               >
-                <span>Débloquer avec le Pack Business (5 000 DZD / mois)</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Débloquer le Pack Business</span>
+                <Crown className="w-4 h-4" />
               </Link>
-
-              <span className="text-xs text-slate-500 dark:text-slate-400 text-center sm:text-left">
-                Paiement instantané BaridiMob / Edahabia
-              </span>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Liste des membres & Rôles ────────────────────────────────────────── */}
+      {/* ── Tableau / Cartes de Performance par Employé ──────────────────────── */}
       <div className="rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0d1c] p-6 sm:p-8 space-y-6 shadow-sm">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-              <Shield className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+              <Award className="w-6 h-6" />
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Membres et Permissions de l&apos;Équipe
+                Performance & Leaderboard des Confirmateurs
               </h3>
               <p className="text-xs text-slate-500 dark:text-white/50">
-                {isBusiness
-                  ? `Membres enregistrés sur « ${stores.find((s) => s.id === selectedStoreId)?.name || "la boutique"} »`
-                  : "Visualisez la structure des permissions de vos boutiques"}
+                Accès global sur tous vos Funnels et Boutiques. Les employés en pause ne reçoivent plus de commandes automatiques.
               </p>
             </div>
           </div>
 
           {isBusiness && (
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.05] text-slate-600 dark:text-white/70 border border-slate-200 dark:border-white/10">
-              {members.length + 1} {members.length + 1 > 1 ? "membres" : "membre"}
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.05] text-slate-600 dark:text-white/70 border border-slate-200 dark:border-white/10 self-start sm:self-auto">
+              {teamStats.length + 1} membre{teamStats.length + 1 > 1 ? "s" : ""} au total
             </span>
           )}
         </div>
 
         <div className="space-y-3">
-          {/* Carte Propriétaire (Compte principal) */}
+          {/* Carte Propriétaire (Compte Administrateur Suprême) */}
           <div className="rounded-2xl border border-slate-100 dark:border-white/[0.05] bg-slate-50/80 dark:bg-white/[0.02] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold uppercase shadow-sm">
@@ -370,7 +512,7 @@ export default function TeamPage() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-white/40">
-                  Propriétaire légal du compte — Accès total et irrévocable
+                  Propriétaire du compte — Administrateur de toutes les boutiques et funnels
                 </p>
               </div>
             </div>
@@ -380,79 +522,177 @@ export default function TeamPage() {
             </span>
           </div>
 
-          {/* Liste des membres invités (si Business) */}
+          {/* Loader */}
           {isBusiness && loadingMembers && (
             <div className="p-8 text-center text-slate-400">
               <Loader2 className="w-6 h-6 animate-spin mx-auto text-purple-600 mb-2" />
-              <p className="text-xs">Chargement des collaborateurs...</p>
+              <p className="text-xs">Chargement des performances de l&apos;équipe...</p>
             </div>
           )}
 
+          {/* Liste détaillée des employés avec KPIs COD */}
           {isBusiness &&
             !loadingMembers &&
-            members.map((member) => {
+            teamStats.map((member) => {
               const roleInfo =
                 ROLE_CONFIGS[member.role] ?? {
-                  label: "Collaborateur",
-                  desc: "Membre de l'équipe",
+                  label: "Confirmateur",
+                  desc: "Gestion des commandes",
                   badge: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
                 };
-              const displayEmail = member.email || member.user_email || "";
+
               return (
                 <div
                   key={member.id}
-                  className="rounded-2xl border border-slate-100 dark:border-white/[0.05] bg-white dark:bg-[#0c0d1c] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm hover:border-slate-200 dark:hover:border-white/10 transition-colors"
+                  className={`rounded-2xl border p-4.5 sm:p-5 flex flex-col gap-4 transition-all shadow-sm ${
+                    member.is_top_performer
+                      ? "border-amber-400/40 bg-gradient-to-r from-amber-500/[0.04] via-transparent to-transparent dark:border-amber-500/30"
+                      : "border-slate-100 dark:border-white/[0.06] bg-white dark:bg-[#0c0d1c] hover:border-slate-200 dark:hover:border-white/10"
+                  }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/[0.08] text-slate-700 dark:text-white/80 font-bold flex items-center justify-center text-xs uppercase">
-                      {displayEmail.slice(0, 2)}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white">
-                          {displayEmail}
-                        </p>
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${roleInfo.badge}`}
-                        >
-                          {roleInfo.label}
-                        </span>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div className="w-11 h-11 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-sm uppercase">
+                          {member.email.slice(0, 2)}
+                        </div>
+                        {member.is_top_performer && (
+                          <span
+                            className="absolute -top-1.5 -right-1.5 text-amber-500 text-sm"
+                            title="Meilleur confirmateur de l'équipe"
+                          >
+                            👑
+                          </span>
+                        )}
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-white/40">
-                        {roleInfo.desc}
-                      </p>
+
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-bold text-slate-900 dark:text-white">
+                            {member.email}
+                          </p>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${roleInfo.badge}`}
+                          >
+                            {roleInfo.label}
+                          </span>
+                          {member.is_top_performer && (
+                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                              🏆 Top Confirmateur
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
+                          {member.last_assigned_at
+                            ? `Dernière attribution : ${new Date(member.last_assigned_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`
+                            : "Pas encore de commande attribuée"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                      {/* Switch Actif / En pause */}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(member.id, member.is_active)}
+                        disabled={togglingMemberId === member.id}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                          member.is_active
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25 hover:bg-emerald-500/20"
+                            : "bg-slate-100 text-slate-500 dark:bg-white/[0.05] dark:text-white/40 border-slate-200 dark:border-white/10 hover:bg-slate-200/60"
+                        }`}
+                        title={
+                          member.is_active
+                            ? "Cliquez pour mettre en pause ce confirmateur"
+                            : "Cliquez pour réactiver ce confirmateur dans le Smart Dispatch"
+                        }
+                      >
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            member.is_active ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+                          }`}
+                        />
+                        <span>{member.is_active ? "Disponible" : "En pause"}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setMemberToDelete(member)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                        title="Retirer ce collaborateur"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 self-end sm:self-auto">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 dark:text-white/40">
-                      <Clock className="w-3 h-3" />
-                      <span>
-                        {member.status === "active" ? "Actif" : "Invitation en attente"}
+                  {/* Statistiques Métier COD */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04]">
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-white/50">
+                        Total Assignées
                       </span>
-                    </span>
+                      <p className="text-lg font-black text-slate-900 dark:text-white mt-1">
+                        {member.total_assigned}
+                      </p>
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setMemberToDelete(member)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
-                      title="Retirer ce collaborateur"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="p-3 rounded-xl bg-orange-500/[0.05] border border-orange-500/15">
+                      <span className="text-[11px] font-semibold text-orange-600 dark:text-orange-400">
+                        En attente d&apos;appel
+                      </span>
+                      <p className="text-lg font-black text-orange-600 dark:text-orange-400 mt-1">
+                        {member.pending_calls}
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-emerald-500/[0.05] border border-emerald-500/15">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                          Confirmées
+                        </span>
+                        <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                          {member.confirmation_rate}%
+                        </span>
+                      </div>
+                      <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                        {member.confirmed}
+                      </p>
+                      {/* Barre de progression verte */}
+                      <div className="w-full bg-emerald-500/20 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                        <div
+                          className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                          style={{ width: `${member.confirmation_rate}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-rose-500/[0.05] border border-rose-500/15">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">
+                          Annulées / Faux
+                        </span>
+                        <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
+                          {member.cancellation_rate}%
+                        </span>
+                      </div>
+                      <p className="text-lg font-black text-rose-600 dark:text-rose-400 mt-1">
+                        {member.cancelled}
+                      </p>
+                    </div>
                   </div>
                 </div>
               );
             })}
 
-          {isBusiness && !loadingMembers && members.length === 0 && (
-            <div className="p-6 text-center rounded-2xl border border-dashed border-slate-200 dark:border-white/10 text-slate-400">
-              <Users className="w-8 h-8 mx-auto text-slate-300 dark:text-white/20 mb-2" />
+          {isBusiness && !loadingMembers && teamStats.length === 0 && (
+            <div className="p-8 text-center rounded-2xl border border-dashed border-slate-200 dark:border-white/10 text-slate-400 space-y-2">
+              <Users className="w-8 h-8 mx-auto text-slate-300 dark:text-white/20" />
               <p className="text-sm font-semibold text-slate-700 dark:text-white/70">
-                Aucun collaborateur invité sur cette boutique
+                Aucun téléopérateur dans votre équipe
               </p>
-              <p className="text-xs text-slate-500 dark:text-white/40 mt-1 max-w-sm mx-auto">
-                Ajoutez vos associés ou agents de confirmation COD pour collaborer en direct.
+              <p className="text-xs text-slate-500 dark:text-white/40 max-w-sm mx-auto">
+                Invitez votre premier employé par email ci-dessus. Le Smart Dispatch lui distribuera automatiquement les commandes entrantes sur l&apos;ensemble de vos boutiques et funnels.
               </p>
             </div>
           )}
@@ -469,7 +709,7 @@ export default function TeamPage() {
                   <UserPlus className="w-5 h-5" />
                 </div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Inviter un Collaborateur
+                  Inviter un Confirmateur COD
                 </h3>
               </div>
               <button
@@ -493,32 +733,35 @@ export default function TeamPage() {
                     required
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="associe@example.com"
+                    placeholder="confirmateur@example.com"
                     className="w-full pl-9 pr-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] text-slate-900 dark:text-white focus:border-purple-500 outline-none"
                   />
                 </div>
+                <p className="text-[11px] text-slate-400 dark:text-white/40 mt-1">
+                  Ce membre aura un accès immédiat aux commandes de tous vos Funnels et Boutiques.
+                </p>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-white/80 mb-1.5">
-                  Rôle et permissions
+                  Rôle attribué
                 </label>
                 <div className="space-y-2">
                   {[
                     {
-                      id: "admin",
-                      label: "Administrateur",
-                      desc: "Accès complet aux produits, commandes et réglages",
-                    },
-                    {
                       id: "manager",
-                      label: "Gestionnaire (Confirmation COD)",
-                      desc: "Peut confirmer, modifier et expédier les commandes",
+                      label: "Confirmateur Call Center (Recommandé)",
+                      desc: "Accès dédié au module Commandes pour appeler et valider les clients COD",
                     },
                     {
                       id: "support",
                       label: "Support Client",
                       desc: "Consultation des commandes et suivi des livraisons",
+                    },
+                    {
+                      id: "admin",
+                      label: "Administrateur",
+                      desc: "Accès complet aux commandes et produits",
                     },
                   ].map((r) => (
                     <label
@@ -592,9 +835,8 @@ export default function TeamPage() {
               </h3>
             </div>
             <p className="text-xs text-slate-600 dark:text-white/70 leading-relaxed">
-              Êtes-vous sûr de vouloir retirer{" "}
-              <strong>{memberToDelete.email || memberToDelete.user_email}</strong> de cette
-              boutique ? Cette personne perdra immédiatement l&apos;accès à vos commandes et données.
+              Êtes-vous sûr de vouloir retirer <strong>{memberToDelete.email}</strong> de votre
+              équipe ? Cette personne perdra immédiatement l&apos;accès à vos commandes et ne recevra plus de commandes attribuées.
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
@@ -623,7 +865,7 @@ export default function TeamPage() {
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
         title="Passez au Pack Business 👥"
-        description="La gestion d'équipe et des permissions multi-collaborateurs est une exclusivité du Pack Business. Débloquez-la pour inviter vos équipes dès aujourd'hui !"
+        description="Le Smart Dispatch et la gestion d'équipe call center est une exclusivité du Pack Business. Débloquez-la dès aujourd'hui !"
         currentPlan={userPlan.plan}
         recommendedPlan="business"
         limitType="team"

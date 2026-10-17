@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import OrdersView from "@/components/dashboard/shared/OrdersView";
 
-export default function DeprecatedOrdersPage() {
-  redirect("/dashboard/boutique/orders");
+export default function GlobalOrdersPage() {
+  return <OrdersView type="funnel" />;
 }

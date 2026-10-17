@@ -367,19 +367,21 @@ export async function GET(req: NextRequest) {
 
     let accessibleStores = ownedStores || [];
     let userRole = "owner";
+    let memberIds: string[] = [];
 
     // 2. Si pas propriétaire (ou pour vérifier l'appartenance à une équipe), vérifier store_members
     if (accessibleStores.length === 0) {
       const userEmail = (user.email || "").toLowerCase();
       const { data: memberships } = await supabase
         .from("store_members")
-        .select("owner_id, store_id, role, status")
+        .select("id, owner_id, store_id, role, status")
         .or(`user_id.eq.${user.id},email.eq.${userEmail},user_email.eq.${userEmail}`);
 
       const activeMemberships = (memberships || []).filter(
         (m: any) => m.status === "active" || m.status === "invited" || !m.status
       );
 
+      memberIds = activeMemberships.map((m: any) => m.id).filter(Boolean);
       const ownerIds = Array.from(new Set(activeMemberships.map((m: any) => m.owner_id).filter(Boolean)));
 
       if (ownerIds.length > 0) {
@@ -443,9 +445,17 @@ export async function GET(req: NextRequest) {
       };
     });
 
+    let finalOrders = formattedOrders;
+    if (userRole === "member") {
+      const allowedAssignees = new Set([user.id, ...memberIds]);
+      finalOrders = formattedOrders.filter(
+        (o: any) => o.assigned_to && allowedAssignees.has(o.assigned_to)
+      );
+    }
+
     return NextResponse.json({
-      orders: formattedOrders,
-      count: formattedOrders.length,
+      orders: finalOrders,
+      count: finalOrders.length,
       user_role: userRole,
     });
   } catch (err: any) {
