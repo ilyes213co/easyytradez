@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient, getAuthUser } from "@/lib/api-auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const user = await getAuthUser(req);

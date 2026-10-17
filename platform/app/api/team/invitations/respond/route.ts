@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient, getAuthUser } from "@/lib/api-auth";
 import { rebalanceOrders } from "@/lib/dispatcher";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const user = await getAuthUser(req);

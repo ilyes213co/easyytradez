@@ -4,6 +4,8 @@ import { DEFAULT_WILAYAS } from "@/lib/wilayas";
 import { normalizeDzPhone, isValidStrictDzPhone } from "@/lib/utils";
 import { getAuthUser, safeUpdate } from "@/lib/api-auth";
 
+export const dynamic = "force-dynamic";
+
 
 function getSupabaseAdmin() {
   const serviceKey =
