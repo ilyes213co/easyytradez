@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
 from typing import Optional, List, Any, Dict
 from pydantic import BaseModel, Field, field_validator
 import re
@@ -8,6 +8,7 @@ import logging
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from dependencies import get_supabase, verify_token, check_store_owner
+
 
 router = APIRouter()
 logger = logging.getLogger("storegen.orders")
@@ -111,6 +112,11 @@ class UpdateOrderStatusRequest(BaseModel):
     status: Optional[str] = None
     payment_status: Optional[str] = None
     notes: Optional[str] = None
+    call_attempts: Optional[int] = None
+    agent_notes: Optional[str] = None
+    cancel_reason: Optional[str] = None
+    assigned_to: Optional[str] = None
+
 
 
 # Fallback wilayas data au cas où la table n'est pas encore migrée
@@ -302,6 +308,16 @@ async def create_order(
 
         created_order = res.data[0]
 
+        # ─── Smart Dispatch Call Center (Global : Boutiques & Funnels) ────────
+        try:
+            from services.dispatcher import assign_order_smartly
+            dispatch_res = assign_order_smartly(created_order.get("id"), store_id, supabase)
+            if dispatch_res.get("success"):
+                created_order["assigned_to"] = dispatch_res.get("assigned_to")
+                created_order["assigned_at"] = dispatch_res.get("assigned_at")
+        except Exception as e:
+            logger.warning(f"SmartDispatch non bloquant: {e}")
+
         # ─── Déduction automatique des stocks ─────────────────────────────────
         try:
             for item in items:
@@ -352,7 +368,137 @@ async def create_order(
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
 
 
-# ─── Endpoints de consultation & gestion sécurisés par Ownership ──────────────
+# ─── Endpoints de consultation & gestion sécurisés (Owner + Équipe Globale) ───
+
+VALID_CALL_CENTER_STATUSES = (
+    "pending",
+    "confirmed",
+    "no_answer",
+    "callback",
+    "postponed",
+    "shipped",
+    "delivered",
+    "cancelled",
+    "unreachable",
+    "wrong_number",
+    "duplicate",
+)
+
+
+def _check_user_order_access(order_data: dict, user_id: str, supabase) -> bool:
+    """Vérifie si l'utilisateur est propriétaire ou membre actif de l'équipe du store."""
+    stores_data = order_data.get("stores")
+    owner_id = stores_data.get("owner_id") if isinstance(stores_data, dict) else None
+    store_id = order_data.get("store_id")
+
+    if owner_id and owner_id == user_id:
+        return True
+
+    # Vérification membre de l'équipe globale (par owner_id ou store_id)
+    try:
+        query = supabase.table("store_members").select("id, status").eq("user_id", user_id)
+        if owner_id:
+            query = query.or_(f"owner_id.eq.{owner_id},store_id.eq.{store_id}")
+        else:
+            query = query.eq("store_id", store_id)
+        mem_res = query.execute()
+        active = [
+            m for m in (mem_res.data or [])
+            if isinstance(m, dict) and str(m.get("status", "")).lower() in ("active", "invited", "")
+        ]
+        return bool(active)
+    except Exception as e:
+        logger.warning(f"Erreur vérification appartenance équipe: {e}")
+        return False
+
+
+@router.get("")
+@router.get("/")
+async def list_orders(
+    store_id: Optional[str] = Query(None, description="Filtrer par boutique spécifique"),
+    status: Optional[str] = Query(None, description="Filtrer par statut"),
+    user_id: str = Depends(verify_token),
+    supabase = Depends(get_supabase),
+):
+    """
+    Récupère la liste des commandes :
+    - Propriétaire : toutes les commandes de ses boutiques et funnels.
+    - Employé (membre) : accès automatique aux commandes de TOUS les funnels et boutiques de son employeur.
+    Chaque commande inclut les infos du Store/Funnel (nom, type).
+    """
+    # 1. Vérifier si l'utilisateur est un propriétaire ayant des stores
+    owner_stores_res = (
+        supabase.table("stores")
+        .select("id, name, type, owner_id")
+        .eq("owner_id", user_id)
+        .execute()
+    )
+    accessible_stores = owner_stores_res.data or []
+
+    # 2. Si pas propriétaire, vérifier s'il est membre de l'équipe globale d'un propriétaire
+    if not accessible_stores:
+        member_res = (
+            supabase.table("store_members")
+            .select("owner_id, store_id")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        memberships = member_res.data or []
+        owner_ids = [m["owner_id"] for m in memberships if isinstance(m, dict) and m.get("owner_id")]
+        
+        if owner_ids:
+            team_stores = (
+                supabase.table("stores")
+                .select("id, name, type, owner_id")
+                .in_("owner_id", owner_ids)
+                .execute()
+            )
+            accessible_stores = team_stores.data or []
+        elif memberships:
+            # Fallback rétro-compatible par store_id
+            direct_store_ids = [m["store_id"] for m in memberships if isinstance(m, dict) and m.get("store_id")]
+            if direct_store_ids:
+                team_stores = (
+                    supabase.table("stores")
+                    .select("id, name, type, owner_id")
+                    .in_("id", direct_store_ids)
+                    .execute()
+                )
+                accessible_stores = team_stores.data or []
+
+    if not accessible_stores:
+        return {"orders": [], "count": 0}
+
+    store_map = {s["id"]: s for s in accessible_stores if isinstance(s, dict) and s.get("id")}
+    allowed_store_ids = list(store_map.keys())
+
+    if store_id:
+        if store_id not in allowed_store_ids:
+            raise HTTPException(status_code=403, detail="Accès refusé à cette boutique")
+        allowed_store_ids = [store_id]
+
+    query = (
+        supabase.table("orders")
+        .select("*")
+        .in_("store_id", allowed_store_ids)
+        .order("created_at", desc=True)
+    )
+
+    if status and status != "all":
+        query = query.eq("status", status)
+
+    res = query.execute()
+    orders = res.data or []
+
+    # Attacher les métadonnées de la boutique/funnel (nom et type)
+    for ord_row in orders:
+        if isinstance(ord_row, dict):
+            st = store_map.get(ord_row.get("store_id"), {})
+            ord_row["store_name"] = st.get("name") or "Boutique"
+            ord_row["store_type"] = st.get("type") or "boutique"
+
+    return {"orders": orders, "count": len(orders)}
+
 
 @router.get("/{order_id}")
 async def get_order(
@@ -362,24 +508,28 @@ async def get_order(
 ):
     """
     Récupère le détail d'une commande.
-    Vérifie strictement que l'utilisateur connecté est le propriétaire du store associé.
+    Accessible au propriétaire et à tous les membres de son équipe globale.
     """
     order_res = (
         supabase.table("orders")
-        .select("*, stores(owner_id)")
+        .select("*, stores(id, name, type, owner_id)")
         .eq("id", order_id)
         .single()
         .execute()
     )
-    if not order_res.data:
+    if not order_res or not order_res.data:
         raise HTTPException(status_code=404, detail="Commande introuvable")
 
-    stores_data = order_res.data.get("stores")
-    owner_id = stores_data.get("owner_id") if isinstance(stores_data, dict) else None
-    if owner_id != user_id:
+    order_data = order_res.data
+    if not _check_user_order_access(order_data, user_id, supabase):
         raise HTTPException(status_code=403, detail="Accès refusé : vous n'êtes pas propriétaire de cette commande")
 
-    return order_res.data
+    stores_data = order_data.get("stores") or {}
+    if isinstance(stores_data, dict):
+        order_data["store_name"] = stores_data.get("name") or "Boutique"
+        order_data["store_type"] = stores_data.get("type") or "boutique"
+
+    return order_data
 
 
 @router.patch("/{order_id}")
@@ -390,43 +540,78 @@ async def update_order_status(
     supabase = Depends(get_supabase),
 ):
     """
-    Met à jour le statut d'une commande (ex: confirmée, livrée, annulée).
-    Vérifie strictement que l'utilisateur connecté est le propriétaire du store associé.
+    Met à jour le statut et les champs Call Center d'une commande.
+    Accessible au propriétaire et aux téléopérateurs de son équipe globale.
     """
     order_res = (
         supabase.table("orders")
-        .select("*, stores(owner_id)")
+        .select("*, stores(id, name, type, owner_id)")
         .eq("id", order_id)
         .single()
         .execute()
     )
-    if not order_res.data:
+    if not order_res or not order_res.data:
         raise HTTPException(status_code=404, detail="Commande introuvable")
 
-    stores_data = order_res.data.get("stores")
-    owner_id = stores_data.get("owner_id") if isinstance(stores_data, dict) else None
-    if owner_id != user_id:
+    order_data = order_res.data
+    if not _check_user_order_access(order_data, user_id, supabase):
         raise HTTPException(status_code=403, detail="Accès refusé : vous n'êtes pas propriétaire de cette commande")
 
-    update_fields = {}
+    update_fields: Dict[str, Any] = {}
+    now_iso = datetime.now(timezone.utc).isoformat()
+
     if payload.status:
-        valid_statuses = ("pending", "confirmed", "shipped", "delivered", "cancelled")
-        if payload.status not in valid_statuses:
-            raise HTTPException(status_code=400, detail=f"Statut invalide. Autorisés: {', '.join(valid_statuses)}")
+        if payload.status not in VALID_CALL_CENTER_STATUSES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Statut invalide. Autorisés: {', '.join(VALID_CALL_CENTER_STATUSES)}"
+            )
         update_fields["status"] = payload.status
+        if payload.status == "confirmed":
+            update_fields["confirmed_by"] = user_id
+            update_fields["confirmed_at"] = now_iso
 
     if payload.payment_status:
         valid_payments = ("pending", "paid", "refunded")
         if payload.payment_status not in valid_payments:
-            raise HTTPException(status_code=400, detail=f"Statut de paiement invalide. Autorisés: {', '.join(valid_payments)}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Statut de paiement invalide. Autorisés: {', '.join(valid_payments)}"
+            )
         update_fields["payment_status"] = payload.payment_status
 
     if payload.notes is not None:
         update_fields["notes"] = payload.notes
 
+    if payload.agent_notes is not None:
+        update_fields["agent_notes"] = payload.agent_notes
+
+    if payload.cancel_reason is not None:
+        update_fields["cancel_reason"] = payload.cancel_reason
+
+    if payload.call_attempts is not None:
+        update_fields["call_attempts"] = payload.call_attempts
+    elif payload.status in ("no_answer", "callback"):
+        curr_attempts = order_data.get("call_attempts") or 0
+        update_fields["call_attempts"] = curr_attempts + 1
+
+    if payload.assigned_to is not None:
+        update_fields["assigned_to"] = payload.assigned_to
+        update_fields["assigned_at"] = now_iso
+
     if not update_fields:
-        return order_res.data
+        return order_data
+
+    try:
+        from db_resilience import safe_update
+        res = safe_update("orders", update_fields, "id", order_id, supabase)
+        if res and res.data:
+            return res.data[0]
+    except Exception:
+        pass
 
     res = supabase.table("orders").update(update_fields).eq("id", order_id).execute()
-    return res.data[0] if res.data else order_res.data
+    return res.data[0] if (res and res.data) else {**order_data, **update_fields}
+
+
 

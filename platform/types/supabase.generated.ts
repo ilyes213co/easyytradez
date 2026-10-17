@@ -23,9 +23,16 @@ export type PlanType = "free" | "pro" | "business";
 export type OrderStatus =
   | "pending"
   | "confirmed"
+  | "no_answer"
+  | "callback"
+  | "postponed"
   | "shipped"
   | "delivered"
-  | "cancelled";
+  | "cancelled"
+  | "unreachable"
+  | "wrong_number"
+  | "duplicate";
+
 export type PaymentStatus = "pending" | "paid" | "refunded";
 
 export interface ProductImage {
@@ -269,6 +276,13 @@ export type Database = {
           status: OrderStatus;
           payment_status: PaymentStatus;
           notes: string | null;
+          assigned_to?: string | null;
+          assigned_at?: string | null;
+          confirmed_by?: string | null;
+          confirmed_at?: string | null;
+          call_attempts?: number;
+          agent_notes?: string | null;
+          cancel_reason?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -284,6 +298,13 @@ export type Database = {
           status?: OrderStatus;
           payment_status?: PaymentStatus;
           notes?: string | null;
+          assigned_to?: string | null;
+          assigned_at?: string | null;
+          confirmed_by?: string | null;
+          confirmed_at?: string | null;
+          call_attempts?: number;
+          agent_notes?: string | null;
+          cancel_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -299,9 +320,17 @@ export type Database = {
           status?: OrderStatus;
           payment_status?: PaymentStatus;
           notes?: string | null;
+          assigned_to?: string | null;
+          assigned_at?: string | null;
+          confirmed_by?: string | null;
+          confirmed_at?: string | null;
+          call_attempts?: number;
+          agent_notes?: string | null;
+          cancel_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };
+
         Relationships: [
           {
             foreignKeyName: "orders_store_id_fkey";

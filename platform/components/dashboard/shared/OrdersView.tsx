@@ -68,6 +68,24 @@ export function StatusBadge({ status }: { status: Order["status"] }) {
         "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25",
       dotClass: "bg-blue-500",
     },
+    no_answer: {
+      label: "Ne répond pas",
+      badgeClass:
+        "bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/25",
+      dotClass: "bg-orange-500",
+    },
+    callback: {
+      label: "À rappeler",
+      badgeClass:
+        "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/25",
+      dotClass: "bg-indigo-500",
+    },
+    postponed: {
+      label: "Reportée",
+      badgeClass:
+        "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/25",
+      dotClass: "bg-sky-500",
+    },
     shipped: {
       label: "Expédiée",
       badgeClass:
@@ -85,6 +103,24 @@ export function StatusBadge({ status }: { status: Order["status"] }) {
       badgeClass:
         "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25",
       dotClass: "bg-rose-500",
+    },
+    unreachable: {
+      label: "Injoignable",
+      badgeClass:
+        "bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/25",
+      dotClass: "bg-zinc-500",
+    },
+    wrong_number: {
+      label: "Faux numéro",
+      badgeClass:
+        "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25",
+      dotClass: "bg-rose-500",
+    },
+    duplicate: {
+      label: "Doublon",
+      badgeClass:
+        "bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/25",
+      dotClass: "bg-slate-500",
     },
   };
 
@@ -114,6 +150,7 @@ export default function OrdersView({ type }: OrdersViewProps) {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [slipOrder, setSlipOrder] = useState<Order | null>(null);
+  const [isMember, setIsMember] = useState(false);
 
   // Sélections multiples & actions rapides (Point 5)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -132,25 +169,49 @@ export default function OrdersView({ type }: OrdersViewProps) {
     if (!user) return;
     setLoading(true);
 
-    const { data: storeList } = await supabase
-      .from("stores")
-      .select("*")
-      .eq("owner_id", user.id)
-      .eq("type", type);
+    // 1. Charger les boutiques accessibles via /api/stores (gère Owner et Membre global)
+    let stList: (Store & { user_role?: string })[] = [];
+    let memberRole = false;
 
-    const stList = (storeList ?? []) as unknown as Store[];
-    setStores(stList);
+    try {
+      const res = await fetch("/api/stores");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          stList = data;
+          memberRole = data.some((s: any) => s.user_role === "member");
+        }
+      }
+    } catch (e) {
+      console.warn("OrdersView: Échec fetch /api/stores, fallback:", e);
+    }
 
     if (stList.length === 0) {
+      const { data: storeList } = await supabase
+        .from("stores")
+        .select("*")
+        .eq("owner_id", user.id);
+      stList = (storeList ?? []) as unknown as (Store & { user_role?: string })[];
+    }
+
+    setIsMember(memberRole);
+
+    // Pour un employé connecté (user_role = 'member'), charge TOUS les Funnels ET Boutiques du propriétaire
+    // sans être bloqué par le filtre type !
+    const displayedStores = memberRole ? stList : stList.filter((s) => s.type === type);
+    setStores(displayedStores);
+
+    if (displayedStores.length === 0) {
       setSelectedStoreId("all");
       setOrders([]);
       setLoading(false);
       return;
     }
 
-    const storeIds = stList.map((s) => s.id);
+    const storeIds = displayedStores.map((s) => s.id);
+    const storesMap = new Map<string, Store>(displayedStores.map((s) => [s.id, s]));
 
-    // Validate that selectedStoreId actually belongs to this section's stores
+    // Valider selectedStoreId
     let effectiveStoreId = selectedStoreId;
     if (effectiveStoreId !== "all" && !storeIds.includes(effectiveStoreId)) {
       effectiveStoreId = "all";
@@ -164,13 +225,22 @@ export default function OrdersView({ type }: OrdersViewProps) {
       query = query.in("store_id", storeIds);
     }
 
-    const { data } = await query.order("created_at", { ascending: false });
-    const mappedOrders = ((data ?? []) as any[]).map((o) => ({
-      ...o,
-      total: o.total ?? o.total_amount ?? 0,
-      subtotal: o.subtotal ?? o.total_amount ?? 0,
-      shipping_address: o.shipping_address ?? o.customer_address ?? null,
-    })) as Order[];
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (error) {
+      console.error("OrdersView: Erreur chargement commandes:", error);
+    }
+
+    const mappedOrders = ((data ?? []) as any[]).map((o) => {
+      const st = storesMap.get(o.store_id);
+      return {
+        ...o,
+        total: o.total ?? o.total_amount ?? 0,
+        subtotal: o.subtotal ?? o.total_amount ?? 0,
+        shipping_address: o.shipping_address ?? o.customer_address ?? null,
+        store_name: o.store_name || st?.name || "Boutique",
+        store_type: o.store_type || st?.type || "boutique",
+      };
+    }) as Order[];
 
     setOrders(mappedOrders);
     setLoading(false);
@@ -189,6 +259,7 @@ export default function OrdersView({ type }: OrdersViewProps) {
     }
 
     const storeIds = stores.map((s) => s.id);
+    const storesMap = new Map<string, Store>(stores.map((s) => [s.id, s]));
 
     const channel = supabase
       .channel(`orders:${type}:${user?.id ?? "global"}:${Date.now()}`)
@@ -211,11 +282,14 @@ export default function OrdersView({ type }: OrdersViewProps) {
           const raw = payload.new as any;
           if (!raw || (raw.store_id && !storeIds.includes(raw.store_id))) return;
 
+          const st = storesMap.get(raw.store_id);
           const formattedOrder: Order = {
             ...raw,
             total: raw.total ?? raw.total_amount ?? 0,
             subtotal: raw.subtotal ?? raw.total_amount ?? 0,
             shipping_address: raw.shipping_address ?? raw.customer_address ?? null,
+            store_name: raw.store_name || st?.name || "Boutique",
+            store_type: raw.store_type || st?.type || "boutique",
           };
 
           if (payload.eventType === "INSERT") {
@@ -237,7 +311,6 @@ export default function OrdersView({ type }: OrdersViewProps) {
 
     channelRef.current = channel;
 
-    // Guaranteed polling fallback every 8 seconds so modifications are ALWAYS in real time
     const pollTimer = setInterval(() => {
       loadData();
     }, 8000);
@@ -248,6 +321,7 @@ export default function OrdersView({ type }: OrdersViewProps) {
         supabase.removeChannel(channelRef.current);
       }
     };
+
   }, [stores, supabase, type, user?.id, loadData]);
 
   const filtered = useMemo(() => {
@@ -259,7 +333,8 @@ export default function OrdersView({ type }: OrdersViewProps) {
         o.customer_name?.toLowerCase().includes(q) ||
         o.customer_phone?.toLowerCase().includes(q) ||
         o.id?.toLowerCase().includes(q) ||
-        o.wilaya?.toLowerCase().includes(q)
+        o.wilaya?.toLowerCase().includes(q) ||
+        o.store_name?.toLowerCase().includes(q)
       );
     });
   }, [orders, statusFilter, search]);
@@ -335,11 +410,16 @@ export default function OrdersView({ type }: OrdersViewProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            Commandes {type === "funnel" ? "Funnels" : "Boutiques"}
+            {isMember ? "Commandes Équipe (Funnels & Boutiques)" : `Commandes ${type === "funnel" ? "Funnels" : "Boutiques"}`}
           </h1>
           <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60">
             {filtered.length}
           </span>
+          {isMember && (
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">
+              Accès Téléopérateur Global
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2.5">
@@ -349,9 +429,12 @@ export default function OrdersView({ type }: OrdersViewProps) {
               onChange={(e) => setSelectedStoreId(e.target.value)}
               className="bg-white dark:bg-[#0c0d1e] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-white/80 focus:border-accent outline-none shadow-sm"
             >
-              <option value="all">Tous les {type === "funnel" ? "funnels" : "boutiques"}</option>
+              <option value="all">
+                {isMember ? `Toutes les boutiques et funnels (${stores.length})` : `Tous les ${type === "funnel" ? "funnels" : "boutiques"}`}
+              </option>
               {stores.map((s) => (
                 <option key={s.id} value={s.id}>
+                  {s.type === "funnel" ? "⚡ " : "🏪 "}
                   {s.name}
                 </option>
               ))}
@@ -376,7 +459,7 @@ export default function OrdersView({ type }: OrdersViewProps) {
           <Search className="w-4 h-4 text-slate-400 dark:text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Rechercher par nom client, téléphone, wilaya, identifiant..."
+            placeholder="Rechercher par nom client, téléphone, wilaya, boutique/funnel..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-white dark:bg-[#0c0d1e] border border-slate-200/90 dark:border-white/[0.08] rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/30 focus:border-accent outline-none transition-colors shadow-sm"
@@ -385,7 +468,7 @@ export default function OrdersView({ type }: OrdersViewProps) {
 
         {/* Status Filter Chips */}
         <div className="flex gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
-          {(["all", "pending", "confirmed", "shipped", "delivered", "cancelled"] as StatusFilter[]).map((st) => (
+          {(["all", "pending", "confirmed", "no_answer", "callback", "shipped", "delivered", "cancelled"] as StatusFilter[]).map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
@@ -400,6 +483,7 @@ export default function OrdersView({ type }: OrdersViewProps) {
           ))}
         </div>
       </div>
+
 
       {/* Orders List Table */}
       <div className="rounded-2xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#0c0d1e] overflow-hidden shadow-sm dark:shadow-xl">
@@ -462,6 +546,20 @@ export default function OrdersView({ type }: OrdersViewProps) {
                           />
                         </div>
                         <div className="min-w-0">
+                          {/* Badge Funnel / Boutique */}
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span
+                              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                                order.store_type === "funnel"
+                                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25"
+                                  : "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/25"
+                              }`}
+                            >
+                              <span>{order.store_type === "funnel" ? "⚡ Funnel :" : "🏪 Boutique :"}</span>
+                              <span className="truncate max-w-[130px] font-semibold">{order.store_name || "Boutique"}</span>
+                            </span>
+                          </div>
+
                           <p className="font-bold text-slate-900 dark:text-white truncate text-xs sm:text-sm">
                             {order.customer_name || "Client sans nom"}
                           </p>
@@ -570,6 +668,7 @@ export default function OrdersView({ type }: OrdersViewProps) {
                       />
                     </th>
                     <th className="py-3 px-4">Commande & Client</th>
+                    <th className="py-3 px-4">Boutique / Funnel</th>
                     <th className="py-3 px-4">Téléphone / Wilaya</th>
                     <th className="py-3 px-4">Date de réception</th>
                     <th className="py-3 px-4">Statut</th>
@@ -613,7 +712,7 @@ export default function OrdersView({ type }: OrdersViewProps) {
                         </td>
 
                         {/* Customer & ID */}
-                        <td className="py-3.5 px-4 min-w-[180px]">
+                        <td className="py-3.5 px-4 min-w-[170px]">
                           <p className="font-bold text-slate-900 dark:text-white group-hover:text-accent transition-colors">
                             {order.customer_name || "Client sans nom"}
                           </p>
@@ -621,6 +720,22 @@ export default function OrdersView({ type }: OrdersViewProps) {
                             #{order.id.slice(0, 8).toUpperCase()}
                           </p>
                         </td>
+
+                        {/* Boutique / Funnel (Point 3 : affichage clair pour le téléopérateur) */}
+                        <td className="py-3.5 px-4 min-w-[150px]">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                              order.store_type === "funnel"
+                                ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25"
+                                : "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/25"
+                            }`}
+                          >
+                            <span>{order.store_type === "funnel" ? "⚡ Funnel" : "🏪 Boutique"}</span>
+                            <span className="text-slate-300 dark:text-white/20">•</span>
+                            <span className="font-bold truncate max-w-[120px]">{order.store_name || "Boutique"}</span>
+                          </span>
+                        </td>
+
 
                         {/* Phone & Wilaya */}
                         <td className="py-3.5 px-4 min-w-[140px]">

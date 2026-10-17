@@ -119,40 +119,54 @@ async def get_current_user(
 async def check_store_owner(
     store_id: str,
     user_id: str,
+    supabase: Optional[Client] = None,
+    allow_members: bool = False,
 ) -> dict[str, str]:
     """
     Vérifie l'appartenance d'un store.
     Returns dict with owner_id if valid.
     Raises HTTPException if not found or access denied.
     """
-    supabase = get_supabase()
+    sb = supabase or get_supabase()
     result = (
-        supabase.table("stores")
+        sb.table("stores")
         .select("owner_id")
         .eq("id", store_id)
-        .single()
+        .maybe_single()
         .execute()
     )
-    if not result.data:
+    if not result or not result.data:
         raise HTTPException(status_code=404, detail="Boutique introuvable")
-    if result.data["owner_id"] != user_id:
-        raise HTTPException(status_code=403, detail="Accès refusé")
-    return {"owner_id": result.data["owner_id"]}
+    
+    owner_id = result.data["owner_id"]
+    if owner_id == user_id:
+        return {"owner_id": owner_id, "role": "owner"}
+
+    if allow_members:
+        try:
+            m_res = (
+                sb.table("store_members")
+                .select("id, role, status")
+                .or_(f"owner_id.eq.{owner_id},store_id.eq.{store_id}")
+                .eq("user_id", user_id)
+                .execute()
+            )
+            active = [
+                m for m in (m_res.data or [])
+                if str(m.get("status", "")).lower() in ("active", "invited", "")
+            ]
+            if active:
+                return {"owner_id": owner_id, "role": active[0].get("role", "member")}
+        except Exception:
+            pass
+
+    raise HTTPException(status_code=403, detail="Accès refusé")
+
 
 async def verify_store_owner(
     store_id: str,
-    user_id:  str = Depends(verify_token),
+    user_id: str = Depends(verify_token),
 ) -> str:
-    supabase = get_supabase()
-    result = (
-        supabase.table("stores")
-        .select("owner_id")
-        .eq("id", store_id)
-        .single()
-        .execute()
-    )
-    if not result.data:
-        raise HTTPException(status_code=404, detail="Boutique introuvable")
-    if result.data["owner_id"] != user_id:
-        raise HTTPException(status_code=403, detail="Accès refusé")
-    return user_id
+    res = await check_store_owner(store_id, user_id)
+    return res["owner_id"]
+

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { DEFAULT_WILAYAS } from "@/lib/wilayas";
 import { normalizeDzPhone, isValidStrictDzPhone } from "@/lib/utils";
+import { getAuthUser, safeUpdate } from "@/lib/api-auth";
+
 
 function getSupabaseAdmin() {
   return createClient(
@@ -241,9 +243,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 7b. Smart Dispatch Call Center (Global : Boutiques & Funnels)
+    try {
+      const { assignOrderSmartly } = await import("@/lib/dispatcher");
+      const dispatchRes = await assignOrderSmartly(createdOrder.id, store_id, supabase);
+      if (dispatchRes?.success && dispatchRes.assigned_to) {
+        createdOrder.assigned_to = dispatchRes.assigned_to;
+        createdOrder.assigned_at = dispatchRes.assigned_at;
+      }
+    } catch (dispatchErr) {
+      console.warn("SmartDispatch non-bloquant:", dispatchErr);
+    }
+
     // 8. Déduction du stock (non-bloquante)
     try {
       for (const item of items) {
+
         const prodId = item.product_id || item.id;
         const q = Math.max(1, Number(item.quantity) || 1);
         if (prodId) {
@@ -330,3 +345,220 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function GET(req: NextRequest) {
+  try {
+    const user = await getAuthUser(req);
+    if (!user) {
+      return NextResponse.json({ detail: "Non authentifié" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const filterStoreId = searchParams.get("store_id");
+    const filterStatus = searchParams.get("status");
+
+    const supabase = getSupabaseAdmin();
+
+    // 1. Boutiques de l'utilisateur comme propriétaire
+    const { data: ownedStores } = await supabase
+      .from("stores")
+      .select("id, name, type, owner_id")
+      .eq("owner_id", user.id);
+
+    let accessibleStores = ownedStores || [];
+    let userRole = "owner";
+
+    // 2. Si pas propriétaire (ou pour vérifier l'appartenance à une équipe), vérifier store_members
+    if (accessibleStores.length === 0) {
+      const userEmail = (user.email || "").toLowerCase();
+      const { data: memberships } = await supabase
+        .from("store_members")
+        .select("owner_id, store_id, role, status")
+        .or(`user_id.eq.${user.id},email.eq.${userEmail},user_email.eq.${userEmail}`);
+
+      const activeMemberships = (memberships || []).filter(
+        (m: any) => m.status === "active" || m.status === "invited" || !m.status
+      );
+
+      const ownerIds = Array.from(new Set(activeMemberships.map((m: any) => m.owner_id).filter(Boolean)));
+
+      if (ownerIds.length > 0) {
+        userRole = "member";
+        const { data: teamStores } = await supabase
+          .from("stores")
+          .select("id, name, type, owner_id")
+          .in("owner_id", ownerIds);
+        accessibleStores = teamStores || [];
+      } else if (activeMemberships.length > 0) {
+        userRole = "member";
+        const directStoreIds = activeMemberships.map((m: any) => m.store_id).filter(Boolean);
+        if (directStoreIds.length > 0) {
+          const { data: teamStores } = await supabase
+            .from("stores")
+            .select("id, name, type, owner_id")
+            .in("id", directStoreIds);
+          accessibleStores = teamStores || [];
+        }
+      }
+    }
+
+    if (accessibleStores.length === 0) {
+      return NextResponse.json({ orders: [], count: 0, user_role: userRole });
+    }
+
+    const storeMap = new Map<string, any>(accessibleStores.map((s: any) => [s.id, s]));
+    let allowedStoreIds = Array.from(storeMap.keys());
+
+    if (filterStoreId && filterStoreId !== "all") {
+      if (!allowedStoreIds.includes(filterStoreId)) {
+        return NextResponse.json({ detail: "Accès refusé à cette boutique" }, { status: 403 });
+      }
+      allowedStoreIds = [filterStoreId];
+    }
+
+    let query = supabase
+      .from("orders")
+      .select("*")
+      .in("store_id", allowedStoreIds)
+      .order("created_at", { ascending: false });
+
+    if (filterStatus && filterStatus !== "all") {
+      query = query.eq("status", filterStatus);
+    }
+
+    const { data: orders, error } = await query;
+    if (error) {
+      return NextResponse.json({ detail: error.message }, { status: 500 });
+    }
+
+    const formattedOrders = (orders || []).map((o: any) => {
+      const st = storeMap.get(o.store_id) || {};
+      return {
+        ...o,
+        total: o.total ?? o.total_amount ?? 0,
+        subtotal: o.subtotal ?? o.total_amount ?? 0,
+        shipping_address: o.shipping_address ?? o.customer_address ?? null,
+        store_name: st.name || "Boutique",
+        store_type: st.type || "boutique",
+      };
+    });
+
+    return NextResponse.json({
+      orders: formattedOrders,
+      count: formattedOrders.length,
+      user_role: userRole,
+    });
+  } catch (err: any) {
+    console.error("GET /api/orders error:", err);
+    return NextResponse.json({ detail: err?.message || "Erreur interne" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await getAuthUser(req);
+    if (!user) {
+      return NextResponse.json({ detail: "Non authentifié" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const orderId = body.id || body.order_id;
+    if (!orderId) {
+      return NextResponse.json({ detail: "ID de commande manquant" }, { status: 400 });
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { data: order, error: orderErr } = await supabase
+      .from("orders")
+      .select("*, stores(id, name, type, owner_id)")
+      .eq("id", orderId)
+      .maybeSingle();
+
+    if (orderErr || !order) {
+      return NextResponse.json({ detail: "Commande introuvable" }, { status: 404 });
+    }
+
+    // Vérifier l'accès (Propriétaire ou membre de l'équipe du propriétaire)
+    const storeData = order.stores as any;
+    const ownerId = storeData?.owner_id;
+    const isOwner = ownerId === user.id;
+    let isMember = false;
+
+    if (!isOwner && ownerId) {
+      const userEmail = (user.email || "").toLowerCase();
+      const { data: memberRows } = await supabase
+        .from("store_members")
+        .select("id, status")
+        .or(`owner_id.eq.${ownerId},store_id.eq.${order.store_id}`)
+        .or(`user_id.eq.${user.id},email.eq.${userEmail},user_email.eq.${userEmail}`);
+
+      const active = (memberRows || []).filter(
+        (m: any) => m.status === "active" || m.status === "invited" || !m.status
+      );
+      if (active.length > 0) {
+        isMember = true;
+      }
+    }
+
+    if (!isOwner && !isMember) {
+      return NextResponse.json({ detail: "Accès refusé à cette commande" }, { status: 403 });
+    }
+
+    const updatePayload: Record<string, any> = {};
+    const nowIso = new Date().toISOString();
+
+    if (body.status) {
+      updatePayload.status = body.status;
+      if (body.status === "confirmed") {
+        updatePayload.confirmed_by = user.id;
+        updatePayload.confirmed_at = nowIso;
+      }
+    }
+
+    if (body.payment_status) {
+      updatePayload.payment_status = body.payment_status;
+    }
+
+    if (body.notes !== undefined) {
+      updatePayload.notes = body.notes;
+    }
+
+    if (body.agent_notes !== undefined) {
+      updatePayload.agent_notes = body.agent_notes;
+    }
+
+    if (body.cancel_reason !== undefined) {
+      updatePayload.cancel_reason = body.cancel_reason;
+    }
+
+    if (body.call_attempts !== undefined) {
+      updatePayload.call_attempts = Number(body.call_attempts);
+    } else if (body.status === "no_answer" || body.status === "callback") {
+      updatePayload.call_attempts = Number(order.call_attempts || 0) + 1;
+    }
+
+    if (body.assigned_to !== undefined) {
+      updatePayload.assigned_to = body.assigned_to;
+      updatePayload.assigned_at = nowIso;
+    }
+
+    const updateRes = await safeUpdate("orders", updatePayload, "id", orderId, supabase);
+    if (updateRes.error) {
+      return NextResponse.json({ detail: updateRes.error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      order: {
+        ...order,
+        ...updatePayload,
+        store_name: storeData?.name || "Boutique",
+        store_type: storeData?.type || "boutique",
+      },
+    });
+  } catch (err: any) {
+    console.error("PATCH /api/orders error:", err);
+    return NextResponse.json({ detail: err?.message || "Erreur interne" }, { status: 500 });
+  }
+}
+

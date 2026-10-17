@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       .eq("owner_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (storeType) {
+    if (storeType && storeType !== "all") {
       query = query.eq("type", storeType);
     }
 
@@ -30,12 +30,65 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ detail: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(stores || []);
+    if (stores && stores.length > 0) {
+      return NextResponse.json(stores.map((s) => ({ ...s, user_role: "owner" })));
+    }
+
+    // Si pas de boutique en tant que propriétaire, vérifier l'appartenance à une équipe globale
+    const userEmail = (user.email || "").toLowerCase();
+    const { data: memberships } = await admin
+      .from("store_members")
+      .select("owner_id, store_id, role, status")
+      .or(`user_id.eq.${user.id},email.eq.${userEmail},user_email.eq.${userEmail}`);
+
+    const activeMemberships = (memberships || []).filter(
+      (m: any) => m.status === "active" || m.status === "invited" || !m.status
+    );
+
+    const ownerIds = Array.from(new Set(activeMemberships.map((m: any) => m.owner_id).filter(Boolean)));
+
+    if (ownerIds.length > 0) {
+      let teamQuery = admin
+        .from("stores")
+        .select("*")
+        .in("owner_id", ownerIds)
+        .order("created_at", { ascending: false });
+
+      if (storeType && storeType !== "all") {
+        teamQuery = teamQuery.eq("type", storeType);
+      }
+
+      const { data: teamStores, error: teamErr } = await teamQuery;
+      if (teamErr) {
+        return NextResponse.json({ detail: teamErr.message }, { status: 500 });
+      }
+
+      return NextResponse.json((teamStores || []).map((s) => ({ ...s, user_role: "member" })));
+    } else if (activeMemberships.length > 0) {
+      const directStoreIds = activeMemberships.map((m: any) => m.store_id).filter(Boolean);
+      if (directStoreIds.length > 0) {
+        let directQuery = admin
+          .from("stores")
+          .select("*")
+          .in("id", directStoreIds)
+          .order("created_at", { ascending: false });
+
+        if (storeType && storeType !== "all") {
+          directQuery = directQuery.eq("type", storeType);
+        }
+
+        const { data: teamStores } = await directQuery;
+        return NextResponse.json((teamStores || []).map((s) => ({ ...s, user_role: "member" })));
+      }
+    }
+
+    return NextResponse.json([]);
   } catch (err: any) {
     console.error("GET /api/stores exception:", err);
     return NextResponse.json({ detail: err.message || "Erreur interne" }, { status: 500 });
   }
 }
+
 
 export async function POST(req: NextRequest) {
   try {

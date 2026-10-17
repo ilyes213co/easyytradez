@@ -43,11 +43,13 @@ async def add_team_member(
     normalized_email = req.user_email.strip().lower()
     payload = {
         "id": str(uuid.uuid4()),
+        "owner_id": user.id,
         "store_id": store_id,
         "user_email": normalized_email,
         "email": normalized_email,
         "role": req.role or "manager",
         "status": "invited",
+        "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -55,12 +57,12 @@ async def add_team_member(
         existing = (
             supabase.table("store_members")
             .select("id")
-            .eq("store_id", store_id)
+            .or_(f"owner_id.eq.{user.id},store_id.eq.{store_id}")
             .or_(f"user_email.eq.{normalized_email},email.eq.{normalized_email}")
             .execute()
         )
         if existing.data:
-            raise HTTPException(status_code=400, detail="Ce collaborateur est déjà invité ou membre de la boutique")
+            raise HTTPException(status_code=400, detail="Ce collaborateur est déjà invité ou membre de l'équipe")
     except HTTPException:
         raise
     except Exception as e:
@@ -86,15 +88,21 @@ async def add_team_member(
 @router.get("")
 @router.get("/")
 async def get_team_members(
-    store_id: str = Query(..., description="ID de la boutique"),
+    store_id: Optional[str] = Query(None, description="ID de la boutique"),
     user = Depends(get_current_user),
     supabase = Depends(get_supabase),
 ):
-    # Vérification de propriété du store
-    check_store_owner(store_id, user.id, supabase)
+    if store_id:
+        check_store_owner(store_id, user.id, supabase)
 
     try:
-        res = supabase.table("store_members").select("*").eq("store_id", store_id).order("created_at", desc=False).execute()
+        query = supabase.table("store_members").select("*")
+        if store_id:
+            query = query.or_(f"owner_id.eq.{user.id},store_id.eq.{store_id}")
+        else:
+            query = query.eq("owner_id", user.id)
+        
+        res = query.order("created_at", desc=False).execute()
         return {"success": True, "members": res.data or []}
     except Exception as e:
         if is_missing_table_error(e):
@@ -102,6 +110,20 @@ async def get_team_members(
             return {"success": True, "members": []}
         logger.error(f"Erreur lecture collaborateurs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/rebalance")
+async def trigger_rebalance_orders(
+    user = Depends(get_current_user),
+    supabase = Depends(get_supabase),
+):
+    """
+    Ré-équilibre les commandes en attente (pending) de tous les funnels
+    et boutiques de ce propriétaire entre les employés actifs.
+    """
+    from services.dispatcher import rebalance_orders
+    result = rebalance_orders(owner_id=user.id, supabase=supabase)
+    return result
 
 
 @router.delete("/{member_id}")
@@ -121,3 +143,4 @@ async def delete_team_member(
             return {"success": True}
         logger.error(f"Erreur suppression collaborateur: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+

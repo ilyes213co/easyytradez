@@ -26,13 +26,23 @@ export interface OrderItem {
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
-export const ORDER_STATUS = {
-  pending:   { label: "En attente",  color: "text-amber-600 dark:text-amber-400",   bg: "bg-amber-500/10 border-amber-500/25",   dot: "bg-amber-500",   icon: "🕐", step: 0 },
-  confirmed: { label: "Confirmée",   color: "text-blue-600 dark:text-blue-400",    bg: "bg-blue-500/10 border-blue-500/25",     dot: "bg-blue-500",    icon: "✓",  step: 1 },
-  shipped:   { label: "Expédiée",    color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-500/10 border-purple-500/25", dot: "bg-purple-500",  icon: "🚚", step: 2 },
-  delivered: { label: "Livrée",      color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/25", dot: "bg-emerald-500", icon: "📦", step: 3 },
-  cancelled: { label: "Annulée",     color: "text-rose-600 dark:text-rose-400",     bg: "bg-rose-500/10 border-rose-500/25",     dot: "bg-rose-500",    icon: "✕",  step: -1 },
-} as const;
+export const ORDER_STATUS: Record<
+  Order["status"],
+  { label: string; color: string; bg: string; dot: string; icon: string; step: number }
+> = {
+  pending:      { label: "En attente",       color: "text-amber-600 dark:text-amber-400",   bg: "bg-amber-500/10 border-amber-500/25",     dot: "bg-amber-500",   icon: "🕐", step: 0 },
+  confirmed:    { label: "Confirmée",        color: "text-blue-600 dark:text-blue-400",     bg: "bg-blue-500/10 border-blue-500/25",       dot: "bg-blue-500",    icon: "✓",  step: 1 },
+  no_answer:    { label: "Ne répond pas",    color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10 border-orange-500/25",   dot: "bg-orange-500",  icon: "📵", step: 0 },
+  callback:     { label: "À rappeler",       color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/25",   dot: "bg-indigo-500",  icon: "📞", step: 0 },
+  postponed:    { label: "Reportée",         color: "text-sky-600 dark:text-sky-400",       bg: "bg-sky-500/10 border-sky-500/25",         dot: "bg-sky-500",     icon: "📅", step: 0 },
+  shipped:      { label: "Expédiée",         color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-500/10 border-purple-500/25",   dot: "bg-purple-500",  icon: "🚚", step: 2 },
+  delivered:    { label: "Livrée",           color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/25", dot: "bg-emerald-500", icon: "📦", step: 3 },
+  cancelled:    { label: "Annulée",          color: "text-rose-600 dark:text-rose-400",     bg: "bg-rose-500/10 border-rose-500/25",       dot: "bg-rose-500",    icon: "✕",  step: -1 },
+  unreachable:  { label: "Injoignable",      color: "text-slate-600 dark:text-slate-400",   bg: "bg-slate-500/10 border-slate-500/25",     dot: "bg-slate-500",   icon: "⚠️", step: -1 },
+  wrong_number: { label: "Faux numéro",      color: "text-rose-600 dark:text-rose-400",     bg: "bg-rose-500/10 border-rose-500/25",       dot: "bg-rose-500",    icon: "🚫", step: -1 },
+  duplicate:    { label: "Doublon",          color: "text-slate-600 dark:text-slate-400",   bg: "bg-slate-500/10 border-slate-500/25",     dot: "bg-slate-500",   icon: "📋", step: -1 },
+};
+
 
 export const PAYMENT_STATUS = {
   pending:  { label: "Non payé",  color: "text-amber-400",   dot: "bg-amber-400"   },
@@ -138,23 +148,48 @@ function StatusStepper({
   onAdvance: (next: Order["status"]) => void;
   loading: boolean;
 }) {
-  if (current === "cancelled") {
+  if (["cancelled", "unreachable", "wrong_number", "duplicate"].includes(current)) {
     return (
-      <div className="flex items-center justify-between rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+      <div className="flex items-center justify-between rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="text-red-400 text-sm font-bold">✕</span>
-          <span className="text-sm text-red-300 font-medium">Commande annulée</span>
+          <span className="text-rose-400 text-sm font-bold">✕</span>
+          <span className="text-sm text-rose-300 font-medium">
+            {ORDER_STATUS[current]?.label || "Commande annulée"}
+          </span>
         </div>
         <button
           onClick={() => onAdvance("pending")}
           disabled={loading}
-          className="text-xs text-red-300/80 hover:text-white underline underline-offset-2 transition-colors"
+          className="text-xs text-rose-300/80 hover:text-white underline underline-offset-2 transition-colors"
         >
           Réactiver
         </button>
       </div>
     );
   }
+
+  if (["no_answer", "callback", "postponed"].includes(current)) {
+    return (
+      <div className="flex items-center justify-between rounded-xl border border-orange-500/20 bg-orange-500/10 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="text-orange-400 text-sm font-bold">
+            {ORDER_STATUS[current]?.icon || "📞"}
+          </span>
+          <span className="text-sm text-orange-300 font-medium">
+            {ORDER_STATUS[current]?.label} (Traitement téléopérateur)
+          </span>
+        </div>
+        <button
+          onClick={() => onAdvance("confirmed")}
+          disabled={loading}
+          className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-bold transition-all"
+        >
+          Confirmer
+        </button>
+      </div>
+    );
+  }
+
 
   const currentStep = ORDER_STATUS[current].step;
   const nextStatus = STATUS_FLOW[currentStep + 1] as Order["status"] | undefined;
@@ -306,12 +341,26 @@ export function OrderDrawer({
   // Note client propre (sans JSON technique automatique)
   const cleanCustomerNote = getCleanCustomerNote(order.notes);
 
+  const [agentNotes, setAgentNotes] = useState(order?.agent_notes || "");
+  const [savingNotes, setSavingNotes] = useState(false);
+
   // ── Advance order status ─────────────────────────────────────────────────
-  const handleStatusAdvance = async (next: Order["status"]) => {
+  const handleStatusAdvance = async (next: Order["status"], cancelReason?: string) => {
     setUpdating(true);
+    const updatePayload: Record<string, any> = { status: next };
+    if (cancelReason) {
+      updatePayload.cancel_reason = cancelReason;
+    }
+    if (next === "confirmed") {
+      updatePayload.confirmed_at = new Date().toISOString();
+    }
+    if (next === "no_answer" || next === "callback") {
+      updatePayload.call_attempts = Number(order.call_attempts || 0) + 1;
+    }
+
     const { data, error } = await supabase
       .from("orders")
-      .update({ status: next })
+      .update(updatePayload)
       .eq("id", order.id)
       .select()
       .single();
@@ -322,6 +371,8 @@ export function OrderDrawer({
         total: (data as any).total ?? (data as any).total_amount ?? 0,
         subtotal: itemsSubtotal,
         shipping_address: (data as any).shipping_address ?? (data as any).customer_address ?? null,
+        store_name: order.store_name,
+        store_type: order.store_type,
       });
     }
   };
@@ -343,6 +394,8 @@ export function OrderDrawer({
         total: (data as any).total ?? (data as any).total_amount ?? 0,
         subtotal: itemsSubtotal,
         shipping_address: (data as any).shipping_address ?? (data as any).customer_address ?? null,
+        store_name: order.store_name,
+        store_type: order.store_type,
       });
     }
   };
@@ -374,10 +427,21 @@ export function OrderDrawer({
         {/* Header avec Référence & Heure relative avec tooltip */}
         <div className="flex items-center justify-between px-4 py-3.5 sm:px-6 sm:py-4 border-b border-white/[0.07] shrink-0 bg-white/[0.01]">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <p className="text-xs text-white/40 font-mono tracking-wider">
                 #{order.id.slice(-8).toUpperCase()}
               </p>
+              {(order.store_name || storeName) && (
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                    order.store_type === "funnel"
+                      ? "bg-amber-500/10 text-amber-300 border-amber-500/25"
+                      : "bg-indigo-500/10 text-indigo-300 border-indigo-500/25"
+                  }`}
+                >
+                  {order.store_type === "funnel" ? "⚡ Funnel :" : "🏪 Boutique :"} {order.store_name || storeName}
+                </span>
+              )}
               <span
                 title={`Reçue le ${formatFullDateTime(order.created_at)}`}
                 className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-white/[0.06] text-white/70 border border-white/10 cursor-help hover:bg-white/10 transition-colors"
@@ -429,6 +493,96 @@ export function OrderDrawer({
               loading={updating}
             />
           </section>
+
+          {/* ─── Module Call Center & Confirmation ──────────────── */}
+          <section className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.04] p-3.5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-indigo-300 uppercase tracking-wider font-bold flex items-center gap-1.5">
+                <span>📞</span> Actions Téléopérateur / Confirmation
+              </span>
+              <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-md bg-white/10 text-white/80">
+                Tentatives d&apos;appel : {order.call_attempts || 0}
+              </span>
+            </div>
+
+            {/* Quick Action Buttons for Teleoperators */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
+              <button
+                type="button"
+                onClick={() => handleStatusAdvance("confirmed")}
+                disabled={updating || order.status === "confirmed"}
+                className="flex flex-col items-center justify-center p-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all disabled:opacity-40"
+              >
+                <span className="text-base">✓</span>
+                <span>Confirmer</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleStatusAdvance("no_answer")}
+                disabled={updating}
+                className="flex flex-col items-center justify-center p-2 rounded-xl bg-orange-500/15 hover:bg-orange-500/25 text-orange-400 border border-orange-500/30 text-xs font-bold transition-all"
+              >
+                <span className="text-base">📵</span>
+                <span>Ne répond pas</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleStatusAdvance("callback")}
+                disabled={updating}
+                className="flex flex-col items-center justify-center p-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-xs font-bold transition-all"
+              >
+                <span className="text-base">📞</span>
+                <span>À rappeler</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const reason = prompt("Motif d'annulation (ex: Client injoignable, A changé d'avis, Faux numéro) :");
+                  if (reason !== null && reason.trim()) {
+                    handleStatusAdvance("cancelled", reason.trim());
+                  }
+                }}
+                disabled={updating || order.status === "cancelled"}
+                className="flex flex-col items-center justify-center p-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-bold transition-all disabled:opacity-40"
+              >
+                <span className="text-base">✕</span>
+                <span>Annuler</span>
+              </button>
+            </div>
+
+            {/* Notes internes du téléopérateur */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-white/60">
+                <span>Notes internes de l&apos;opérateur :</span>
+                {savingNotes && <span className="text-[10px] text-indigo-400 animate-pulse">Enregistrement...</span>}
+              </div>
+              <textarea
+                rows={2}
+                value={agentNotes}
+                onChange={(e) => setAgentNotes(e.target.value)}
+                onBlur={async () => {
+                  if (agentNotes === (order.agent_notes || "")) return;
+                  setSavingNotes(true);
+                  const { data } = await supabase
+                    .from("orders")
+                    .update({ agent_notes: agentNotes })
+                    .eq("id", order.id)
+                    .select()
+                    .single();
+                  setSavingNotes(false);
+                  if (data) {
+                    onUpdated({ ...order, agent_notes: agentNotes });
+                  }
+                }}
+                placeholder="Ex: Le client demande d'être livré après 17h, rappel convenu samedi..."
+                className="w-full text-xs bg-black/40 border border-white/10 rounded-lg p-2 text-white placeholder-white/30 focus:border-indigo-500 outline-none resize-none"
+              />
+            </div>
+          </section>
+
 
           {/* ── Bordereau d'expédition (Bordereau de livraison C.O.D) ────────── */}
           <section className="rounded-xl border border-white/[0.08] bg-white/[0.025] p-3.5 space-y-2.5">

@@ -25,7 +25,23 @@ export type Order = Database["public"]["Tables"]["orders"]["Row"] & {
   subtotal: number;
   shipping_address?: string | null;
   wilaya?: string | null;
+  store_name?: string | null;
+  store_type?: "boutique" | "funnel" | null;
 };
+export type StoreMember = {
+  id: string;
+  store_id?: string | null;
+  owner_id: string;
+  user_id?: string | null;
+  email?: string | null;
+  user_email?: string | null;
+  role: string;
+  status: string;
+  is_active?: boolean;
+  last_assigned_at?: string | null;
+  created_at?: string;
+};
+
 export type DeliveryZone = Database["public"]["Tables"]["delivery_zones"]["Row"];
 export type PushSubscription = Database["public"]["Tables"]["push_subscriptions"]["Row"];
 export type StoreAnalyticEvent = Database["public"]["Tables"]["store_analytics"]["Row"];

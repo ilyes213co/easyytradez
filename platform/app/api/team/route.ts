@@ -35,8 +35,9 @@ export async function GET(req: NextRequest) {
     const { data: members, error } = await admin
       .from("store_members")
       .select("*")
-      .eq("store_id", storeId)
+      .or(`owner_id.eq.${user.id},store_id.eq.${storeId}`)
       .order("created_at", { ascending: false });
+
 
     if (error) {
       if (isTableMissingError(error)) {
@@ -96,11 +97,13 @@ export async function POST(req: NextRequest) {
     }
 
     const memberPayload = {
+      owner_id: user.id,
       store_id: storeId,
       email: userEmail,
       user_email: userEmail,
       role,
       status: "invited",
+      is_active: true,
     };
 
     // 3. Vérification des doublons
@@ -108,8 +111,9 @@ export async function POST(req: NextRequest) {
       const { data: existing } = await admin
         .from("store_members")
         .select("id")
-        .eq("store_id", storeId)
+        .or(`owner_id.eq.${user.id},store_id.eq.${storeId}`)
         .or(`email.eq.${userEmail},user_email.eq.${userEmail}`);
+
 
       if (existing && existing.length > 0) {
         return NextResponse.json(
