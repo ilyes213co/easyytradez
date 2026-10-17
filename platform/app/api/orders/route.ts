@@ -217,9 +217,11 @@ export async function POST(req: NextRequest) {
     }
 
     // 6. Formatage de l'adresse et de la note client réelle
+    const customerCommune = typeof body.customer_commune === "string" ? body.customer_commune.trim() : (typeof body.commune === "string" ? body.commune.trim() : "");
     const modeLabel = shipMode === "stopdesk" ? "Stop Desk" : "À domicile";
     const addressParts: string[] = [];
     if (wilayaName) addressParts.push(`Wilaya: ${wilayaName} (${modeLabel})`);
+    if (customerCommune) addressParts.push(`Commune: ${customerCommune}`);
     if (customer_address && String(customer_address).trim()) {
       addressParts.push(String(customer_address).trim());
     }

@@ -57,6 +57,7 @@ export interface CreateOrderPayload {
   customer_name: string;
   customer_phone: string;
   customer_address?: string;
+  customer_commune?: string;
   notes?: string;
   store_id?: string;
 }

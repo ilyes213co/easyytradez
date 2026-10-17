@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import type { Product, Store } from "@/lib/supabase";
+import { getCommunesByWilayaId } from "@/lib/algeria-cities";
 import { generateWhatsAppUrl, normalizeDzPhone, isValidStrictDzPhone } from "@/lib/utils";
 import { trackStorePurchase } from "@/components/analytics/StoreTrackingPixels";
 
@@ -134,8 +135,13 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
   // Delivery
   const [rates, setRates]                   = useState<ShippingRateOption[]>([]);
   const [selectedWilaya, setSelectedWilaya] = useState("");
+  const [selectedCommune, setSelectedCommune] = useState("");
   const [shipMode, setShipMode]             = useState<"domicile" | "stopdesk">("domicile");
   const [deliveryFee, setDeliveryFee]       = useState(0);
+
+  const availableCommunes = useMemo(() => {
+    return getCommunesByWilayaId(selectedWilaya);
+  }, [selectedWilaya]);
 
   // Options & Variants
   const productOptions: any[] = (product as any).options || [];
@@ -254,9 +260,11 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
       (r) => String(r.wilaya_id) === selectedWilaya || r.code === selectedWilaya
     );
     const wilayaLabel = selectedRate ? `${selectedRate.code}. ${selectedRate.name}` : selectedWilaya;
-    const fullAddress = selectedWilaya
-      ? `Wilaya: ${wilayaLabel} (${shipMode === "stopdesk" ? "Stop Desk" : "À domicile"})${form.address.trim() ? " — " + form.address.trim() : ""}`
-      : form.address.trim() || null;
+    const addressParts: string[] = [];
+    if (selectedWilaya) addressParts.push(`Wilaya: ${wilayaLabel} (${shipMode === "stopdesk" ? "Stop Desk" : "À domicile"})`);
+    if (selectedCommune) addressParts.push(`Commune: ${selectedCommune}`);
+    if (form.address.trim()) addressParts.push(form.address.trim());
+    const fullAddress = addressParts.join(" — ") || null;
 
     let finalOrderId = "CMD-" + Date.now().toString().slice(-6);
     const cleanedPhone = normalizeDzPhone(form.phone);
@@ -275,6 +283,7 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
           ship_mode: shipMode,
           customer_name: form.name.trim(),
           customer_phone: cleanedPhone || form.phone.trim(),
+          customer_commune: selectedCommune.trim() || undefined,
           customer_address: fullAddress,
           notes: form.notes.trim() || undefined,
         }),
@@ -359,6 +368,7 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
       `Je voudrais commander :`,
       `• ${product.name} × ${qty} = ${subtotal.toLocaleString("fr-DZ")} DZD`,
       wilayaName ? `🚚 ${wilayaName}` : "",
+      selectedCommune ? `📍 Commune : ${selectedCommune}` : "",
       `💰 Total : ${total.toLocaleString("fr-DZ")} DZD`,
       ``,
       `👤 ${form.name}`,
@@ -492,19 +502,45 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
       {/* Wilaya select & Mode */}
       {rates.length > 0 && (
         <div className="space-y-2">
-          <Label>Wilaya de livraison</Label>
-          <select
-            value={selectedWilaya}
-            onChange={(e) => setSelectedWilaya(e.target.value)}
-            className={inputClass + " appearance-none cursor-pointer"}
-          >
-            <option value="">Sélectionnez votre wilaya…</option>
-            {rates.map((r) => (
-              <option key={r.wilaya_id} value={String(r.wilaya_id)} className="bg-white text-stone-800">
-                {r.code} — {r.name} ({shipMode === "stopdesk" ? `${r.price_desk.toLocaleString("fr-DZ")} DZD` : `${r.price_home.toLocaleString("fr-DZ")} DZD`})
-              </option>
-            ))}
-          </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <Label>Wilaya de livraison</Label>
+              <select
+                value={selectedWilaya}
+                onChange={(e) => {
+                  setSelectedWilaya(e.target.value);
+                  setSelectedCommune("");
+                }}
+                className={inputClass + " appearance-none cursor-pointer"}
+              >
+                <option value="">Sélectionnez votre wilaya…</option>
+                {rates.map((r) => (
+                  <option key={r.wilaya_id} value={String(r.wilaya_id)} className="bg-white text-stone-800">
+                    {r.code} — {r.name} ({shipMode === "stopdesk" ? `${r.price_desk.toLocaleString("fr-DZ")} DZD` : `${r.price_home.toLocaleString("fr-DZ")} DZD`})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label>Commune</Label>
+              <select
+                value={selectedCommune}
+                onChange={(e) => setSelectedCommune(e.target.value)}
+                disabled={!selectedWilaya}
+                className={inputClass + " appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"}
+              >
+                <option value="">
+                  {!selectedWilaya ? "Sélectionnez wilaya d'abord" : "Sélectionnez votre commune…"}
+                </option>
+                {availableCommunes.map((c) => (
+                  <option key={c} value={c} className="bg-white text-stone-800">
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           {/* Mode de livraison */}
           <div className="grid grid-cols-2 gap-2 pt-1">
@@ -576,9 +612,9 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
 
       {/* Address */}
       <div>
-        <Label>Adresse de livraison <span className="text-stone-300 normal-case font-normal tracking-normal">(optionnel)</span></Label>
+        <Label>Adresse / Rue / Bâtiment <span className="text-stone-300 normal-case font-normal tracking-normal">(optionnel)</span></Label>
         <input type="text" value={form.address} onChange={set("address")}
-          placeholder="Rue, ville, wilaya"
+          placeholder="Cité, numéro de rue, bâtiment..."
           className={inputClass}
         />
       </div>

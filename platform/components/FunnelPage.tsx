@@ -5,6 +5,7 @@ import Image from "next/image";
 import Script from "next/script";
 import type { Product, Store, Wilaya, ThemeId, CreateOrderPayload } from "@/types/product";
 import { DEFAULT_WILAYAS, resolveImageUrl } from "@/components/ProductPage";
+import { getCommunesByWilayaId } from "@/lib/algeria-cities";
 import { Editable, EditableProvider } from "@/components/editor/Editable";
 import { generateWhatsAppUrl, normalizeDzPhone, isValidStrictDzPhone } from "@/lib/utils";
 import StoreTrackingPixels, { trackStorePurchase } from "@/components/analytics/StoreTrackingPixels";
@@ -65,6 +66,7 @@ export default function FunnelPage({
   // Coordonnées client
   const [customerName, setCustomerName] = useState<string>("");
   const [customerPhone, setCustomerPhone] = useState<string>("");
+  const [customerCommune, setCustomerCommune] = useState<string>("");
   const [customerAddress, setCustomerAddress] = useState<string>("");
 
   // UI state
@@ -76,9 +78,15 @@ export default function FunnelPage({
 
   const orderFormRef = useRef<HTMLDivElement>(null);
   const wilayaSelectRef = useRef<HTMLSelectElement>(null);
+  const communeSelectRef = useRef<HTMLSelectElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ─── Communes dynamiques selon la wilaya ─────────────────────────────────────
+  const availableCommunes = useMemo(() => {
+    return getCommunesByWilayaId(selectedWilayaId);
+  }, [selectedWilayaId]);
 
   // ─── Tracking Pixel standardisé ───────────────────────────────────────────
   useEffect(() => {
@@ -139,6 +147,13 @@ export default function FunnelPage({
       orderFormRef.current?.scrollIntoView({ behavior: "smooth" });
       wilayaSelectRef.current?.focus();
       showToast("Veuillez sélectionner votre Wilaya de livraison.");
+      return;
+    }
+
+    if (!customerCommune.trim() && availableCommunes.length > 0) {
+      orderFormRef.current?.scrollIntoView({ behavior: "smooth" });
+      communeSelectRef.current?.focus();
+      showToast("Veuillez sélectionner votre commune de livraison.");
       return;
     }
 
@@ -204,6 +219,7 @@ export default function FunnelPage({
       ship_mode: shipMode,
       customer_name: customerName.trim(),
       customer_phone: cleanedPhone || customerPhone.trim(),
+      customer_commune: customerCommune.trim() || undefined,
       customer_address: customerAddress.trim() || undefined,
       store_id: effectiveStoreId,
     };
@@ -603,24 +619,54 @@ export default function FunnelPage({
                   />
                 </div>
 
-                <div>
-                  <label className="pd-label" htmlFor="funnel-wilaya">
-                    Wilaya de livraison *
-                  </label>
-                  <select
-                    id="funnel-wilaya"
-                    ref={wilayaSelectRef}
-                    className="pd-select"
-                    value={selectedWilayaId}
-                    onChange={(e) => setSelectedWilayaId(e.target.value ? Number(e.target.value) : "")}
-                  >
-                    <option value="">Sélectionnez votre Wilaya</option>
-                    {wilayas.map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.id} - {w.name} ({w.eta})
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="pd-label" htmlFor="funnel-wilaya">
+                      Wilaya de livraison *
+                    </label>
+                    <select
+                      id="funnel-wilaya"
+                      ref={wilayaSelectRef}
+                      className="pd-select"
+                      value={selectedWilayaId}
+                      onChange={(e) => {
+                        const val = e.target.value ? Number(e.target.value) : "";
+                        setSelectedWilayaId(val);
+                        setCustomerCommune("");
+                      }}
+                    >
+                      <option value="">Sélectionnez votre Wilaya</option>
+                      {wilayas.map((w) => (
+                        <option key={w.id} value={w.id}>
+                          {w.id} - {w.name} ({w.eta})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="pd-label" htmlFor="funnel-commune">
+                      Commune *
+                    </label>
+                    <select
+                      id="funnel-commune"
+                      ref={communeSelectRef}
+                      className="pd-select"
+                      value={customerCommune}
+                      onChange={(e) => setCustomerCommune(e.target.value)}
+                      disabled={!selectedWilayaId}
+                      style={!selectedWilayaId ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+                    >
+                      <option value="">
+                        {!selectedWilayaId ? "Sélectionnez d'abord la wilaya" : "Sélectionnez votre commune"}
                       </option>
-                    ))}
-                  </select>
+                      {availableCommunes.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="pd-modes">
@@ -654,13 +700,13 @@ export default function FunnelPage({
 
                 <div>
                   <label className="pd-label" htmlFor="funnel-address">
-                    Adresse ou Commune (optionnel)
+                    Adresse exacte ou Rue <span className="opacity-70 font-normal lowercase">(optionnel)</span>
                   </label>
                   <input
                     id="funnel-address"
                     type="text"
                     className="pd-select"
-                    placeholder="Ex: Bab El Oued, Rue Larbi Ben M'hidi"
+                    placeholder="Ex: Cité 5 Juillet, Bâtiment B, N° 12"
                     value={customerAddress}
                     onChange={(e) => setCustomerAddress(e.target.value)}
                   />
@@ -697,7 +743,7 @@ export default function FunnelPage({
                     <a
                       href={generateWhatsAppUrl(
                         waNumber,
-                        `Bonjour ${store.name} ! 👋\nJe viens de commander "${product.name}" (${formatMoney(total)}).\nClient: ${customerName} - ${customerPhone}.\nWilaya: ${selectedWilaya?.name || selectedWilayaId}.\nMerci de confirmer ma commande !`
+                        `Bonjour ${store.name} ! 👋\nJe viens de commander "${product.name}" (${formatMoney(total)}).\nClient: ${customerName} - ${customerPhone}.\nWilaya: ${selectedWilaya?.name || selectedWilayaId}${customerCommune ? ' (' + customerCommune + ')' : ''}.\nMerci de confirmer ma commande !`
                       )}
                       target="_blank"
                       rel="noopener noreferrer"

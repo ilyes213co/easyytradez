@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { Product, Store, Wilaya, ThemeId, CreateOrderPayload } from "@/types/product";
 
 import { DEFAULT_WILAYAS, resolveImageUrl } from "@/lib/wilayas";
+import { getCommunesByWilayaId } from "@/lib/algeria-cities";
 import { generateWhatsAppUrl, normalizeDzPhone, isValidStrictDzPhone } from "@/lib/utils";
 import StoreTrackingPixels, { trackStorePurchase } from "@/components/analytics/StoreTrackingPixels";
 export { DEFAULT_WILAYAS, resolveImageUrl };
@@ -60,6 +61,7 @@ export default function ProductPage({
   // Formulaire client
   const [customerName, setCustomerName] = useState<string>("");
   const [customerPhone, setCustomerPhone] = useState<string>("");
+  const [customerCommune, setCustomerCommune] = useState<string>("");
   const [customerAddress, setCustomerAddress] = useState<string>("");
   const [showOrderForm, setShowOrderForm] = useState<boolean>(false);
 
@@ -71,7 +73,9 @@ export default function ProductPage({
   const [orderDone, setOrderDone] = useState<boolean>(false);
 
   const wilayaSelectRef = useRef<HTMLSelectElement>(null);
+  const communeSelectRef = useRef<HTMLSelectElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const showToast = (msg: string) => {
@@ -81,6 +85,17 @@ export default function ProductPage({
     toastTimeoutRef.current = setTimeout(() => {
       setIsToastOpen(false);
     }, 3500);
+  };
+
+  // ─── Communes dynamiques selon la wilaya ─────────────────────────────────────
+  const availableCommunes = useMemo(() => {
+    return getCommunesByWilayaId(selectedWilayaId);
+  }, [selectedWilayaId]);
+
+  const handleWilayaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value ? Number(e.target.value) : "";
+    setSelectedWilayaId(val);
+    setCustomerCommune("");
   };
 
   // ─── Calcul à la volée ───────────────────────────────────────────────────────
@@ -106,7 +121,15 @@ export default function ProductPage({
       if (wilayaSelectRef.current) {
         wilayaSelectRef.current.focus();
       }
-      showToast("Choisissez votre wilaya pour confirmer la commande.");
+      showToast("Choisissez votre wilaya de livraison.");
+      return;
+    }
+
+    if (!customerCommune.trim() && availableCommunes.length > 0) {
+      if (communeSelectRef.current) {
+        communeSelectRef.current.focus();
+      }
+      showToast("Choisissez votre commune de livraison.");
       return;
     }
 
@@ -124,6 +147,7 @@ export default function ProductPage({
 
     if (!customerPhone.trim()) {
       showToast("Veuillez indiquer un numéro de téléphone.");
+      phoneInputRef.current?.focus();
       return;
     }
 
@@ -133,10 +157,12 @@ export default function ProductPage({
     if (security.strict_dz_phone !== false) {
       if (!isValidStrictDzPhone(cleanedPhone)) {
         showToast("Numéro algérien invalide (10 chiffres commençant par 05, 06 ou 07).");
+        phoneInputRef.current?.focus();
         return;
       }
     } else if (cleanedPhone.length < 9) {
       showToast("Veuillez indiquer un numéro de téléphone valide.");
+      phoneInputRef.current?.focus();
       return;
     }
 
@@ -165,6 +191,7 @@ export default function ProductPage({
       ship_mode: shipMode,
       customer_name: customerName.trim(),
       customer_phone: cleanedPhone || customerPhone.trim(),
+      customer_commune: customerCommune.trim() || undefined,
       customer_address: customerAddress.trim() || undefined,
       store_id: effectiveStoreId,
     };
@@ -488,23 +515,51 @@ export default function ProductPage({
                 Livraison &amp; total
               </p>
 
-              <label className="pd-label" htmlFor="wilaya-select">
-                Wilaya de livraison
-              </label>
-              <select
-                id="wilaya-select"
-                ref={wilayaSelectRef}
-                className="pd-select"
-                value={selectedWilayaId}
-                onChange={(e) => setSelectedWilayaId(e.target.value ? Number(e.target.value) : "")}
-              >
-                <option value="">Choisissez votre wilaya</option>
-                {wilayas.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.id} - {w.name} ({w.eta})
-                  </option>
-                ))}
-              </select>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "10px", marginBottom: "10px" }}>
+                <div>
+                  <label className="pd-label" htmlFor="wilaya-select" style={{ marginBottom: "4px" }}>
+                    Wilaya de livraison *
+                  </label>
+                  <select
+                    id="wilaya-select"
+                    ref={wilayaSelectRef}
+                    className="pd-select"
+                    value={selectedWilayaId}
+                    onChange={handleWilayaChange}
+                  >
+                    <option value="">Choisissez votre wilaya</option>
+                    {wilayas.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.id} - {w.name} ({w.eta})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="pd-label" htmlFor="commune-select" style={{ marginBottom: "4px" }}>
+                    Commune *
+                  </label>
+                  <select
+                    id="commune-select"
+                    ref={communeSelectRef}
+                    className="pd-select"
+                    value={customerCommune}
+                    onChange={(e) => setCustomerCommune(e.target.value)}
+                    disabled={!selectedWilayaId}
+                    style={!selectedWilayaId ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+                  >
+                    <option value="">
+                      {!selectedWilayaId ? "Sélectionnez d'abord la wilaya" : "Choisissez votre commune"}
+                    </option>
+                    {availableCommunes.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
               <div className="pd-modes">
                 <label className="pd-mode">
@@ -557,6 +612,7 @@ export default function ProductPage({
                       Numéro de téléphone *
                     </label>
                     <input
+                      ref={phoneInputRef}
                       type="tel"
                       className="pd-select"
                       placeholder="Ex: 0555 12 34 56"
@@ -567,12 +623,12 @@ export default function ProductPage({
                   </div>
                   <div>
                     <label className="pd-label" style={{ marginBottom: "4px" }}>
-                      Commune / Adresse de livraison (optionnel)
+                      Adresse exacte / Rue / Cité <span style={{ opacity: 0.65, fontWeight: 400, textTransform: "none" }}>(optionnel)</span>
                     </label>
                     <input
                       type="text"
                       className="pd-select"
-                      placeholder="Ex: Bab Ezzouar, Cité 5 Juillet"
+                      placeholder="Ex: Cité 5 Juillet, Bâtiment B, N° 12"
                       value={customerAddress}
                       onChange={(e) => setCustomerAddress(e.target.value)}
                     />
@@ -610,7 +666,7 @@ export default function ProductPage({
                     <a
                       href={generateWhatsAppUrl(
                         waNumber,
-                        `Bonjour ${store.name} ! 👋\nJe viens de commander "${product.name}" (${formatMoney(total)}).\nClient: ${customerName} - ${customerPhone}.\nMerci de confirmer ma commande !`
+                        `Bonjour ${store.name} ! 👋\nJe viens de commander "${product.name}" (${formatMoney(total)}).\nClient: ${customerName} - ${customerPhone}\nLivraison: ${selectedWilaya?.name || selectedWilayaId}${customerCommune ? ' (' + customerCommune + ')' : ''}\nMerci de confirmer ma commande !`
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
