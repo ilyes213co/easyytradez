@@ -48,6 +48,7 @@ interface OrderDrawerProps {
   order: Order | null;
   onUpdated: (updated: Order) => void;
   storeName?: string;
+  store?: any;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -271,7 +272,14 @@ function StatusStepper({
 
 // ─── Main Drawer ──────────────────────────────────────────────────────────────
 
-export function OrderDrawer({ open, onClose, order, onUpdated, storeName = "EasyTradez Store" }: OrderDrawerProps) {
+export function OrderDrawer({
+  open,
+  onClose,
+  order,
+  onUpdated,
+  storeName = "EasyTradez Store",
+  store,
+}: OrderDrawerProps) {
   const supabase = getSupabaseBrowserClient();
   const [updating, setUpdating] = useState(false);
   const [payUpdating, setPayUpdating] = useState(false);
@@ -470,7 +478,7 @@ export function OrderDrawer({ open, onClose, order, onUpdated, storeName = "Easy
                 </button>
                 <button
                   type="button"
-                  onClick={() => printShippingSlip(order, storeName)}
+                  onClick={() => printShippingSlip(order, storeName, store)}
                   className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/[0.06] hover:bg-white/10 active:scale-95 text-white/90 text-xs font-semibold border border-white/10 transition-all"
                   title="Impression directe instantanée"
                 >
@@ -687,6 +695,7 @@ export function OrderDrawer({ open, onClose, order, onUpdated, storeName = "Easy
         onClose={() => setSlipModalOpen(false)}
         order={order}
         storeName={storeName}
+        store={store}
       />
     </>
   );

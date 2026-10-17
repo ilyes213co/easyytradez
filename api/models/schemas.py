@@ -76,7 +76,9 @@ class StoreUpdate(BaseModel):
     custom_domain: Optional[str] = None
     facebook_pixel_id: Optional[str] = None
     tiktok_pixel_id: Optional[str] = None
+    google_analytics_id: Optional[str] = None
     payment_settings: Optional[dict] = None
+    settings: Optional[dict] = None
 
 class StoreResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -108,6 +110,8 @@ class StoreResponse(BaseModel):
     custom_domain: Optional[str] = None
     facebook_pixel_id: Optional[str] = None
     tiktok_pixel_id: Optional[str] = None
+    google_analytics_id: Optional[str] = None
+    settings: Optional[dict] = Field(default_factory=dict)
     payment_settings: dict = Field(default_factory=dict)
     created_at: datetime
     updated_at: datetime

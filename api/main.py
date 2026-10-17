@@ -51,6 +51,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from plan_guard import PlanLimitException
+
+@app.exception_handler(PlanLimitException)
+async def plan_limit_exception_handler(request: Request, exc: PlanLimitException):
+    logger.warning(f"Plan limit reached: {exc.message} (type={exc.limit_type})")
+    origin = request.headers.get("origin")
+    allowed_origins = get_allowed_origins()
+    matched_origin: str | None = None
+    if origin:
+        if origin in allowed_origins or re.match(CORS_ORIGIN_REGEX, origin):
+            matched_origin = origin
+
+    response = JSONResponse(
+        status_code=403,
+        content={
+            "detail": "PLAN_LIMIT_REACHED",
+            "code": "PLAN_LIMIT_REACHED",
+            "message": exc.message,
+            "limit_type": exc.limit_type,
+            "current": exc.current,
+            "limit": exc.limit,
+        },
+    )
+    if matched_origin:
+        response.headers["Access-Control-Allow-Origin"] = matched_origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global exception: {str(exc)}", exc_info=True)
@@ -104,6 +134,7 @@ app.include_router(seo_router, prefix="/seo", tags=["seo"])
 app.include_router(orders_router, prefix="/orders", tags=["orders"])
 app.include_router(orders_router, prefix="/api/orders", tags=["orders"])
 app.include_router(team_router, prefix="/team", tags=["team"])
+app.include_router(team_router, prefix="/api/team", tags=["team"])
 app.include_router(payment_router, prefix="/payment", tags=["payment"])
 app.include_router(payment_router, prefix="/api/payment", tags=["payment"])
 

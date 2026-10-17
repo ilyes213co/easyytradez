@@ -9,10 +9,12 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   Legend
 } from "recharts";
-import { Layers, Store as StoreIcon, Plus } from "lucide-react";
+import { Layers, Store as StoreIcon, Plus, Lock } from "lucide-react";
 import { analyticsApi } from "@/lib/api";
 import { getOwnedStores } from "@/lib/current-store";
 import type { Store as StoreType } from "@/types/database";
+import { useUserPlan } from "@/lib/use-user-plan";
+import UpgradeModal from "@/components/dashboard/UpgradeModal";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -170,6 +172,8 @@ async function fetchAnalytics(storeId: string, period: Period): Promise<Analytic
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AnalyticsPage() {
+  const userPlan = useUserPlan();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [period, setPeriod] = useState<Period>("7d");
   const searchParams = useSearchParams();
   const requestedStoreId = searchParams.get("store");
@@ -312,19 +316,33 @@ export default function AnalyticsPage() {
 
           {/* Period selector */}
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl p-1">
-            {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  period === p
-                    ? "bg-indigo-600 text-white shadow"
-                    : "text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70"
-                }`}
-              >
-                {PERIOD_LABELS[p]}
-              </button>
-            ))}
+            {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => {
+              const isProPeriod = p === "30d" || p === "3m";
+              const isLocked = isProPeriod && userPlan.isFree;
+
+              return (
+                <button
+                  key={p}
+                  onClick={() => {
+                    if (isLocked) {
+                      setShowUpgradeModal(true);
+                      return;
+                    }
+                    setPeriod(p);
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
+                    period === p
+                      ? "bg-indigo-600 text-white shadow"
+                      : isLocked
+                      ? "text-slate-400 dark:text-white/30 hover:text-amber-500 dark:hover:text-amber-300"
+                      : "text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70"
+                  }`}
+                >
+                  <span>{PERIOD_LABELS[p]}</span>
+                  {isLocked && <Lock className="w-3 h-3 text-amber-500 dark:text-amber-400" />}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -639,6 +657,15 @@ export default function AnalyticsPage() {
           })}
         </div>
       </div>
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Analytiques Détaillées Réservées 📊"
+        description="L'historique des ventes et analyses sur 30 jours et 3 mois est réservé aux forfaits Pro et Business. Passez au plan Pro pour débloquer la vue complète de votre croissance !"
+        currentPlan={userPlan.plan}
+        recommendedPlan="pro"
+      />
     </div>
   );
 }

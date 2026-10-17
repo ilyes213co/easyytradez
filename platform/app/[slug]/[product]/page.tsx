@@ -184,6 +184,10 @@ export default async function ProductDetailsPage({ params }: PageProps) {
     logo_url: storeRaw.logo_url,
     cover_url: storeRaw.cover_url,
     brand_accent: storeRaw.primary_color || storeRaw.brand_accent,
+    facebook_pixel_id: storeRaw.facebook_pixel_id,
+    tiktok_pixel_id: storeRaw.tiktok_pixel_id,
+    google_analytics_id: storeRaw.google_analytics_id,
+    settings: storeRaw.settings,
   };
 
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://easytradez.site";

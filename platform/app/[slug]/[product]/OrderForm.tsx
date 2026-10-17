@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import type { Product, Store } from "@/lib/supabase";
-import { generateWhatsAppUrl } from "@/lib/utils";
+import { generateWhatsAppUrl, normalizeDzPhone, isValidStrictDzPhone } from "@/lib/utils";
+import { trackStorePurchase } from "@/components/analytics/StoreTrackingPixels";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -194,10 +195,30 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
   // ── Validation ──────────────────────────────────────────────────────────
   const validate = (): boolean => {
     const errs: Partial<FormState> = {};
-    if (!form.name.trim())  errs.name  = "Nom requis";
-    if (!form.phone.trim()) errs.phone = "Téléphone requis";
-    else if (!/^\+?[\d\s\-]{7,15}$/.test(form.phone))
+    if (!form.name.trim()) errs.name = "Nom requis";
+
+    const cleanedPhone = normalizeDzPhone(form.phone);
+    const security = (store as any)?.settings?.security || {};
+
+    if (!form.phone.trim()) {
+      errs.phone = "Téléphone requis";
+    } else if (security.strict_dz_phone !== false) {
+      if (!isValidStrictDzPhone(cleanedPhone)) {
+        errs.phone = "10 chiffres requis (commençant par 05, 06 ou 07)";
+      }
+    } else if (!/^\+?[\d\s\-]{7,15}$/.test(form.phone)) {
       errs.phone = "Format invalide";
+    }
+
+    // Contrôle Liste Noire
+    const blacklist = security.blacklist;
+    if (Array.isArray(blacklist) && blacklist.length > 0) {
+      const normalizedBlacklist = new Set(blacklist.map((b: string) => normalizeDzPhone(b)).filter(Boolean));
+      if (normalizedBlacklist.has(cleanedPhone)) {
+        errs.phone = "Ce numéro n'est pas autorisé à commander";
+      }
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -218,6 +239,7 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
       : form.address.trim() || null;
 
     let finalOrderId = "CMD-" + Date.now().toString().slice(-6);
+    const cleanedPhone = normalizeDzPhone(form.phone);
 
     try {
       // 1. Essayer la route Next.js API /api/orders (sécurisée, service role, validation)
@@ -232,23 +254,31 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
           wilaya_id: selectedWilaya ? Number(selectedWilaya) : 16,
           ship_mode: shipMode,
           customer_name: form.name.trim(),
-          customer_phone: form.phone.trim(),
+          customer_phone: cleanedPhone || form.phone.trim(),
           customer_address: fullAddress,
           notes: form.notes.trim() || undefined,
         }),
       }).catch(() => null);
 
+      const data = await res?.json().catch(() => null);
+
       if (res && res.ok) {
-        const data = await res.json().catch(() => null);
         if (data?.order?.id) finalOrderId = data.order.id;
       } else {
+        // Si rejeté par la sécurité (erreur 400 ou 403), afficher le message exact du serveur
+        if (res && (res.status === 400 || res.status === 403)) {
+          setServerError(data?.error || data?.detail || "Numéro ou commande non autorisée");
+          setLoading(false);
+          return;
+        }
+
         // 2. Fallback: insertion directe Supabase sans .select() (car RLS restreint select pour anon)
         const { error } = await supabase
           .from("orders")
           .insert({
             store_id:         store.id,
             customer_name:    form.name.trim(),
-            customer_phone:   form.phone.trim(),
+            customer_phone:   cleanedPhone || form.phone.trim(),
             customer_address: fullAddress,
             notes:            form.notes.trim() || null,
             items: [
@@ -276,14 +306,25 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
           return;
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Order submit error:", err);
-      setServerError("Erreur lors de l'envoi. Veuillez réessayer.");
+      setServerError(err?.message || "Erreur lors de l'envoi. Veuillez réessayer.");
       setLoading(false);
       return;
     }
 
     setLoading(false);
+
+    // Track conversion across configured pixels
+    trackStorePurchase({
+      total,
+      orderId: finalOrderId,
+      productName: product.name,
+      currency: "DZD",
+      facebookPixelId: store.facebook_pixel_id,
+      tiktokPixelId: (store as any).tiktok_pixel_id,
+      googleAnalyticsId: (store as any).google_analytics_id,
+    });
 
     // Build WhatsApp message for optional confirmation link
     const phone = store.whatsapp_phone || store.whatsapp_number || "";

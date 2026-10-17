@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getAdminClient, getAuthUser, verifyStoreOwner } from "@/lib/api-auth";
+import { FREE_THEMES } from "@/lib/plan-limits";
+import { getUserPlan } from "@/lib/plan-limits-server";
 
 const ALLOWED_THEMES = new Set([
   "monochrome", "blossom-lavender", "phantom", "playful-pumpkin", "crimson",
@@ -26,6 +28,27 @@ export async function PATCH(
 
     const body = await req.json();
     const theme = (body.theme || "").trim().toLowerCase();
+
+    if (!ALLOWED_THEMES.has(theme)) {
+      return NextResponse.json(
+        { detail: `Thème '${theme}' invalide.` },
+        { status: 400 }
+      );
+    }
+
+    // Vérification du plan (thèmes premium réservés à Pro/Business)
+    const planLimits = await getUserPlan(user.id, admin);
+    if (!planLimits.canUseAllThemes && !FREE_THEMES.has(theme)) {
+      return NextResponse.json(
+        {
+          detail: "PLAN_LIMIT_REACHED",
+          code: "PLAN_LIMIT_REACHED",
+          message: `Le thème '${theme}' est un thème premium réservé aux forfaits Pro et Business. Passez au forfait Pro pour l'activer.`,
+          limit_type: "theme",
+        },
+        { status: 403 }
+      );
+    }
 
     const { data: updated, error } = await admin
       .from("stores")

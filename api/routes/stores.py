@@ -3,6 +3,12 @@ from pydantic import BaseModel, Field
 from typing import Optional, Literal, Dict, Any
 from dependencies import get_current_user, get_supabase, check_store_owner
 from models.schemas import StoreCreate, StoreUpdate, StoreResponse
+from plan_guard import (
+    check_store_creation_allowed,
+    check_theme_allowed,
+    check_bulk_shipping_allowed,
+    ALL_THEMES,
+)
 import re
 import logging
 import asyncio
@@ -26,6 +32,13 @@ async def create_store(
     supabase=Depends(get_supabase),
 ):
     user_id = user.id
+
+    # ── Vérification des quotas et restrictions du plan utilisateur ─────────
+    check_store_creation_allowed(
+        user_id=user_id,
+        requested_theme=payload.theme,
+        supabase=supabase,
+    )
     async def run_query(executor, timeout_seconds: int = 20):
         try:
             return await asyncio.wait_for(asyncio.to_thread(executor), timeout=timeout_seconds)
@@ -180,6 +193,24 @@ async def update_store(
         if value is not None
     }
 
+    if "custom_domain" in update_data and update_data["custom_domain"]:
+        from plan_guard import get_user_plan, PlanLimitException
+        user_plan = get_user_plan(user.id, supabase)
+        if not user_plan.can_use_custom_domain:
+            raise PlanLimitException(
+                message="La connexion d'un nom de domaine personnalisé (.com, .dz) est réservée aux forfaits Pro et Business.",
+                limit_type="domain",
+            )
+
+    if ("tiktok_pixel_id" in update_data and update_data["tiktok_pixel_id"]) or ("google_analytics_id" in update_data and update_data["google_analytics_id"]):
+        from plan_guard import get_user_plan, PlanLimitException
+        user_plan = get_user_plan(user.id, supabase)
+        if user_plan.plan == "free":
+            raise PlanLimitException(
+                message="Le suivi multi-pixels (TikTok Pixel et Google Analytics) est réservé aux forfaits Pro et Business. Passez à Pro pour débloquer le multi-tracking !",
+                limit_type="pixels",
+            )
+
     if "type" in update_data:
         try:
             existing = (
@@ -227,10 +258,7 @@ async def delete_store(
 class ThemeUpdate(BaseModel):
     theme: str
 
-ALLOWED_THEMES = {
-    'monochrome', 'blossom-lavender', 'phantom', 'playful-pumpkin', 'crimson',
-    'natural', 'energetic', 'tuareg-indigo', 'neo-brutalist', 'luxe-noir'
-}
+ALLOWED_THEMES = ALL_THEMES
 
 @router.patch("/{store_id}/theme")
 async def update_store_theme(
@@ -247,6 +275,9 @@ async def update_store_theme(
             status_code=400,
             detail=f"Thème '{payload.theme}' invalide. Thèmes autorisés: {', '.join(sorted(ALLOWED_THEMES))}"
         )
+
+    # Vérification des droits du plan (thèmes premium réservés à Pro/Business)
+    check_theme_allowed(user_id=user.id, theme=theme, supabase=supabase)
 
     res = supabase.table("stores").update({"theme": theme}).eq("id", store_id).execute()
     if not res.data:
@@ -444,6 +475,8 @@ async def update_store_shipping_rates_bulk(
     - Couche 2 : Protégé par RLS Postgres
     """
     await check_store_owner(store_id, user.id)
+    # Vérification du plan (modification en masse réservée à Pro/Business)
+    check_bulk_shipping_allowed(user_id=user.id, supabase=supabase)
 
     update_fields = {}
     if payload.price_home is not None:

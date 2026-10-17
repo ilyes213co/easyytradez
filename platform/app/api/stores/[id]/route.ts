@@ -49,6 +49,45 @@ export async function PATCH(
     delete body.id;
     delete body.owner_id;
 
+    // Protection plan pour domaine personnalisé
+    if (body.custom_domain && typeof body.custom_domain === "string" && body.custom_domain.trim()) {
+      const { getUserPlan } = await import("@/lib/plan-limits-server");
+      const userPlan = await getUserPlan(user.id, admin);
+      if (!userPlan.canUseCustomDomain) {
+        return NextResponse.json(
+          {
+            detail: "PLAN_LIMIT_REACHED",
+            code: "PLAN_LIMIT_REACHED",
+            message:
+              "La connexion d'un nom de domaine personnalisé (.com, .dz) est réservée aux forfaits Pro et Business. Passez au Pack Pro pour connecter votre propre domaine !",
+            limit_type: "domain",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Protection plan pour multi-pixels (TikTok & Google Analytics)
+    if (
+      (body.tiktok_pixel_id && typeof body.tiktok_pixel_id === "string" && body.tiktok_pixel_id.trim()) ||
+      (body.google_analytics_id && typeof body.google_analytics_id === "string" && body.google_analytics_id.trim())
+    ) {
+      const { getUserPlan } = await import("@/lib/plan-limits-server");
+      const userPlan = await getUserPlan(user.id, admin);
+      if (userPlan.plan === "free") {
+        return NextResponse.json(
+          {
+            detail: "PLAN_LIMIT_REACHED",
+            code: "PLAN_LIMIT_REACHED",
+            message:
+              "Le tracking multi-pixels (TikTok Pixel & Google Analytics) est réservé aux forfaits Pro et Business. Passez au Pack Pro pour débloquer le multi-tracking !",
+            limit_type: "pixels",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // If type is updated, keep seo_metadata in sync
     if (body.type && check.store) {
       const currentMeta = (typeof check.store.seo_metadata === "object" && check.store.seo_metadata !== null)

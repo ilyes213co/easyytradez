@@ -1,4 +1,11 @@
-import { getAdminClient } from "./api-auth";
+export const FREE_THEMES = new Set([
+  "monochrome",
+  "blossom-lavender",
+  "crimson",
+  "natural",
+  "modern",
+  "minimalist",
+]);
 
 export interface PlanLimits {
   plan: "free" | "pro" | "business";
@@ -9,6 +16,8 @@ export interface PlanLimits {
   canUseTeam: boolean; // only business
   canUseCustomDomain: boolean; // pro & business
   canUseAiUnlimited: boolean; // pro & business
+  canUseBulkShipping: boolean; // pro & business
+  canUseAllThemes: boolean; // pro & business
 }
 
 export const PLAN_CONFIGS: Record<string, PlanLimits> = {
@@ -21,6 +30,8 @@ export const PLAN_CONFIGS: Record<string, PlanLimits> = {
     canUseTeam: false,
     canUseCustomDomain: false,
     canUseAiUnlimited: false,
+    canUseBulkShipping: false,
+    canUseAllThemes: false,
   },
   pro: {
     plan: "pro",
@@ -31,6 +42,8 @@ export const PLAN_CONFIGS: Record<string, PlanLimits> = {
     canUseTeam: false,
     canUseCustomDomain: true,
     canUseAiUnlimited: true,
+    canUseBulkShipping: true,
+    canUseAllThemes: true,
   },
   business: {
     plan: "business",
@@ -41,6 +54,8 @@ export const PLAN_CONFIGS: Record<string, PlanLimits> = {
     canUseTeam: true,
     canUseCustomDomain: true,
     canUseAiUnlimited: true,
+    canUseBulkShipping: true,
+    canUseAllThemes: true,
   },
 };
 
@@ -64,20 +79,3 @@ export function getEffectivePlan(
   return found ?? PLAN_CONFIGS.free!;
 }
 
-export async function getUserPlan(
-  userId: string,
-  adminClient = getAdminClient()
-): Promise<PlanLimits> {
-  try {
-    const { data: profile } = await adminClient
-      .from("profiles")
-      .select("plan, plan_expires_at")
-      .eq("id", userId)
-      .single();
-
-    return getEffectivePlan(profile?.plan, profile?.plan_expires_at);
-  } catch (err) {
-    console.warn("getUserPlan fallback to free:", err);
-    return PLAN_CONFIGS.free!;
-  }
-}

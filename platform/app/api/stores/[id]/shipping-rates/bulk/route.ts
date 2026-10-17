@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient, getAuthUser, verifyStoreOwner } from "@/lib/api-auth";
+import { getUserPlan } from "@/lib/plan-limits-server";
 import { RAW_WILAYAS } from "@/lib/wilayas";
 
 export async function PATCH(
@@ -17,6 +18,20 @@ export async function PATCH(
     const check = await verifyStoreOwner(id, user.id, admin);
     if (!check.ok) {
       return NextResponse.json({ detail: check.message }, { status: check.status });
+    }
+
+    // Vérification du plan (mise à jour en masse réservée à Pro/Business)
+    const planLimits = await getUserPlan(user.id, admin);
+    if (!planLimits.canUseBulkShipping) {
+      return NextResponse.json(
+        {
+          detail: "PLAN_LIMIT_REACHED",
+          code: "PLAN_LIMIT_REACHED",
+          message: "La modification en masse des tarifs de livraison (58 wilayas en un clic) est réservée aux forfaits Pro et Business. Vous pouvez configurer chaque wilaya individuellement ou passer au forfait Pro.",
+          limit_type: "shipping_bulk",
+        },
+        { status: 403 }
+      );
     }
 
     const body = await req.json();

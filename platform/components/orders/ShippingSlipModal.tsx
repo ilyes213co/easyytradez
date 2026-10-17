@@ -36,11 +36,22 @@ function formatSlipDate(iso?: string | null): string {
   });
 }
 
+export interface ShippingSlipConfig {
+  sender_name?: string | null;
+  customer_service_phone?: string | null;
+  default_wilaya_id?: number | null;
+  footer_note?: string | null;
+}
+
 /**
  * Builds standalone printable HTML for the shipping slip (Bordereau d'expédition).
  * Clean, high-contrast, ink-efficient, perfectly styled for standard A4 or A6/thermal sticker print.
  */
-export function generateShippingSlipHtml(order: Order, storeName = "EasyTradez Store"): string {
+export function generateShippingSlipHtml(
+  order: Order,
+  storeName = "EasyTradez Store",
+  storeOrConfig?: any
+): string {
   const items = parseItems(order.items);
   const wilaya = extractWilaya(order);
   const delivery = extractDeliveryMethod(order);
@@ -53,6 +64,26 @@ export function generateShippingSlipHtml(order: Order, storeName = "EasyTradez S
   const refCode = order.id ? order.id.slice(-8).toUpperCase() : "000000";
   const dateStr = formatSlipDate(order.created_at);
   const isOffice = delivery.type === "office";
+
+  // Récupération de la configuration du bordereau personnalisée
+  const slipConfig: ShippingSlipConfig =
+    (storeOrConfig && typeof storeOrConfig === "object" && storeOrConfig.settings?.shipping_slip)
+      ? storeOrConfig.settings.shipping_slip
+      : (storeOrConfig as ShippingSlipConfig) || {};
+
+  const effectiveSenderName =
+    slipConfig.sender_name?.trim() ||
+    (storeOrConfig && typeof storeOrConfig === "object" && storeOrConfig.name ? storeOrConfig.name : null) ||
+    storeName ||
+    "EasyTradez Store";
+
+  const effectiveCustomerServicePhone =
+    slipConfig.customer_service_phone?.trim() ||
+    (storeOrConfig && typeof storeOrConfig === "object" ? storeOrConfig.whatsapp_phone || storeOrConfig.phone : null) ||
+    null;
+
+  const effectiveFooterNote =
+    slipConfig.footer_note?.trim() || "Merci pour votre confiance !";
 
   const itemsHtml = items
     .map(
@@ -347,7 +378,7 @@ export function generateShippingSlipHtml(order: Order, storeName = "EasyTradez S
       <div>
         <h1>Bordereau d'Expédition / Livraison</h1>
         <div style="font-size: 11px; opacity: 0.9; margin-top: 2px;">
-          Boutique : <strong>${escapeHtml(storeName)}</strong> · Plateforme EasyTradez
+          Boutique : <strong>${escapeHtml(effectiveSenderName)}</strong> · Plateforme EasyTradez
         </div>
       </div>
       <div style="text-align: right;">
@@ -413,7 +444,14 @@ export function generateShippingSlipHtml(order: Order, storeName = "EasyTradez S
       <div class="info-box" style="display: flex; flex-direction: column; justify-content: space-between;">
         <div>
           <div class="info-box-title">Expéditeur & Envoi</div>
-          <div style="font-size: 13px; font-weight: 700; color: #0f172a;">${escapeHtml(storeName)}</div>
+          <div style="font-size: 13px; font-weight: 700; color: #0f172a;">${escapeHtml(effectiveSenderName)}</div>
+          ${
+            effectiveCustomerServicePhone
+              ? `<div style="font-size: 11px; font-weight: 700; color: #1e3a8a; margin-top: 3px; font-family: monospace;">
+                  📞 Service client : ${escapeHtml(effectiveCustomerServicePhone)}
+                </div>`
+              : ""
+          }
           <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Expédition via transporteur express national</div>
         </div>
 
@@ -480,7 +518,12 @@ export function generateShippingSlipHtml(order: Order, storeName = "EasyTradez S
 
     <!-- Footer mentions -->
     <div class="slip-footer">
-      Document officiel généré pour le transport et la livraison en Algérie · EasyTradez E-Commerce Platform · ${dateStr}
+      <div style="font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 3px;">
+        ✨ ${escapeHtml(effectiveFooterNote)}
+      </div>
+      <div>
+        Document officiel généré pour le transport et la livraison en Algérie · Plateforme EasyTradez · ${dateStr}
+      </div>
     </div>
   </div>
 </body>
@@ -500,8 +543,8 @@ function escapeHtml(str: string): string {
  * Triggers native browser printing for the shipping slip via a dedicated hidden iframe.
  * Avoids popup blockers and prevents dashboard styling bleed.
  */
-export function printShippingSlip(order: Order, storeName = "EasyTradez Store") {
-  const html = generateShippingSlipHtml(order, storeName);
+export function printShippingSlip(order: Order, storeName = "EasyTradez Store", storeOrConfig?: any) {
+  const html = generateShippingSlipHtml(order, storeName, storeOrConfig);
 
   let iframe = document.getElementById("hidden-print-iframe") as HTMLIFrameElement | null;
   if (!iframe) {
@@ -537,6 +580,7 @@ interface ShippingSlipModalProps {
   onClose: () => void;
   order: Order | null;
   storeName?: string;
+  store?: any;
 }
 
 export function ShippingSlipModal({
@@ -544,6 +588,7 @@ export function ShippingSlipModal({
   onClose,
   order,
   storeName = "EasyTradez Store",
+  store,
 }: ShippingSlipModalProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -552,10 +597,10 @@ export function ShippingSlipModal({
     const doc = iframeRef.current.contentWindow?.document || iframeRef.current.contentDocument;
     if (doc) {
       doc.open();
-      doc.write(generateShippingSlipHtml(order, storeName));
+      doc.write(generateShippingSlipHtml(order, storeName, store));
       doc.close();
     }
-  }, [isOpen, order, storeName]);
+  }, [isOpen, order, storeName, store]);
 
   if (!isOpen || !order) return null;
 
@@ -588,7 +633,7 @@ export function ShippingSlipModal({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => printShippingSlip(order, storeName)}
+              onClick={() => printShippingSlip(order, storeName, store)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs sm:text-sm font-bold transition-all shadow-lg shadow-indigo-600/30"
             >
               <Printer className="w-4 h-4" />

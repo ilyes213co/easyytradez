@@ -16,6 +16,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from dependencies import get_supabase, verify_token
+from plan_guard import check_ai_generation_allowed
 from services.ai_generator import AIStoreGenerator
 
 logger = logging.getLogger("storegen.generate")
@@ -282,6 +283,9 @@ async def start_generation(
         raise HTTPException(status_code=404, detail="Boutique introuvable")
     if store_result.data["owner_id"] != user_id:
         raise HTTPException(status_code=403, detail="Accès refusé")
+
+    # ── Vérification des droits IA du plan utilisateur ───────────────────────
+    check_ai_generation_allowed(user_id=user_id, store_id=req.store_id, supabase=supabase)
 
     # Check if already generated (skip if force_regenerate)
     if (

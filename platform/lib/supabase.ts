@@ -8,6 +8,11 @@ export type Database = GeneratedDatabase;
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Store = Database["public"]["Tables"]["stores"]["Row"] & {
   whatsapp_number?: string | null;
+  facebook_pixel_id?: string | null;
+  tiktok_pixel_id?: string | null;
+  google_analytics_id?: string | null;
+  custom_domain?: string | null;
+  settings?: any;
 };
 export type Product = Omit<Database["public"]["Tables"]["products"]["Row"], "images"> & {
   images: string[];

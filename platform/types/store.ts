@@ -54,6 +54,32 @@ export interface Store {
   type?: 'boutique' | 'funnel';
   facebook_pixel_id?: string | null;
   tiktok_pixel_id?: string | null;
+  google_analytics_id?: string | null;
+  custom_domain?: string | null;
+  settings?: {
+    instagram_url?: string | null;
+    facebook_page_url?: string | null;
+    shipping_slip?: {
+      sender_name?: string | null;
+      customer_service_phone?: string | null;
+      default_wilaya_id?: number | null;
+      footer_note?: string | null;
+    } | null;
+    security?: {
+      strict_dz_phone?: boolean;
+      anti_spam_orders?: boolean;
+      blacklist?: string[];
+    } | null;
+    carrier?: {
+      provider?: string | null;
+      api_id?: string | null;
+      api_token?: string | null;
+    } | null;
+    notifications?: {
+      email_alerts?: boolean;
+      telegram_chat_id?: string | null;
+    } | null;
+  } | null;
   content_overrides?: StoreContentOverrides | null;
   published_url?: string | null;
   status?: 'active' | 'suspended' | 'draft';

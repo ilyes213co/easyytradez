@@ -9,9 +9,11 @@ import {
   Trash2, Edit3, Eye, Search, AlertTriangle, 
   CheckCircle2, Globe, Sparkles, LayoutGrid, List as ListIcon,
   ArrowUpRight, Loader2, Copy, Check, ArrowRight,
-  TrendingUp, BarChart2, Layers
+  TrendingUp, BarChart2, Layers, Crown, Lock
 } from "lucide-react";
 import type { Store as StoreType } from "@/types/database";
+import { useUserPlan } from "@/lib/use-user-plan";
+import UpgradeModal from "@/components/dashboard/UpgradeModal";
 
 interface StoreWithMetrics extends StoreType {
   productsCount: number;
@@ -40,11 +42,31 @@ export default function StoresListView({ type }: StoresListViewProps) {
   const [toastMessage, setToastMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const isFunnel = type === "funnel";
+  const userPlan = useUserPlan();
+  const [totalStoresCount, setTotalStoresCount] = useState<number>(0);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  const isStoreLimitReached =
+    userPlan.storesLimit !== -1 && totalStoresCount >= userPlan.storesLimit;
+
+  const handleCreateClick = (e: React.MouseEvent) => {
+    if (isStoreLimitReached) {
+      e.preventDefault();
+      setShowUpgradeModal(true);
+    }
+  };
 
   const loadStores = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
+      // Fetch total store count across all types for quota check
+      const { count: totalCount } = await supabase
+        .from("stores")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", user.id);
+      setTotalStoresCount(totalCount ?? 0);
+
       const { data, error } = await supabase
         .from("stores")
         .select("*")
@@ -260,20 +282,52 @@ export default function StoresListView({ type }: StoresListViewProps) {
               {stores.length} {stores.length > 1 ? (isFunnel ? "funnels" : "boutiques") : (isFunnel ? "funnel" : "boutique")}
             </span>
           </div>
-          <p className="text-sm text-slate-500 dark:text-white/60 mt-1">
-            {isFunnel
-              ? "Pilotez vos pages mono-produit optimisées pour un taux de conversion maximal."
-              : "Gérez vos catalogues de vente multi-produits et votre présence en ligne."}
-          </p>
+          <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
+            <p className="text-sm text-slate-500 dark:text-white/60">
+              {isFunnel
+                ? "Pilotez vos pages mono-produit optimisées pour un taux de conversion maximal."
+                : "Gérez vos catalogues de vente multi-produits et votre présence en ligne."}
+            </p>
+            <span className="text-slate-300 dark:text-white/20">•</span>
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                isStoreLimitReached
+                  ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                  : userPlan.isFree
+                  ? "bg-slate-100 dark:bg-white/[0.08] text-slate-700 dark:text-white/70 border border-slate-200 dark:border-white/10"
+                  : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+              }`}
+            >
+              <Store className="w-3 h-3" />
+              {userPlan.storesLimit === -1 ? (
+                <span>Boutiques : {totalStoresCount} (Illimité)</span>
+              ) : (
+                <span>
+                  Boutiques : {totalStoresCount}/{userPlan.storesLimit}
+                  {isStoreLimitReached ? " (Limite atteinte)" : ""}
+                </span>
+              )}
+            </span>
+          </div>
         </div>
 
         {/* Primary Action */}
         <Link
           href={`/dashboard/${type}/create`}
-          className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-accent to-[#3b55f6] hover:from-accent/95 hover:to-[#2e47e8] shadow-lg shadow-accent/25 hover:shadow-accent/40 active:scale-95 transition-all duration-200 self-start sm:self-auto shrink-0"
+          onClick={handleCreateClick}
+          className={`inline-flex items-center gap-2.5 px-5 py-2.5 rounded-2xl font-bold text-sm text-white shadow-lg active:scale-95 transition-all duration-200 self-start sm:self-auto shrink-0 ${
+            isStoreLimitReached
+              ? "bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-600/95 hover:to-amber-700/95 shadow-amber-600/25 hover:shadow-amber-600/40"
+              : "bg-gradient-to-r from-accent to-[#3b55f6] hover:from-accent/95 hover:to-[#2e47e8] shadow-accent/25 hover:shadow-accent/40"
+          }`}
         >
-          <Plus className="w-4 h-4" />
+          {isStoreLimitReached ? <Lock className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           <span>{isFunnel ? "Créer un funnel" : "Créer une boutique"}</span>
+          {isStoreLimitReached && (
+            <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-black bg-amber-400 text-slate-950">
+              PRO
+            </span>
+          )}
         </Link>
       </div>
 
@@ -475,10 +529,20 @@ export default function StoresListView({ type }: StoresListViewProps) {
           </div>
           <Link
             href={`/dashboard/${type}/create`}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-white bg-accent hover:bg-accent/90 shadow-lg shadow-accent/25 hover:shadow-accent/40 transition-all active:scale-95"
+            onClick={handleCreateClick}
+            className={`inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-white shadow-lg active:scale-95 transition-all ${
+              isStoreLimitReached
+                ? "bg-amber-600 hover:bg-amber-700 shadow-amber-600/25"
+                : "bg-accent hover:bg-accent/90 shadow-accent/25 hover:shadow-accent/40"
+            }`}
           >
-            <Plus className="w-4 h-4" />
+            {isStoreLimitReached ? <Lock className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             <span>{isFunnel ? "Créer mon premier funnel" : "Créer ma première boutique"}</span>
+            {isStoreLimitReached && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-black bg-amber-400 text-slate-950">
+                PRO
+              </span>
+            )}
           </Link>
         </div>
       ) : viewMode === "grid" ? (
@@ -678,24 +742,44 @@ export default function StoresListView({ type }: StoresListViewProps) {
           {/* ── 5. Companion "Create New Project" Card (Vercel Style) ────────── */}
           <Link
             href={`/dashboard/${type}/create`}
-            className="group rounded-3xl border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-accent dark:hover:border-accent/80 p-8 flex flex-col items-center justify-center text-center cursor-pointer min-h-[320px] transition-all duration-300 hover:bg-accent/[0.02] dark:hover:bg-accent/[0.04]"
+            onClick={handleCreateClick}
+            className={`group rounded-3xl border-2 border-dashed p-8 flex flex-col items-center justify-center text-center cursor-pointer min-h-[320px] transition-all duration-300 ${
+              isStoreLimitReached
+                ? "border-amber-500/30 bg-amber-500/[0.02] hover:border-amber-500/60"
+                : "border-slate-200 dark:border-white/10 hover:border-accent dark:hover:border-accent/80 hover:bg-accent/[0.02] dark:hover:bg-accent/[0.04]"
+            }`}
           >
-            <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent group-hover:scale-110 transition-transform mb-4 shadow-sm">
-              <Plus className="w-6 h-6" />
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-4 shadow-sm ${
+              isStoreLimitReached
+                ? "bg-amber-500/10 border border-amber-500/20 text-amber-500"
+                : "bg-accent/10 border border-accent/20 text-accent"
+            }`}>
+              {isStoreLimitReached ? <Crown className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
             </div>
 
-            <h3 className="font-bold text-slate-900 dark:text-white text-base group-hover:text-accent transition-colors">
-              {isFunnel ? "Nouveau Funnel de Vente" : "Nouvelle Boutique en Ligne"}
-            </h3>
+            <div className="flex items-center gap-2 justify-center">
+              <h3 className="font-bold text-slate-900 dark:text-white text-base group-hover:text-accent transition-colors">
+                {isFunnel ? "Nouveau Funnel de Vente" : "Nouvelle Boutique en Ligne"}
+              </h3>
+              {isStoreLimitReached && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                  PRO
+                </span>
+              )}
+            </div>
 
             <p className="text-xs text-slate-500 dark:text-white/50 max-w-xs mt-1.5 leading-relaxed">
-              {isFunnel
+              {isStoreLimitReached
+                ? "Vous avez atteint la limite de boutiques autorisée par votre forfait actuel. Passez à Pro pour débloquer jusqu'à 5 boutiques !"
+                : isFunnel
                 ? "Configurez une nouvelle landing page mono-produit avec formulaire de commande optimisé."
                 : "Lancez un nouveau catalogue complet de produits et commencez à vendre partout en Algérie."}
             </p>
 
-            <span className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-accent group-hover:underline">
-              <span>Commencer maintenant</span>
+            <span className={`mt-5 inline-flex items-center gap-1.5 text-xs font-bold ${
+              isStoreLimitReached ? "text-amber-500 group-hover:underline" : "text-accent group-hover:underline"
+            }`}>
+              <span>{isStoreLimitReached ? "Débloquer avec le Pack Pro" : "Commencer maintenant"}</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </span>
           </Link>
@@ -821,6 +905,14 @@ export default function StoresListView({ type }: StoresListViewProps) {
           </div>
         </div>
       )}
+
+      {/* Upgrade Modal for Stores Limit */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        limitType="stores"
+        currentPlan={userPlan.plan}
+      />
     </div>
   );
 }

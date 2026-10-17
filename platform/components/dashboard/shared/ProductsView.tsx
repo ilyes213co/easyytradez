@@ -7,9 +7,12 @@ import ProductModal, { Product } from "@/components/products/ProductModal";
 import { toast } from "sonner";
 import { 
   Package, Plus, Search, MoreVertical, Edit2, Trash2, 
-  Copy, Star, RefreshCw, AlertTriangle, Layers, Store as StoreIcon
+  Copy, Star, RefreshCw, AlertTriangle, Layers, Store as StoreIcon,
+  Crown, Lock
 } from "lucide-react";
 import type { Store } from "@/lib/supabase";
+import { useUserPlan } from "@/lib/use-user-plan";
+import UpgradeModal from "@/components/dashboard/UpgradeModal";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
@@ -26,7 +29,16 @@ async function apiFetch(path: string, opts?: RequestInit) {
   });
   if (!res.ok) {
     const errorText = await res.text().catch(() => "");
-    throw new Error(`API ${res.status}: ${errorText || res.statusText}`);
+    let errorJson: any = null;
+    try {
+      errorJson = JSON.parse(errorText);
+    } catch {}
+    const err: any = new Error(
+      errorJson?.message || errorJson?.detail || `API ${res.status}: ${res.statusText}`
+    );
+    err.status = res.status;
+    err.data = errorJson;
+    throw err;
   }
   if (res.status === 204) return null;
   const text = await res.text();
@@ -188,6 +200,8 @@ function ProductCard({
 export default function ProductsView({ type }: ProductsViewProps) {
   const supabase = createClient();
   const queryClient = useQueryClient();
+  const userPlan = useUserPlan();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const [stores, setStores] = useState<Store[]>([]);
   const [storeId, setStoreId] = useState<string | null>(null);
@@ -200,6 +214,9 @@ export default function ProductsView({ type }: ProductsViewProps) {
   // Filters
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
+
+  const isProductLimitReached =
+    userPlan.productsLimit !== -1 && products.length >= userPlan.productsLimit;
 
   // Reset store and products immediately when switching between boutique and funnel
   useEffect(() => {
@@ -257,7 +274,19 @@ export default function ProductsView({ type }: ProductsViewProps) {
       toast.success("Produit ajouté avec succès");
       setModalOpen(false);
     },
-    onError: (err: any) => toast.error(err.message ?? "Erreur lors de l'ajout"),
+    onError: (err: any) => {
+      const isPlanLimit =
+        err?.data?.code === "PLAN_LIMIT_REACHED" ||
+        err?.data?.detail === "PLAN_LIMIT_REACHED" ||
+        err?.message?.includes("PLAN_LIMIT_REACHED") ||
+        err?.status === 403;
+
+      if (isPlanLimit) {
+        setShowUpgradeModal(true);
+      } else {
+        toast.error(err.message ?? "Erreur lors de l'ajout");
+      }
+    },
   });
 
   // Update mutation
@@ -295,6 +324,10 @@ export default function ProductsView({ type }: ProductsViewProps) {
 
   const handleDuplicate = async (p: Product) => {
     if (!storeId) return;
+    if (isProductLimitReached) {
+      setShowUpgradeModal(true);
+      return;
+    }
     const { id, created_at, updated_at, ...rest } = p as any;
     try {
       await createMutation.mutateAsync({
@@ -338,6 +371,31 @@ export default function ProductsView({ type }: ProductsViewProps) {
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             Produits {type === "funnel" ? "du Funnel" : "du Catalogue"}
           </h1>
+          <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-white/50">
+              Gérez votre inventaire {activeStore ? `(« ${activeStore.name} »)` : ""}
+            </p>
+            <span className="text-slate-300 dark:text-white/20">•</span>
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                isProductLimitReached
+                  ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                  : userPlan.isFree
+                  ? "bg-slate-100 dark:bg-white/[0.05] text-slate-700 dark:text-white/70 border border-slate-200 dark:border-white/10"
+                  : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+              }`}
+            >
+              <Package className="w-3 h-3" />
+              {userPlan.productsLimit === -1 ? (
+                <span>Produits : {products.length} (Illimité)</span>
+              ) : (
+                <span>
+                  Produits : {products.length}/{userPlan.productsLimit}
+                  {isProductLimitReached ? " (Limite atteinte)" : ""}
+                </span>
+              )}
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
@@ -360,14 +418,31 @@ export default function ProductsView({ type }: ProductsViewProps) {
 
           <button
             onClick={() => {
+              if (isProductLimitReached) {
+                setShowUpgradeModal(true);
+                return;
+              }
               setEditProduct(null);
               setModalOpen(true);
             }}
             disabled={!storeId}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-accent hover:bg-accent/90 shadow-md shadow-accent/25 transition-all disabled:opacity-50"
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all disabled:opacity-50 ${
+              isProductLimitReached
+                ? "bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-500/15 hover:from-amber-500/25 hover:to-orange-500/25 text-amber-500 dark:text-amber-300 border border-amber-500/30 hover:border-amber-400 shadow-sm"
+                : "text-white bg-accent hover:bg-accent/90 shadow-md shadow-accent/25"
+            }`}
           >
-            <Plus className="w-4 h-4" />
-            <span>Nouveau produit</span>
+            {isProductLimitReached ? (
+              <>
+                <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                <span>Débloquer plus de produits (Pro)</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                <span>Nouveau produit</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -517,6 +592,14 @@ export default function ProductsView({ type }: ProductsViewProps) {
           </div>
         </div>
       )}
+
+      {/* Upgrade Modal for Products Limit */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        limitType="products"
+        currentPlan={userPlan.plan}
+      />
     </div>
   );
 }

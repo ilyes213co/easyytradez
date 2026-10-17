@@ -12,6 +12,7 @@ from enum import Enum
 
 import logging
 from dependencies import get_supabase, verify_token
+from plan_guard import check_product_creation_allowed
 
 router = APIRouter()
 logger = logging.getLogger("storegen.products")
@@ -212,6 +213,9 @@ async def create_product(
     await assert_store_owner(payload.store_id, user_id)
 
     supabase = get_supabase()
+
+    # ── Vérification du quota de produits du plan utilisateur ───────────────
+    check_product_creation_allowed(user_id=user_id, store_id=payload.store_id, supabase=supabase)
 
     # Auto-position at end
     try:

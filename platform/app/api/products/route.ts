@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient, getAuthUser, verifyStoreOwner, safeInsert } from "@/lib/api-auth";
-import { getUserPlan } from "@/lib/plan-limits";
+import { getUserPlan } from "@/lib/plan-limits-server";
 
 export async function GET(req: NextRequest) {
   try {
@@ -79,10 +79,13 @@ export async function POST(req: NextRequest) {
 
     const planLimits = await getUserPlan(user.id, admin);
     if (planLimits.productsLimit !== -1 && position >= planLimits.productsLimit) {
+      const msg = `Limite de produits atteinte pour votre forfait ${planLimits.planName} (max: ${planLimits.productsLimit} produits). Passez au forfait Pro ou Business pour ajouter des produits en illimité.`;
       return NextResponse.json(
         {
-          detail: `Limite de produits atteinte pour votre forfait ${planLimits.planName} (max: ${planLimits.productsLimit} produits). Passez au forfait Pro ou Business pour ajouter des produits en illimité.`,
+          detail: "PLAN_LIMIT_REACHED",
           code: "PLAN_LIMIT_REACHED",
+          message: msg,
+          limit_type: "products",
           limit: planLimits.productsLimit,
           current: position,
         },

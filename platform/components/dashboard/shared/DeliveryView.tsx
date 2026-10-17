@@ -15,8 +15,12 @@ import {
   X,
   AlertTriangle,
   RotateCcw,
+  Crown,
+  Lock,
 } from "lucide-react";
 import type { Store } from "@/lib/supabase";
+import { useUserPlan } from "@/lib/use-user-plan";
+import UpgradeModal from "@/components/dashboard/UpgradeModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -72,6 +76,8 @@ export default function DeliveryView({ type }: DeliveryViewProps) {
   const [showBulkConfirmModal, setShowBulkConfirmModal] = useState(false);
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkSuccessMsg, setBulkSuccessMsg] = useState<string | null>(null);
+  const userPlan = useUserPlan();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // ── Load Stores ─────────────────────────────────────────────────────────────
   const loadStores = useCallback(async () => {
@@ -317,11 +323,19 @@ export default function DeliveryView({ type }: DeliveryViewProps) {
       setTimeout(() => setBulkSuccessMsg(null), 4000);
     } catch (err: any) {
       console.error("Erreur bulk update:", err);
-      setGeneralError(
-        err?.response?.data?.detail ||
-          err?.message ||
-          "Échec de l'application globale des tarifs."
-      );
+      const code = err?.response?.data?.code;
+      const detail = err?.response?.data?.detail;
+      const message = err?.response?.data?.message;
+
+      if (code === "PLAN_LIMIT_REACHED" || detail === "PLAN_LIMIT_REACHED") {
+        setShowBulkConfirmModal(false);
+        setShowUpgradeModal(true);
+      } else {
+        setGeneralError(
+          message || (typeof detail === "string" ? detail : err?.message) ||
+            "Échec de l'application globale des tarifs."
+        );
+      }
     } finally {
       setBulkSaving(false);
     }
@@ -422,9 +436,15 @@ export default function DeliveryView({ type }: DeliveryViewProps) {
               <Layers className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                Application globale rapide
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                  Application globale rapide
+                </h3>
+                <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-500 dark:text-amber-300 border border-amber-500/30 uppercase tracking-wider">
+                  <Crown className="w-3 h-3 text-amber-500 dark:text-amber-400" />
+                  PRO
+                </span>
+              </div>
               <p className="text-xs text-slate-500 dark:text-white/50">
                 Définissez un tarif unique pour l&apos;appliquer instantanément aux 58 wilayas.
               </p>
@@ -478,12 +498,31 @@ export default function DeliveryView({ type }: DeliveryViewProps) {
           {/* Button trigger modal */}
           <button
             type="button"
-            onClick={() => setShowBulkConfirmModal(true)}
+            onClick={() => {
+              if (!userPlan.canUseBulkShipping) {
+                setShowUpgradeModal(true);
+                return;
+              }
+              setShowBulkConfirmModal(true);
+            }}
             disabled={!selectedStoreId || loadingRates}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent hover:bg-accent/90 text-white font-bold text-xs shadow-md shadow-accent/20 disabled:opacity-50 transition-all active:scale-95 ml-auto"
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-95 ml-auto ${
+              !userPlan.canUseBulkShipping
+                ? "bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-500/15 hover:from-amber-500/25 hover:to-orange-500/25 text-amber-500 dark:text-amber-300 border border-amber-500/30 hover:border-amber-400 shadow-sm"
+                : "bg-accent hover:bg-accent/90 text-white shadow-md shadow-accent/20 disabled:opacity-50"
+            }`}
           >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Appliquer à toutes les wilayas</span>
+            {!userPlan.canUseBulkShipping ? (
+              <>
+                <Lock className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                <span>Débloquer avec le Plan Pro</span>
+              </>
+            ) : (
+              <>
+                <Layers className="w-3.5 h-3.5" />
+                <span>Appliquer à toutes les wilayas</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -755,6 +794,16 @@ export default function DeliveryView({ type }: DeliveryViewProps) {
           </div>
         </div>
       )}
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Application Globale Réservée 🚀"
+        description="La configuration en masse des tarifs de livraison (58 wilayas en un seul clic) est une fonctionnalité exclusive aux plans Pro et Business. Passez à Pro pour configurer toutes vos livraisons instantanément !"
+        currentPlan={userPlan.plan}
+        recommendedPlan="pro"
+        limitType="shipping"
+      />
     </div>
   );
 }

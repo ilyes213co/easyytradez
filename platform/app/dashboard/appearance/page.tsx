@@ -6,10 +6,13 @@ import { resolveOwnedStore } from "@/lib/current-store";
 import { storesApi } from "@/lib/api";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Palette, Check, ExternalLink, Sparkles, RefreshCw } from "lucide-react";
+import { Palette, Check, ExternalLink, Sparkles, RefreshCw, Crown, Lock } from "lucide-react";
 import Link from "next/link";
 import type { ThemeName } from "@/types/product";
 import type { ThemeScope } from "@/types/store";
+import { FREE_THEMES } from "@/lib/plan-limits";
+import { useUserPlan } from "@/lib/use-user-plan";
+import UpgradeModal from "@/components/dashboard/UpgradeModal";
 
 interface ThemeMeta {
   id: ThemeName;
@@ -199,6 +202,10 @@ export default function AppearancePage() {
     queryFn: () => resolveOwnedStore(),
   });
 
+  const userPlan = useUserPlan();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeThemeName, setUpgradeThemeName] = useState("");
+
   const [activeTheme, setActiveTheme] = useState<ThemeName>("monochrome");
   const [scopeFilter, setScopeFilter] = useState<"recommended" | "all">("recommended");
 
@@ -227,11 +234,27 @@ export default function AppearancePage() {
       toast.success(`Thème « ${THEMES.find((t) => t.id === newTheme)?.name} » appliqué instantanément !`);
     },
     onError: (err: any) => {
-      toast.error(
-        err?.response?.data?.detail || "Erreur lors de la mise à jour du thème"
-      );
+      const code = err?.response?.data?.code;
+      const detail = err?.response?.data?.detail;
+      const message = err?.response?.data?.message;
+      if (code === "PLAN_LIMIT_REACHED" || detail === "PLAN_LIMIT_REACHED") {
+        setShowUpgradeModal(true);
+      } else {
+        toast.error(
+          message || (typeof detail === "string" ? detail : "Erreur lors de la mise à jour du thème")
+        );
+      }
     },
   });
+
+  const handleApplyTheme = (themeId: ThemeName, themeName: string) => {
+    if (!FREE_THEMES.has(themeId) && !userPlan.canUseAllThemes) {
+      setUpgradeThemeName(themeName);
+      setShowUpgradeModal(true);
+      return;
+    }
+    updateMutation.mutate(themeId);
+  };
 
   if (isLoading) {
     return (
@@ -387,6 +410,8 @@ export default function AppearancePage() {
           {displayedThemes.map((theme) => {
             const isSelected = activeTheme === theme.id;
             const isUpdatingThis = updateMutation.isPending && updateMutation.variables === theme.id;
+            const isPremium = !FREE_THEMES.has(theme.id);
+            const isLocked = isPremium && !userPlan.canUseAllThemes;
 
             return (
               <motion.div
@@ -423,6 +448,12 @@ export default function AppearancePage() {
                         >
                           {theme.scope === "funnel" ? "Funnel" : "Boutique"}
                         </span>
+                        {isPremium && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30 uppercase tracking-wider shadow-sm">
+                            <Crown className="w-3 h-3 text-amber-400" />
+                            PRO
+                          </span>
+                        )}
                       </div>
                       <div className="text-lg font-bold tracking-tight">
                         {theme.name}
@@ -502,9 +533,18 @@ export default function AppearancePage() {
                       >
                         <Check className="w-3.5 h-3.5" /> Thème Actuel
                       </button>
+                    ) : isLocked ? (
+                      <button
+                        type="button"
+                        onClick={() => handleApplyTheme(theme.id, theme.name)}
+                        className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-500/15 hover:from-amber-500/25 hover:to-orange-500/25 text-amber-300 border border-amber-500/30 hover:border-amber-400 transition-all flex items-center justify-center gap-2 group shadow-sm shadow-amber-500/10"
+                      >
+                        <Lock className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                        <span>Débloquer avec le Plan Pro</span>
+                      </button>
                     ) : (
                       <button
-                        onClick={() => updateMutation.mutate(theme.id)}
+                        onClick={() => handleApplyTheme(theme.id, theme.name)}
                         disabled={updateMutation.isPending}
                         className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-white/[0.06] hover:bg-indigo-600 text-white/90 hover:text-white border border-white/10 hover:border-indigo-500 transition-all flex items-center justify-center gap-2 group"
                       >
@@ -528,6 +568,20 @@ export default function AppearancePage() {
           })}
         </div>
       </div>
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Thème Premium Réservé 🎨"
+        description={
+          upgradeThemeName
+            ? `Le thème « ${upgradeThemeName} » fait partie de nos thèmes Premium haute conversion. Débloquez tous les thèmes premium de la vitrine avec le plan Pro !`
+            : "Débloquez tous les thèmes Premium haute conversion avec le plan Pro !"
+        }
+        currentPlan={userPlan.plan}
+        recommendedPlan="pro"
+        limitType="theme"
+      />
     </div>
   );
 }

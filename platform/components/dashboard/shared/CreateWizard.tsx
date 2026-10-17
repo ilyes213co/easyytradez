@@ -8,7 +8,7 @@ import {
   Loader2, Sparkles, X,
   RefreshCw, Rocket, Plus, Wand2,
   Layers, Phone, FileText, CheckCircle2,
-  DollarSign, Star
+  DollarSign, Star, Crown, Lock
 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -19,6 +19,8 @@ import { storesApi, uploadApi, deployApi } from "@/lib/api";
 import { STORE_AND_FUNNEL_TEMPLATES, getTemplatesForScope, type TemplateData } from "@/lib/templates/data";
 import type { Store as StoreType, Product } from "@/types/database";
 import type { ProductOption, ProductOptionValue } from "@/types/product";
+import { FREE_THEMES } from "@/lib/plan-limits";
+import { useUserPlan } from "@/lib/use-user-plan";
 import UpgradeModal from "../UpgradeModal";
 
 // ─── Contrast utility for template preview (WCAG AA compliance) ─────────────
@@ -172,13 +174,15 @@ export default function CreateWizard({ type }: CreateWizardProps) {
   const [pendingDeploy, setPendingDeploy] = useState<{ jobId: string; storeId: string } | null>(null);
   const genTimerRef = useRef<number | null>(null);
 
+  const userPlan = useUserPlan();
+
   // Upgrade Modal state
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeInfo, setUpgradeInfo] = useState<{
     title: string;
     description: string;
     recommendedPlan: "pro" | "business";
-    limitType: "stores" | "products" | "team";
+    limitType: "stores" | "products" | "team" | "domain" | "ai" | "theme" | "shipping";
   }>({
     title: "Limite de boutiques atteinte",
     description: "",
@@ -487,19 +491,22 @@ export default function CreateWizard({ type }: CreateWizardProps) {
       router.push(`/dashboard/${type}/${store.id}`);
     } catch (err: any) {
       setIsGenerating(false);
-      const detail = err?.response?.data?.detail;
-      const code = err?.response?.data?.code;
+      const data = err?.response?.data;
+      const detail = data?.detail;
+      const code = data?.code;
+      const message = data?.message || (typeof detail === "string" ? detail : "");
+      const limitType = data?.limit_type;
 
-      if (code === "PLAN_STORE_LIMIT_REACHED") {
+      if (code === "PLAN_LIMIT_REACHED" || code === "PLAN_STORE_LIMIT_REACHED" || detail === "PLAN_LIMIT_REACHED") {
         setUpgradeInfo({
-          title: "Limite de boutiques atteinte 🚀",
-          description: detail || "Vous avez atteint la limite de boutiques autorisées par votre pack actuel.",
+          title: limitType === "theme" ? "Thème Premium Réservé 🎨" : "Limite de boutiques atteinte 🚀",
+          description: message || "Vous avez atteint la limite autorisée par votre forfait actuel.",
           recommendedPlan: "pro",
-          limitType: "stores",
+          limitType: (limitType as any) || "stores",
         });
         setShowUpgradeModal(true);
       } else {
-        toast.error(typeof detail === "string" ? detail : err?.message ?? "Une erreur est survenue");
+        toast.error(typeof detail === "string" ? detail : (message || err?.message || "Une erreur est survenue"));
       }
     }
   };
@@ -668,6 +675,15 @@ export default function CreateWizard({ type }: CreateWizardProps) {
                 data={data}
                 setData={setData}
                 type={type}
+                onRequireUpgrade={(themeName: string) => {
+                  setUpgradeInfo({
+                    title: "Template Premium Réservé 🎨",
+                    description: `Le template « ${themeName} » fait partie de notre catalogue Premium haute conversion. Débloquez tous les templates avec le plan Pro !`,
+                    recommendedPlan: "pro",
+                    limitType: "theme",
+                  });
+                  setShowUpgradeModal(true);
+                }}
               />
             )}
 
@@ -947,12 +963,15 @@ function Step2TemplatesAndFunnel({
   data,
   setData,
   type,
+  onRequireUpgrade,
 }: {
   data: WizardState;
   setData: any;
   type: "boutique" | "funnel";
+  onRequireUpgrade?: (themeName: string) => void;
 }) {
   const isFunnel = type === "funnel";
+  const userPlan = useUserPlan();
   const availableTemplates = useMemo(() => {
     return getTemplatesForScope(isFunnel ? "funnel" : "boutique");
   }, [isFunnel]);
@@ -988,10 +1007,17 @@ function Step2TemplatesAndFunnel({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left">
             {availableTemplates.map((tpl: TemplateData) => {
             const isSelected = data.theme === tpl.id;
+            const isPremium = !FREE_THEMES.has(tpl.id);
+            const isLocked = isPremium && !userPlan.canUseAllThemes;
+
             return (
               <div
                 key={tpl.id}
                 onClick={() => {
+                  if (isLocked) {
+                    onRequireUpgrade?.(tpl.name);
+                    return;
+                  }
                   setData((p: any) => ({
                     ...p,
                     theme: tpl.id,
@@ -1007,26 +1033,36 @@ function Step2TemplatesAndFunnel({
               >
                 {/* Top Badge & Indicator */}
                 <div className="flex items-center justify-between gap-2 mb-3">
-                  <span
-                    className="text-[10px] font-bold px-2.5 py-1 rounded-md"
-                    style={{
-                      background: tpl.colors.accentSoft,
-                      color: tpl.colors.text === "#000000" ? "#000" : tpl.colors.accent,
-                      border: `1px solid ${tpl.colors.border}`,
-                    }}
-                  >
-                    {tpl.badge}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span
+                      className="text-[10px] font-bold px-2.5 py-1 rounded-md"
+                      style={{
+                        background: tpl.colors.accentSoft,
+                        color: tpl.colors.text === "#000000" ? "#000" : tpl.colors.accent,
+                        border: `1px solid ${tpl.colors.border}`,
+                      }}
+                    >
+                      {tpl.badge}
+                    </span>
+                    {isPremium && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-500 dark:text-amber-300 border border-amber-500/30 uppercase tracking-wider">
+                        <Crown className="w-3 h-3 text-amber-500 dark:text-amber-400" />
+                        PRO
+                      </span>
+                    )}
+                  </div>
 
                   <div
                     className={cn(
                       "w-5 h-5 rounded-full flex items-center justify-center transition-all",
                       isSelected
                         ? "bg-accent text-white shadow-sm shadow-accent/60"
+                        : isLocked
+                        ? "border border-amber-500/40 text-amber-500"
                         : "border border-slate-300 dark:border-white/20 text-transparent"
                     )}
                   >
-                    <Check className="w-3 h-3" />
+                    {isLocked ? <Lock className="w-2.5 h-2.5" /> : <Check className="w-3 h-3" />}
                   </div>
                 </div>
 

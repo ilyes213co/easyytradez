@@ -1,12 +1,75 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from typing import Optional, List, Any, Dict
 from pydantic import BaseModel, Field, field_validator
 import re
-from dependencies import get_supabase, verify_token, check_store_owner
+import os
+import json
 import logging
+import urllib.request
+from datetime import datetime, timedelta, timezone
+from dependencies import get_supabase, verify_token, check_store_owner
 
 router = APIRouter()
 logger = logging.getLogger("storegen.orders")
+
+# ─── Algérie Phone & Sécurité Helpers ──────────────────────────────────────────
+
+def normalize_dz_phone(raw_phone: str) -> str:
+    """Nettoie et normalise un numéro algérien au format standard 10 chiffres (ex: 0555123456)."""
+    digits = re.sub(r"\D", "", str(raw_phone or ""))
+    if digits.startswith("00213"):
+        digits = digits[5:]
+    elif digits.startswith("213"):
+        digits = digits[3:]
+    if len(digits) == 9 and digits[0] in ("5", "6", "7"):
+        digits = "0" + digits
+    return digits
+
+
+def is_valid_strict_dz_phone(cleaned_phone: str) -> bool:
+    """Valide qu'un numéro DZ comporte exactement 10 chiffres et commence par 05, 06 ou 07."""
+    return bool(re.match(r"^0[567]\d{8}$", cleaned_phone))
+
+
+def send_telegram_order_notification(bot_token: str, chat_id: str, order_data: dict, store_name: str):
+    """Envoie un récapitulatif de commande formaté sur Telegram sans ralentir la requête."""
+    try:
+        items_list = order_data.get("items") or []
+        items_lines = []
+        for it in items_list:
+            name = it.get("name") or "Article"
+            q = it.get("quantity") or 1
+            price = it.get("price") or 0
+            items_lines.append(f"  • {name} × {q} ({price} DZD)")
+        items_str = "\n".join(items_lines) if items_lines else "  • 1x Commande directe"
+
+        ref = str(order_data.get("id", ""))[-6:].upper()
+        text = (
+            f"🛍️ <b>Nouvelle commande reçue !</b>\n\n"
+            f"🏪 <b>Boutique :</b> {store_name}\n"
+            f"🔖 <b>Réf :</b> #{ref}\n\n"
+            f"📦 <b>Articles :</b>\n{items_str}\n\n"
+            f"👤 <b>Client :</b> {order_data.get('customer_name')}\n"
+            f"📞 <b>Téléphone :</b> <code>{order_data.get('customer_phone')}</code>\n"
+            f"📍 <b>Adresse / Wilaya :</b> {order_data.get('customer_address')}\n"
+            f"💰 <b>Total C.O.D :</b> <b>{order_data.get('total_amount')} DZD</b>\n"
+        )
+        if order_data.get("notes"):
+            text += f"📝 <b>Note :</b> {order_data.get('notes')}\n"
+
+        req = urllib.request.Request(
+            f"https://api.telegram.org/bot{bot_token}/sendMessage",
+            data=json.dumps({
+                "chat_id": chat_id,
+                "text": text,
+                "parse_mode": "HTML"
+            }).encode("utf-8"),
+            headers={"Content-Type": "application/json"}
+        )
+        urllib.request.urlopen(req, timeout=5)
+        logger.info(f"Notification Telegram envoyée avec succès au chat {chat_id}")
+    except Exception as e:
+        logger.warning(f"Échec notification Telegram (non-bloquant): {e}")
 
 # ─── Pydantic Models ──────────────────────────────────────────────────────────
 
@@ -79,7 +142,11 @@ async def list_wilayas(supabase = Depends(get_supabase)):
 
 @router.post("")
 @router.post("/")
-async def create_order(req: CreateOrderRequest, supabase = Depends(get_supabase)):
+async def create_order(
+    req: CreateOrderRequest,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    supabase = Depends(get_supabase)
+):
     """Enregistre une commande produit direct ou multi-articles avec calcul COD."""
     store_id = req.store_id
     product = None
@@ -121,20 +188,70 @@ async def create_order(req: CreateOrderRequest, supabase = Depends(get_supabase)
             if not req.items:
                 items = [item_entry]
 
-    # 3. Validation stricte du store_id (suppression formelle du fallback limit(1) sur boutique aléatoire)
+    # 3. Validation stricte du store_id
     if not store_id or str(store_id).strip().lower() in ("demo", "null", "undefined") or str(store_id).startswith("{{"):
         raise HTTPException(
             status_code=400,
             detail="Identifiant de boutique (store_id) manquant ou invalide pour cette commande"
         )
 
-    # Vérification que la boutique existe et n'est pas suspendue
-    store_check = supabase.table("stores").select("id, status").eq("id", store_id).execute()
+    # Vérification que la boutique existe et récupération des settings de sécurité
+    store_check = supabase.table("stores").select("id, name, status, settings").eq("id", store_id).execute()
     if not store_check.data:
         raise HTTPException(status_code=404, detail="Boutique introuvable pour cette commande")
     
-    if store_check.data[0].get("status") == "suspended":
+    store_record = store_check.data[0]
+    if store_record.get("status") == "suspended":
         raise HTTPException(status_code=403, detail="Cette boutique est actuellement suspendue")
+
+    store_settings = store_record.get("settings") or {}
+    security = store_settings.get("security") or {}
+
+    # ─── Sécurité COD & Anti-Fake Orders (Spécial Algérie) ───────────────────
+    clean_dz_phone = normalize_dz_phone(req.customer_phone)
+
+    # A. Validation stricte numéro DZ (10 chiffres commençant par 05, 06 ou 07)
+    if security.get("strict_dz_phone", True):
+        if not is_valid_strict_dz_phone(clean_dz_phone):
+            raise HTTPException(
+                status_code=400,
+                detail="Numéro de téléphone algérien invalide. Il doit comporter 10 chiffres et commencer obligatoirement par 05, 06 ou 07."
+            )
+
+    # B. Vérification Liste Noire (Blacklist)
+    blacklist = security.get("blacklist") or []
+    if blacklist:
+        normalized_blacklist = {normalize_dz_phone(b) for b in blacklist if b}
+        if clean_dz_phone in normalized_blacklist:
+            raise HTTPException(
+                status_code=400,
+                detail="Ce numéro de téléphone n'est pas autorisé à passer commande sur cette boutique."
+            )
+
+    # C. Anti-Spam commandes (limite à 2 commandes sur 24h par numéro)
+    if security.get("anti_spam_orders"):
+        cutoff_24h = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+        try:
+            recent_orders = (
+                supabase.table("orders")
+                .select("id, customer_phone")
+                .eq("store_id", store_id)
+                .gte("created_at", cutoff_24h)
+                .execute()
+            )
+            matching = [
+                o for o in (recent_orders.data or [])
+                if normalize_dz_phone(o.get("customer_phone") or "") == clean_dz_phone
+            ]
+            if len(matching) >= 2:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Limite de commandes atteinte pour ce numéro dans les dernières 24h. Veuillez patienter ou contacter le service client."
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning(f"Vérification anti-spam non bloquante échouée: {e}")
 
     # 4. Calcul du montant total
     if req.total_amount is not None and req.total_amount > 0:
@@ -168,7 +285,7 @@ async def create_order(req: CreateOrderRequest, supabase = Depends(get_supabase)
     payload = {
         "store_id": store_id,
         "customer_name": req.customer_name.strip(),
-        "customer_phone": req.customer_phone.strip(),
+        "customer_phone": clean_dz_phone or req.customer_phone.strip(),
         "customer_email": req.customer_email,
         "customer_address": full_address,
         "items": items,
@@ -207,6 +324,19 @@ async def create_order(req: CreateOrderRequest, supabase = Depends(get_supabase)
                     }).eq("id", str(prod_id)).execute()
         except Exception as e:
             logger.warning(f"Déduction de stock non bloquante: {e}")
+
+        # ─── Alerte Telegram instantanée (BackgroundTasks) ────────────────────
+        notifications = store_settings.get("notifications") or {}
+        telegram_chat_id = (notifications.get("telegram_chat_id") or "").strip()
+        bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+        if telegram_chat_id and bot_token and background_tasks:
+            background_tasks.add_task(
+                send_telegram_order_notification,
+                bot_token,
+                telegram_chat_id,
+                created_order,
+                store_record.get("name") or "Boutique"
+            )
 
         return {
             "message": "Commande enregistrée avec succès",

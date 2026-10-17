@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { DEFAULT_WILAYAS } from "@/lib/wilayas";
+import { normalizeDzPhone, isValidStrictDzPhone } from "@/lib/utils";
 
 function getSupabaseAdmin() {
   return createClient(
@@ -48,14 +49,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const cleanPhone = String(customer_phone || "").replace(/\D/g, "");
-    if (cleanPhone.length < 9) {
-      return NextResponse.json(
-        { error: "Numéro de téléphone invalide (au moins 9 chiffres requis)" },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
     const supabase = getSupabaseAdmin();
 
     // 2. Résolution du produit si product_id fourni
@@ -93,6 +86,89 @@ export async function POST(req: NextRequest) {
         { error: "Identifiant de boutique (store_id) manquant pour cette commande" },
         { status: 400, headers: corsHeaders }
       );
+    }
+
+    // Récupération de la boutique et de ses paramètres de sécurité
+    const { data: storeData } = await supabase
+      .from("stores")
+      .select("id, name, status, settings")
+      .eq("id", store_id)
+      .maybeSingle();
+
+    if (!storeData) {
+      return NextResponse.json(
+        { error: "Boutique introuvable pour cette commande" },
+        { status: 404, headers: corsHeaders }
+      );
+    }
+
+    if (storeData.status === "suspended") {
+      return NextResponse.json(
+        { error: "Cette boutique est actuellement suspendue" },
+        { status: 403, headers: corsHeaders }
+      );
+    }
+
+    const storeSettings = (storeData.settings as any) || {};
+    const security = storeSettings.security || {};
+
+    // ─── Sécurité COD & Anti-Fake Orders (Spécial Algérie) ───────────────────
+    const cleanPhone = normalizeDzPhone(customer_phone);
+
+    // A. Validation stricte numéro DZ (10 chiffres commençant par 05, 06 ou 07)
+    if (security.strict_dz_phone !== false) {
+      if (!isValidStrictDzPhone(cleanPhone)) {
+        return NextResponse.json(
+          {
+            error:
+              "Numéro de téléphone algérien invalide. Il doit comporter 10 chiffres et commencer obligatoirement par 05, 06 ou 07.",
+          },
+          { status: 400, headers: corsHeaders }
+        );
+      }
+    } else if (cleanPhone.length < 9) {
+      return NextResponse.json(
+        { error: "Numéro de téléphone invalide (au moins 9 chiffres requis)" },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // B. Vérification Liste Noire (Blacklist)
+    const blacklist: string[] = Array.isArray(security.blacklist) ? security.blacklist : [];
+    if (blacklist.length > 0) {
+      const normalizedBlacklist = new Set(blacklist.map((b) => normalizeDzPhone(b)).filter(Boolean));
+      if (normalizedBlacklist.has(cleanPhone)) {
+        return NextResponse.json(
+          {
+            error:
+              "Ce numéro de téléphone n'est pas autorisé à passer commande sur cette boutique.",
+          },
+          { status: 400, headers: corsHeaders }
+        );
+      }
+    }
+
+    // C. Anti-Spam commandes (limite à 2 commandes sur 24h par numéro)
+    if (security.anti_spam_orders) {
+      const cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: recentOrders } = await supabase
+        .from("orders")
+        .select("id, customer_phone")
+        .eq("store_id", store_id)
+        .gte("created_at", cutoff24h);
+
+      const matching = (recentOrders || []).filter(
+        (o: any) => normalizeDzPhone(o.customer_phone) === cleanPhone
+      );
+      if (matching.length >= 2) {
+        return NextResponse.json(
+          {
+            error:
+              "Limite de commandes atteinte pour ce numéro dans les dernières 24h. Veuillez patienter ou contacter le service client.",
+          },
+          { status: 400, headers: corsHeaders }
+        );
+      }
     }
 
     // 4. Calcul des frais de livraison via Wilaya
@@ -187,6 +263,54 @@ export async function POST(req: NextRequest) {
       }
     } catch (e) {
       console.warn("Déduction stock non bloquante:", e);
+    }
+
+    // 9. Alerte Telegram instantanée (non-bloquante)
+    try {
+      const telegramChatId = storeSettings?.notifications?.telegram_chat_id?.trim();
+      const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim();
+      if (telegramChatId && botToken) {
+        const itemsList = Array.isArray(items) ? items : [];
+        const itemsStr =
+          itemsList
+            .map(
+              (it: any) =>
+                `  • ${it.name || "Article"} × ${it.quantity || 1} (${Number(it.price || 0).toLocaleString("fr-DZ")} DZD)`
+            )
+            .join("\n") || "  • 1x Commande directe";
+        const ref = String(createdOrder.id || "").slice(-6).toUpperCase();
+        const text = [
+          `🛍️ <b>Nouvelle commande reçue !</b>`,
+          ``,
+          `🏪 <b>Boutique :</b> ${storeData.name || "Boutique"}`,
+          `🔖 <b>Réf :</b> #${ref}`,
+          ``,
+          `📦 <b>Articles :</b>\n${itemsStr}`,
+          ``,
+          `👤 <b>Client :</b> ${createdOrder.customer_name}`,
+          `📞 <b>Téléphone :</b> <code>${createdOrder.customer_phone}</code>`,
+          `📍 <b>Adresse / Wilaya :</b> ${createdOrder.customer_address || "Non spécifiée"}`,
+          `💰 <b>Total C.O.D :</b> <b>${Number(totalAmount).toLocaleString("fr-DZ")} DZD</b>`,
+          cleanCustomerNote ? `📝 <b>Note :</b> ${cleanCustomerNote}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n");
+
+        // Envoi asynchrone fire-and-forget sans ralentir le retour HTTP
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: telegramChatId,
+            text,
+            parse_mode: "HTML",
+          }),
+        }).catch((err) => {
+          console.warn("Échec alerte Telegram (non bloquant):", err?.message || err);
+        });
+      }
+    } catch (e) {
+      console.warn("Erreur préparation alerte Telegram:", e);
     }
 
     return NextResponse.json(

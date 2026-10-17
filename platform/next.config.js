@@ -106,6 +106,14 @@ const nextConfig = {
         source: "/analytics/:path*",
         destination: "/api/analytics/:path*",
       },
+      {
+        source: "/team",
+        destination: "/api/team",
+      },
+      {
+        source: "/team/:path*",
+        destination: "/api/team/:path*",
+      },
     ];
   },
 };

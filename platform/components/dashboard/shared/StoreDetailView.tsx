@@ -301,7 +301,7 @@ export default function StoreDetailView({ type, storeId: propStoreId }: StoreDet
           color="bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
         />
         <ActionCard
-          href={`/dashboard/settings`}
+          href={`/dashboard/settings?store=${store.id}`}
           icon={Settings}
           title="Paramètres"
           desc="Pixel Facebook, TikTok, domaine personnalisé et coordonnées"

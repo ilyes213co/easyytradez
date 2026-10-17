@@ -19,7 +19,7 @@ interface UpgradeModalProps {
   description?: string;
   currentPlan?: string;
   recommendedPlan?: "pro" | "business";
-  limitType?: "stores" | "products" | "team" | "domain" | "ai";
+  limitType?: "stores" | "products" | "team" | "domain" | "ai" | "theme" | "shipping" | "pixels" | "carrier";
 }
 
 export default function UpgradeModal({
@@ -38,8 +38,18 @@ export default function UpgradeModal({
       ? "Vous avez atteint la limite de boutiques autorisée par votre plan actuel. Débloquez jusqu'à 5 boutiques avec le Pack Pro !"
       : limitType === "products"
       ? "Vous avez atteint la limite de 10 produits pour le plan Gratuit. Débloquez des produits illimités avec le Pack Pro !"
+      : limitType === "theme"
+      ? "Les thèmes premium haute conversion sont réservés aux marchands Pro et Business. Passez à Pro pour débloquer toute la collection !"
+      : limitType === "shipping"
+      ? "La configuration en masse des tarifs de livraison (58 wilayas en 1 clic) est réservée aux forfaits Pro et Business."
       : limitType === "team"
       ? "La gestion des accès et membres d'équipe est réservée aux marchands du Pack Business."
+      : limitType === "domain"
+      ? "La connexion d'un nom de domaine personnalisé (.com, .dz) est réservée aux forfaits Pro et Business."
+      : limitType === "pixels"
+      ? "Le multi-tracking publicitaire (TikTok Pixel & Google Analytics) est réservé aux forfaits Pro et Business. Débloquez tous vos pixels avec le Pack Pro !"
+      : limitType === "carrier"
+      ? "L'intégration directe avec les transporteurs algériens (Yalidine, ZR Express, Maystro) est réservée aux forfaits Pro et Business."
       : "Cette fonctionnalité avancée est disponible sur nos plans supérieurs.";
 
   const isBusinessTarget = recommendedPlan === "business";

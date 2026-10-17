@@ -765,6 +765,7 @@ export default function OrdersView({ type }: OrdersViewProps) {
         onClose={() => setDrawerOpen(false)}
         order={selectedOrder}
         storeName={stores.find((s) => s.id === selectedOrder?.store_id)?.name}
+        store={stores.find((s) => s.id === selectedOrder?.store_id)}
         onUpdated={(updated) => {
           setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
           setSelectedOrder(updated);
@@ -777,6 +778,7 @@ export default function OrdersView({ type }: OrdersViewProps) {
         onClose={() => setSlipOrder(null)}
         order={slipOrder}
         storeName={stores.find((s) => s.id === slipOrder?.store_id)?.name}
+        store={stores.find((s) => s.id === slipOrder?.store_id)}
       />
     </div>
   );

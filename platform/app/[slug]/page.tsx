@@ -107,6 +107,9 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
       city: store.city,
       type: (store as any).type,
       facebook_pixel_id: (store as any).facebook_pixel_id,
+      tiktok_pixel_id: (store as any).tiktok_pixel_id,
+      google_analytics_id: (store as any).google_analytics_id,
+      settings: (store as any).settings,
       content_overrides: (store as any).content_overrides || {},
     };
 

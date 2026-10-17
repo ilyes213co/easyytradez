@@ -6,7 +6,8 @@ import Script from "next/script";
 import type { Product, Store, Wilaya, ThemeId, CreateOrderPayload } from "@/types/product";
 import { DEFAULT_WILAYAS, resolveImageUrl } from "@/components/ProductPage";
 import { Editable, EditableProvider } from "@/components/editor/Editable";
-import { generateWhatsAppUrl } from "@/lib/utils";
+import { generateWhatsAppUrl, normalizeDzPhone, isValidStrictDzPhone } from "@/lib/utils";
+import StoreTrackingPixels, { trackStorePurchase } from "@/components/analytics/StoreTrackingPixels";
 
 function formatMoney(amount: number): string {
   return new Intl.NumberFormat("fr-DZ").format(Math.round(amount)) + " DA";
@@ -148,11 +149,37 @@ export default function FunnelPage({
       return;
     }
 
-    if (!customerPhone.trim() || customerPhone.trim().length < 9) {
+    if (!customerPhone.trim()) {
+      orderFormRef.current?.scrollIntoView({ behavior: "smooth" });
+      phoneInputRef.current?.focus();
+      showToast("Veuillez saisir votre numéro de téléphone.");
+      return;
+    }
+
+    const cleanedPhone = normalizeDzPhone(customerPhone);
+    const security = (store as any)?.settings?.security || {};
+
+    if (security.strict_dz_phone !== false) {
+      if (!isValidStrictDzPhone(cleanedPhone)) {
+        orderFormRef.current?.scrollIntoView({ behavior: "smooth" });
+        phoneInputRef.current?.focus();
+        showToast("Numéro algérien invalide (10 chiffres commençant par 05, 06 ou 07).");
+        return;
+      }
+    } else if (cleanedPhone.length < 9) {
       orderFormRef.current?.scrollIntoView({ behavior: "smooth" });
       phoneInputRef.current?.focus();
       showToast("Veuillez saisir un numéro de téléphone valide.");
       return;
+    }
+
+    const blacklist = security.blacklist;
+    if (Array.isArray(blacklist) && blacklist.length > 0) {
+      const normalizedB = new Set(blacklist.map((b: string) => normalizeDzPhone(b)).filter(Boolean));
+      if (normalizedB.has(cleanedPhone)) {
+        showToast("Ce numéro de téléphone n'est pas autorisé à passer commande.");
+        return;
+      }
     }
 
     submitOrder();
@@ -167,6 +194,7 @@ export default function FunnelPage({
     });
 
     const effectiveStoreId = store?.id || product.store_id;
+    const cleanedPhone = normalizeDzPhone(customerPhone);
 
     const payload: CreateOrderPayload = {
       product_id: product.id,
@@ -175,7 +203,7 @@ export default function FunnelPage({
       wilaya_id: Number(selectedWilayaId),
       ship_mode: shipMode,
       customer_name: customerName.trim(),
-      customer_phone: customerPhone.trim(),
+      customer_phone: cleanedPhone || customerPhone.trim(),
       customer_address: customerAddress.trim() || undefined,
       store_id: effectiveStoreId,
     };
@@ -188,7 +216,16 @@ export default function FunnelPage({
         body: JSON.stringify(payload),
       }).catch(() => null);
 
-      // 2. Si échoué ou non disponible, fallback vers l'API backend
+      let resData = await res?.json().catch(() => null);
+
+      // Si erreur 400 ou 403 (ex: blacklist, anti-spam, format), ne pas masquer l'erreur
+      if (res && (res.status === 400 || res.status === 403)) {
+        showToast(resData?.error || resData?.detail || "Numéro ou commande non autorisé(e)");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. Si route locale échouée (ex: 404/500), fallback vers l'API backend
       if (!res || !res.ok) {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
         res = await fetch(`${apiUrl}/api/orders`, {
@@ -197,28 +234,37 @@ export default function FunnelPage({
           body: JSON.stringify(payload),
         }).catch(() => null);
 
-        if (!res || !res.ok) {
-          const fallbackRes = await fetch(`${apiUrl}/orders`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          }).catch(() => null);
+        resData = await res?.json().catch(() => null);
 
-          if (!fallbackRes || !fallbackRes.ok) {
-            throw new Error("Échec de confirmation de commande");
-          }
+        if (res && (res.status === 400 || res.status === 403)) {
+          showToast(resData?.error || resData?.detail || "Commande refusée");
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (!res || !res.ok) {
+          throw new Error(resData?.error || resData?.detail || "Échec de confirmation de commande");
         }
       }
 
+      const finalOrderId = resData?.order_id || resData?.order?.id || "CMD-" + Date.now().toString().slice(-6);
+
       setOrderDone(true);
-      trackEvent("Purchase", {
-        value: total,
+
+      // Déclenchement de la conversion sur tous les pixels configurés (Meta, TikTok, Google Analytics)
+      trackStorePurchase({
+        total,
+        orderId: finalOrderId,
+        productName: product.name,
         currency: "DZD",
-        content_name: product.name,
+        facebookPixelId: pixelId,
+        tiktokPixelId: (store as any).tiktok_pixel_id,
+        googleAnalyticsId: (store as any).google_analytics_id,
       });
+
       showToast("Commande confirmée ! Vous recevrez un appel pour valider la livraison.");
-    } catch {
-      showToast("Erreur lors de l'envoi. Veuillez réessayer ou vérifier votre connexion.");
+    } catch (err: any) {
+      showToast(err?.message || "Erreur lors de l'envoi. Veuillez réessayer ou vérifier votre connexion.");
     } finally {
       setIsSubmitting(false);
     }
@@ -254,23 +300,12 @@ export default function FunnelPage({
           ...inlineBrandingStyles,
         }}
       >
-        {/* ── Injection dynamique du Pixel si renseigné ── */}
-        {pixelId && (
-          <Script id="facebook-pixel" strategy="afterInteractive">
-            {`
-              !function(f,b,e,v,n,t,s)
-              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-              n.queue=[];t=b.createElement(e);t.async=!0;
-              t.src=v;s=b.getElementsByTagName(e)[0];
-              s.parentNode.insertBefore(t,s)}(window, document,'script',
-              'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '${pixelId}');
-              fbq('track', 'PageView');
-            `}
-          </Script>
-        )}
+        {/* ── Tracking Pixels (Meta, TikTok, Google Analytics) ── */}
+        <StoreTrackingPixels
+          facebookPixelId={pixelId}
+          tiktokPixelId={(store as any).tiktok_pixel_id}
+          googleAnalyticsId={(store as any).google_analytics_id}
+        />
 
         {/* ── ANNOUNCEMENT BAR (éditable en place) ── */}
         {(store.slogan || isEditable) && (

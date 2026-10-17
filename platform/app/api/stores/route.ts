@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient, getAuthUser, getUniqueStoreSlug, safeInsert } from "@/lib/api-auth";
-import { getUserPlan } from "@/lib/plan-limits";
+import { FREE_THEMES } from "@/lib/plan-limits";
+import { getUserPlan } from "@/lib/plan-limits-server";
 
 export async function GET(req: NextRequest) {
   try {
@@ -74,16 +75,35 @@ export async function POST(req: NextRequest) {
         .eq("owner_id", user.id);
 
       if ((storeCount ?? 0) >= planLimits.storesLimit) {
+        const msg = `Limite atteinte : votre forfait ${planLimits.planName} vous permet de créer au maximum ${planLimits.storesLimit} boutique(s). Passez à un forfait supérieur pour débloquer plus de boutiques.`;
         return NextResponse.json(
           {
-            detail: `Limite atteinte : votre forfait ${planLimits.planName} vous permet de créer au maximum ${planLimits.storesLimit} boutique(s). Passez à un forfait supérieur pour débloquer plus de boutiques.`,
+            detail: "PLAN_LIMIT_REACHED",
             code: "PLAN_LIMIT_REACHED",
+            message: msg,
+            limit_type: "stores",
             limit: planLimits.storesLimit,
             current: storeCount ?? 0,
           },
           { status: 403 }
         );
       }
+    }
+
+    // Enforce theme gating on creation
+    const requestedTheme = (body.theme || "crimson").trim().toLowerCase();
+    if (!planLimits.canUseAllThemes && !FREE_THEMES.has(requestedTheme)) {
+      return NextResponse.json(
+        {
+          detail: "PLAN_LIMIT_REACHED",
+          code: "PLAN_LIMIT_REACHED",
+          message: `Le thème '${requestedTheme}' est réservé aux forfaits Pro et Business. Choisissez un thème standard ou passez au forfait Pro.`,
+          limit_type: "theme",
+          limit: 0,
+          current: 0,
+        },
+        { status: 403 }
+      );
     }
 
     const slug = await getUniqueStoreSlug(body.slug || name, admin);

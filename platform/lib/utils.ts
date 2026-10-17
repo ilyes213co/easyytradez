@@ -73,6 +73,20 @@ export function formatWhatsAppPhone(phone: string): string {
   return cleaned;
 }
 
+export function normalizeDzPhone(raw: string): string {
+  let digits = String(raw || "").replace(/\D/g, "");
+  if (digits.startsWith("00213")) digits = digits.slice(5);
+  else if (digits.startsWith("213")) digits = digits.slice(3);
+  if (digits.length === 9 && (digits.startsWith("5") || digits.startsWith("6") || digits.startsWith("7"))) {
+    digits = "0" + digits;
+  }
+  return digits;
+}
+
+export function isValidStrictDzPhone(cleaned: string): boolean {
+  return /^0[567]\d{8}$/.test(cleaned);
+}
+
 export function generateWhatsAppUrl(phone: string, message?: string): string {
   const formatted = formatWhatsAppPhone(phone);
   if (!formatted) return "";

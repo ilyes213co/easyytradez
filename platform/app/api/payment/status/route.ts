@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient, getAuthUser } from "@/lib/api-auth";
-import { getEffectivePlan, getUserPlan } from "@/lib/plan-limits";
+import { getEffectivePlan } from "@/lib/plan-limits";
+import { getUserPlan } from "@/lib/plan-limits-server";
 import { PLANS_PRICING } from "@/lib/slickpay";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +55,8 @@ export async function GET(req: NextRequest) {
       products_limit: planLimits.productsLimit,
       can_use_team: planLimits.canUseTeam,
       can_use_custom_domain: planLimits.canUseCustomDomain,
+      can_use_bulk_shipping: planLimits.canUseBulkShipping,
+      can_use_all_themes: planLimits.canUseAllThemes,
     });
   } catch (err: any) {
     if (err?.digest === "DYNAMIC_SERVER_USAGE" || err?.message?.includes("Dynamic server usage")) {

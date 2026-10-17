@@ -5,7 +5,8 @@ import Image from "next/image";
 import type { Product, Store, Wilaya, ThemeId, CreateOrderPayload } from "@/types/product";
 
 import { DEFAULT_WILAYAS, resolveImageUrl } from "@/lib/wilayas";
-import { generateWhatsAppUrl } from "@/lib/utils";
+import { generateWhatsAppUrl, normalizeDzPhone, isValidStrictDzPhone } from "@/lib/utils";
+import StoreTrackingPixels, { trackStorePurchase } from "@/components/analytics/StoreTrackingPixels";
 export { DEFAULT_WILAYAS, resolveImageUrl };
 
 export function formatMoney(amount: number): string {
@@ -121,9 +122,31 @@ export default function ProductPage({
       return;
     }
 
-    if (!customerPhone.trim() || customerPhone.trim().length < 9) {
+    if (!customerPhone.trim()) {
+      showToast("Veuillez indiquer un numéro de téléphone.");
+      return;
+    }
+
+    const cleanedPhone = normalizeDzPhone(customerPhone);
+    const security = (store as any)?.settings?.security || {};
+
+    if (security.strict_dz_phone !== false) {
+      if (!isValidStrictDzPhone(cleanedPhone)) {
+        showToast("Numéro algérien invalide (10 chiffres commençant par 05, 06 ou 07).");
+        return;
+      }
+    } else if (cleanedPhone.length < 9) {
       showToast("Veuillez indiquer un numéro de téléphone valide.");
       return;
+    }
+
+    const blacklist = security.blacklist;
+    if (Array.isArray(blacklist) && blacklist.length > 0) {
+      const normalizedB = new Set(blacklist.map((b: string) => normalizeDzPhone(b)).filter(Boolean));
+      if (normalizedB.has(cleanedPhone)) {
+        showToast("Ce numéro de téléphone n'est pas autorisé à passer commande.");
+        return;
+      }
     }
 
     submitOrder();
@@ -132,6 +155,7 @@ export default function ProductPage({
   const submitOrder = async () => {
     setIsSubmitting(true);
     const effectiveStoreId = store?.id || product.store_id;
+    const cleanedPhone = normalizeDzPhone(customerPhone);
 
     const payload: CreateOrderPayload = {
       product_id: product.id,
@@ -140,7 +164,7 @@ export default function ProductPage({
       wilaya_id: Number(selectedWilayaId),
       ship_mode: shipMode,
       customer_name: customerName.trim(),
-      customer_phone: customerPhone.trim(),
+      customer_phone: cleanedPhone || customerPhone.trim(),
       customer_address: customerAddress.trim() || undefined,
       store_id: effectiveStoreId,
     };
@@ -153,6 +177,14 @@ export default function ProductPage({
         body: JSON.stringify(payload),
       }).catch(() => null);
 
+      let resData = await res?.json().catch(() => null);
+
+      if (res && (res.status === 400 || res.status === 403)) {
+        showToast(resData?.error || resData?.detail || "Numéro ou commande non autorisé(e)");
+        setIsSubmitting(false);
+        return;
+      }
+
       // 2. Si échoué ou non disponible, fallback vers l'API backend
       if (!res || !res.ok) {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -162,23 +194,37 @@ export default function ProductPage({
           body: JSON.stringify(payload),
         }).catch(() => null);
 
-        if (!res || !res.ok) {
-          const fallbackRes = await fetch(`${apiUrl}/orders`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          }).catch(() => null);
+        resData = await res?.json().catch(() => null);
 
-          if (!fallbackRes || !fallbackRes.ok) {
-            throw new Error("Échec de la commande");
-          }
+        if (res && (res.status === 400 || res.status === 403)) {
+          showToast(resData?.error || resData?.detail || "Commande refusée");
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (!res || !res.ok) {
+          throw new Error(resData?.error || resData?.detail || "Échec de confirmation de la commande");
         }
       }
 
+      const finalOrderId = resData?.order_id || resData?.order?.id || "CMD-" + Date.now().toString().slice(-6);
+
       setOrderDone(true);
+
+      // Track conversion across configured pixels (Meta, TikTok, Google Analytics)
+      trackStorePurchase({
+        total,
+        orderId: finalOrderId,
+        productName: product.name,
+        currency: "DZD",
+        facebookPixelId: store.facebook_pixel_id,
+        tiktokPixelId: store.tiktok_pixel_id,
+        googleAnalyticsId: store.google_analytics_id,
+      });
+
       showToast("Commande enregistrée ! Nous vous appellerons pour confirmer.");
-    } catch {
-      showToast("Erreur lors de la validation. Veuillez réessayer ou commander par téléphone.");
+    } catch (err: any) {
+      showToast(err?.message || "Erreur lors de la validation. Veuillez réessayer ou commander par téléphone.");
     } finally {
       setIsSubmitting(false);
     }
@@ -210,6 +256,12 @@ export default function ProductPage({
         ...inlineBrandingStyles,
       }}
     >
+      {/* ── Tracking Pixels (Meta, TikTok, Google Analytics) ── */}
+      <StoreTrackingPixels
+        facebookPixelId={store.facebook_pixel_id}
+        tiktokPixelId={store.tiktok_pixel_id}
+        googleAnalyticsId={store.google_analytics_id}
+      />
       {/* ── HEADER ── */}
       <header className="pd-top">
         <div className="pd-top__in">
