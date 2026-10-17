@@ -37,6 +37,10 @@ import {
   AlertTriangle,
   X,
   CheckCircle2,
+  Search,
+  ChevronDown,
+  ChevronUp,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -146,6 +150,13 @@ interface StoreSettingsData {
       email_alerts?: boolean;
       telegram_chat_id?: string | null;
     } | null;
+    manual_shipping?: {
+      price_home?: number;
+      price_desk?: number;
+      is_free?: boolean;
+      custom_wilayas?: Record<number, { price_home?: number; price_desk?: number }>;
+      updated_at?: string;
+    } | null;
   } | null;
 }
 
@@ -217,6 +228,17 @@ function SettingsContent() {
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [telegramChatId, setTelegramChatId] = useState("");
 
+  // Tab 4 (suite): Tarifs Manuels de Livraison (Sans Transporteur Connecté)
+  const [manualPriceHome, setManualPriceHome] = useState<number>(600);
+  const [manualPriceDesk, setManualPriceDesk] = useState<number>(350);
+  const [isFreeShipping, setIsFreeShipping] = useState<boolean>(false);
+  const [customWilayasShipping, setCustomWilayasShipping] = useState<
+    Record<number, { price_home?: number; price_desk?: number }>
+  >({});
+  const [showWilayaDetails, setShowWilayaDetails] = useState<boolean>(false);
+  const [wilayaSearch, setWilayaSearch] = useState<string>("");
+  const [applyingShippingToAll, setApplyingShippingToAll] = useState<boolean>(false);
+
   // Tab 5: Danger Zone Deletion
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmationName, setDeleteConfirmationName] = useState("");
@@ -286,6 +308,12 @@ function SettingsContent() {
     setCarrierProvider(s.carrier?.provider || "yalidine");
     setCarrierApiId(s.carrier?.api_id || "");
     setCarrierApiToken(s.carrier?.api_token || "");
+
+    const manualShip = s.manual_shipping || {};
+    setManualPriceHome(manualShip.price_home !== undefined ? manualShip.price_home : 600);
+    setManualPriceDesk(manualShip.price_desk !== undefined ? manualShip.price_desk : 350);
+    setIsFreeShipping(Boolean(manualShip.is_free));
+    setCustomWilayasShipping(manualShip.custom_wilayas || {});
 
     setEmailAlerts(s.notifications?.email_alerts ?? true);
     setTelegramChatId(s.notifications?.telegram_chat_id || "");
@@ -369,6 +397,13 @@ function SettingsContent() {
           api_id: carrierApiId.trim(),
           api_token: carrierApiToken.trim(),
         },
+        manual_shipping: {
+          price_home: isFreeShipping ? 0 : Number(manualPriceHome) || 0,
+          price_desk: isFreeShipping ? 0 : Number(manualPriceDesk) || 0,
+          is_free: isFreeShipping,
+          custom_wilayas: customWilayasShipping,
+          updated_at: new Date().toISOString(),
+        },
         notifications: {
           email_alerts: emailAlerts,
           telegram_chat_id: telegramChatId.trim(),
@@ -410,6 +445,91 @@ function SettingsContent() {
       toast.error(err.message || "Erreur lors de la sauvegarde");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Helper Tarifs Manuels
+  const GRAND_SUD_WILAYAS = [1, 8, 11, 30, 33, 37, 39, 47, 49, 50, 51, 53, 54, 55, 56, 57, 58];
+
+  const handleApplyGrandSudPreset = () => {
+    const updated = { ...customWilayasShipping };
+    const baseHome = isFreeShipping ? 0 : Number(manualPriceHome) || 600;
+    const baseDesk = isFreeShipping ? 0 : Number(manualPriceDesk) || 350;
+    GRAND_SUD_WILAYAS.forEach((wid) => {
+      updated[wid] = {
+        price_home: baseHome + 300,
+        price_desk: baseDesk + 200,
+      };
+    });
+    setCustomWilayasShipping(updated);
+    toast.info("Tarifs Grand Sud ajustés (+300 DA Domicile, +200 DA Bureau) !");
+  };
+
+  const handleResetCustomWilaya = (wilayaId: number) => {
+    const updated = { ...customWilayasShipping };
+    delete updated[wilayaId];
+    setCustomWilayasShipping(updated);
+  };
+
+  const handleResetAllCustomWilayas = () => {
+    setCustomWilayasShipping({});
+    toast.info("Tous les tarifs spécifiques ont été réinitialisés au tarif standard.");
+  };
+
+  const filteredWilayas = useMemo(() => {
+    const q = wilayaSearch.trim().toLowerCase();
+    if (!q) return DZ_WILAYAS;
+    return DZ_WILAYAS.filter(
+      (w) => w.name.toLowerCase().includes(q) || String(w.id).includes(q)
+    );
+  }, [wilayaSearch]);
+
+  const customWilayasCount = Object.keys(customWilayasShipping).length;
+
+  const handleApplyShippingToAllStores = async () => {
+    setApplyingShippingToAll(true);
+    try {
+      const payload = {
+        price_home: isFreeShipping ? 0 : Number(manualPriceHome) || 0,
+        price_desk: isFreeShipping ? 0 : Number(manualPriceDesk) || 0,
+        is_free: isFreeShipping,
+        custom_wilayas: customWilayasShipping,
+      };
+
+      const res = await fetch("/api/shipping-rates/apply-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.detail || "Erreur lors de l'application des tarifs");
+      }
+
+      // Sync local stores state
+      setStores((prev) =>
+        prev.map((s) => ({
+          ...s,
+          settings: {
+            ...(s.settings || {}),
+            manual_shipping: {
+              ...payload,
+              updated_at: new Date().toISOString(),
+            },
+          },
+        }))
+      );
+
+      toast.success(
+        data.message ||
+          "Tarifs de livraison appliqués avec succès à tous vos funnels et boutiques !"
+      );
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'application des tarifs");
+    } finally {
+      setApplyingShippingToAll(false);
     }
   };
 
@@ -1087,6 +1207,354 @@ function SettingsContent() {
       ═══════════════════════════════════════════════════════════════════════ */}
       {activeTab === "carrier-notifications" && (
         <div className="space-y-6 animate-in fade-in duration-200">
+          {/* CARTE 1 : Tarifs Manuels de Livraison (Sans Transporteur Connecté) */}
+          <div className="rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0d1c] p-6 sm:p-7 space-y-6 shadow-sm relative overflow-hidden">
+            {/* Ambient subtle glow */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative">
+              <div className="flex items-start sm:items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0 shadow-inner">
+                  <Truck className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                      Tarifs de Livraison Manuels
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      Sans transporteur API
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-white/50 mt-0.5">
+                    Fixez vos frais de livraison à domicile et en bureau. Appliquez-les en 1 clic sur toutes vos boutiques et funnels.
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Indicator */}
+              <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-white/[0.05] text-slate-600 dark:text-white/70 border border-slate-200 dark:border-white/10">
+                  <Layers className="w-3.5 h-3.5 text-accent" />
+                  <span>{stores.length} boutique{stores.length > 1 ? "s" : ""} &amp; funnel{stores.length > 1 ? "s" : ""}</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Switch Livraison Gratuite */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/[0.06] via-teal-500/[0.04] to-transparent border border-emerald-500/20 flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Livraison 100% Gratuite (Offerte sur toute l&apos;Algérie)
+                  </span>
+                  {isFreeShipping && (
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-400 text-slate-950">
+                      Offerte active
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-white/50">
+                  Active la livraison à 0 DA sur tous vos formulaires COD pour maximiser le taux de conversion.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  checked={isFreeShipping}
+                  onChange={(e) => setIsFreeShipping(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500" />
+              </label>
+            </div>
+
+            {/* Tarifs Standards : Domicile & Stop Desk */}
+            {!isFreeShipping && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1">
+                {/* Domicile */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Truck className="w-4 h-4 text-emerald-400" />
+                      <span>Tarif Livraison à Domicile</span>
+                    </label>
+                    <span className="text-[11px] font-medium text-slate-400">Toutes wilayas</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      step={50}
+                      value={manualPriceHome}
+                      onChange={(e) => setManualPriceHome(Math.max(0, Number(e.target.value) || 0))}
+                      placeholder="600"
+                      className="w-full px-3.5 py-2.5 pr-14 text-sm font-bold rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#080914] text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                    />
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 dark:text-white/40">
+                      DA
+                    </span>
+                  </div>
+                  {/* Quick preset buttons */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                    <span className="text-[10px] text-slate-400 dark:text-white/40 mr-1">Raccourcis :</span>
+                    {[0, 400, 500, 600, 750, 900].map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setManualPriceHome(val)}
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
+                          manualPriceHome === val
+                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                            : "bg-white dark:bg-white/5 text-slate-600 dark:text-white/70 border-slate-200 dark:border-white/10 hover:border-emerald-500/30"
+                        }`}
+                      >
+                        {val === 0 ? "Gratuit" : `${val} DA`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Stop Desk / Bureau */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Store className="w-4 h-4 text-sky-400" />
+                      <span>Tarif Livraison en Bureau (Stop Desk)</span>
+                    </label>
+                    <span className="text-[11px] font-medium text-slate-400">Toutes wilayas</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      step={50}
+                      value={manualPriceDesk}
+                      onChange={(e) => setManualPriceDesk(Math.max(0, Number(e.target.value) || 0))}
+                      placeholder="350"
+                      className="w-full px-3.5 py-2.5 pr-14 text-sm font-bold rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#080914] text-slate-900 dark:text-white focus:border-sky-500 outline-none"
+                    />
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 dark:text-white/40">
+                      DA
+                    </span>
+                  </div>
+                  {/* Quick preset buttons */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                    <span className="text-[10px] text-slate-400 dark:text-white/40 mr-1">Raccourcis :</span>
+                    {[0, 300, 350, 400, 500].map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setManualPriceDesk(val)}
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
+                          manualPriceDesk === val
+                            ? "bg-sky-500/10 text-sky-400 border-sky-500/30"
+                            : "bg-white dark:bg-white/5 text-slate-600 dark:text-white/70 border-slate-200 dark:border-white/10 hover:border-sky-500/30"
+                        }`}
+                      >
+                        {val === 0 ? "Gratuit" : `${val} DA`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Accordion Personnalisation par Wilaya (ex: Grand Sud) */}
+            <div className="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden bg-slate-50/50 dark:bg-white/[0.01]">
+              <button
+                type="button"
+                onClick={() => setShowWilayaDetails((prev) => !prev)}
+                className="w-full px-5 py-3.5 flex items-center justify-between text-left hover:bg-slate-100/50 dark:hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Sliders className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Personnaliser les prix par Wilaya (ex: Grand Sud, tarifs différenciés)
+                  </span>
+                  {customWilayasCount > 0 && (
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      {customWilayasCount} personnalisée{customWilayasCount > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+                {showWilayaDetails ? (
+                  <ChevronUp className="w-4 h-4 text-slate-400" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                )}
+              </button>
+
+              {showWilayaDetails && (
+                <div className="p-5 pt-3 border-t border-slate-200 dark:border-white/10 space-y-4">
+                  {/* Toolbar & Filter */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    <div className="relative flex-1 max-w-sm">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={wilayaSearch}
+                        onChange={(e) => setWilayaSearch(e.target.value)}
+                        placeholder="Filtrer par nom ou numéro de wilaya..."
+                        className="w-full pl-9 pr-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#080914] text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={handleApplyGrandSudPreset}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all"
+                      >
+                        <Sparkles className="w-3 h-3 text-amber-400" />
+                        <span>+300 DA Grand Sud (17 wilayas)</span>
+                      </button>
+
+                      {customWilayasCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleResetAllCustomWilayas}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white bg-slate-200/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-white/20 transition-all"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>Réinitialiser</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* List of Wilayas */}
+                  <div className="max-h-72 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                    {filteredWilayas.map((w) => {
+                      const custom = customWilayasShipping[w.id];
+                      const isCustomized = custom !== undefined;
+                      const curHome = custom?.price_home !== undefined ? custom.price_home : (isFreeShipping ? 0 : manualPriceHome);
+                      const curDesk = custom?.price_desk !== undefined ? custom.price_desk : (isFreeShipping ? 0 : manualPriceDesk);
+
+                      return (
+                        <div
+                          key={w.id}
+                          className={`flex items-center justify-between gap-3 p-2.5 rounded-xl border text-xs transition-all ${
+                            isCustomized
+                              ? "bg-emerald-500/[0.04] border-emerald-500/20"
+                              : "bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/5"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-[140px]">
+                            <span className="font-bold text-slate-800 dark:text-white">{w.name}</span>
+                            {isCustomized && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
+                                Modifié
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-slate-400 dark:text-white/40">Domicile :</span>
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  step={50}
+                                  value={curHome}
+                                  onChange={(e) => {
+                                    const val = Math.max(0, Number(e.target.value) || 0);
+                                    setCustomWilayasShipping((prev) => ({
+                                      ...prev,
+                                      [w.id]: {
+                                        ...(prev[w.id] || {}),
+                                        price_home: val,
+                                        price_desk: curDesk,
+                                      },
+                                    }));
+                                  }}
+                                  className="w-20 px-2 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#080914] text-slate-900 dark:text-white text-right outline-none focus:border-emerald-500"
+                                />
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-white/40 ml-1">DA</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-slate-400 dark:text-white/40">Bureau :</span>
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  step={50}
+                                  value={curDesk}
+                                  onChange={(e) => {
+                                    const val = Math.max(0, Number(e.target.value) || 0);
+                                    setCustomWilayasShipping((prev) => ({
+                                      ...prev,
+                                      [w.id]: {
+                                        ...(prev[w.id] || {}),
+                                        price_home: curHome,
+                                        price_desk: val,
+                                      },
+                                    }));
+                                  }}
+                                  className="w-20 px-2 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#080914] text-slate-900 dark:text-white text-right outline-none focus:border-sky-500"
+                                />
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-white/40 ml-1">DA</span>
+                              </div>
+                            </div>
+
+                            {isCustomized && (
+                              <button
+                                type="button"
+                                onClick={() => handleResetCustomWilaya(w.id)}
+                                title="Réinitialiser au tarif général"
+                                className="p-1 rounded-lg hover:bg-rose-500/10 text-rose-400 transition-colors"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ACTION GLOBALE : Bouton principal "Appliquer à tous mes funnels et boutiques" */}
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Application Universelle Immédiate
+                  </h4>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-white/60 max-w-xl">
+                  Ces tarifs manuels ({isFreeShipping ? "Livraison Offerte 0 DA" : `${manualPriceHome} DA à domicile / ${manualPriceDesk} DA en bureau`}) seront injectés en base de données sur vos <strong>{stores.length} boutiques et funnels</strong> actifs.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleApplyShippingToAllStores}
+                disabled={applyingShippingToAll}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-black text-xs sm:text-sm text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 shadow-lg shadow-emerald-500/25 transition-all transform active:scale-[0.98] disabled:opacity-50 shrink-0 cursor-pointer"
+              >
+                {applyingShippingToAll ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                    <span>Application à toutes vos boutiques...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                    <span>Appliquer à tous mes funnels et boutiques</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
           {/* Transporteurs Algérie */}
           <div className="rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0d1c] p-6 sm:p-7 space-y-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">

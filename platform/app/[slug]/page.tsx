@@ -120,6 +120,7 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
       .eq("store_id", store.id)
       .order("wilaya_id", { ascending: true });
 
+    const manualShip = (store as any)?.settings?.manual_shipping;
     const storeWilayas: Wilaya[] = (rawRates && rawRates.length > 0)
       ? (rawRates as any[]).map((r) => ({
           id: r.wilaya_id,
@@ -129,7 +130,16 @@ export default async function StoreOrFunnelPage({ params, searchParams }: PagePr
           price_desk: r.price_desk,
           eta: r.eta || "2-4 j",
         }))
-      : DEFAULT_WILAYAS;
+      : DEFAULT_WILAYAS.map((w) => {
+          if (!manualShip) return w;
+          const custom = manualShip.custom_wilayas?.[w.id];
+          const isFree = Boolean(manualShip.is_free);
+          return {
+            ...w,
+            price_home: isFree ? 0 : (custom?.price_home !== undefined ? Number(custom.price_home) : manualShip.price_home !== undefined ? Number(manualShip.price_home) : w.price_home),
+            price_desk: isFree ? 0 : (custom?.price_desk !== undefined ? Number(custom.price_desk) : manualShip.price_desk !== undefined ? Number(manualShip.price_desk) : w.price_desk),
+          };
+        });
 
     const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://easytradez.site";
     const funnelUrl = `${siteUrl}/${store.slug}`;

@@ -172,9 +172,29 @@ export function OrderForm({ product, store, disabled }: OrderFormProps) {
             eta: r.eta || "2-4 j",
           }));
           setRates(mapped);
+        } else {
+          const manualShip = (store as any)?.settings?.manual_shipping;
+          if (manualShip) {
+            const isFree = Boolean(manualShip.is_free);
+            const defaultHome = isFree ? 0 : (manualShip.price_home ?? 600);
+            const defaultDesk = isFree ? 0 : (manualShip.price_desk ?? 350);
+            const fallbackRates: ShippingRateOption[] = Array.from({ length: 58 }, (_, i) => {
+              const wid = i + 1;
+              const custom = manualShip.custom_wilayas?.[wid];
+              return {
+                wilaya_id: wid,
+                code: String(wid).padStart(2, "0"),
+                name: `Wilaya ${wid}`,
+                price_home: isFree ? 0 : (custom?.price_home !== undefined ? Number(custom.price_home) : defaultHome),
+                price_desk: isFree ? 0 : (custom?.price_desk !== undefined ? Number(custom.price_desk) : defaultDesk),
+                eta: "2-4 j",
+              };
+            });
+            setRates(fallbackRates);
+          }
         }
       });
-  }, [store.id, supabase]);
+  }, [store.id, (store as any)?.settings, supabase]);
 
   // Recalculate fee when wilaya or shipMode changes
   useEffect(() => {
