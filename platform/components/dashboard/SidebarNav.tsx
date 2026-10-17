@@ -13,8 +13,15 @@ import {
   Settings,
   Store,
   ChevronRight,
+  ChevronDown,
   LogOut,
+  Globe,
+  FileText,
+  ShieldAlert,
+  Truck,
+  CreditCard,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import StoreSwitcher from "@/components/dashboard/StoreSwitcher";
 import { useAuth } from "@/components/auth/AuthProvider";
 
@@ -42,6 +49,39 @@ const BOUTIQUE_ITEMS: NavItemConfig[] = [
   { label: "Leads",        href: "/dashboard/team",              icon: Users },
   { label: "Boutique",     href: "/dashboard/boutique",          icon: Store, exact: true },
   { label: "Analytiques",  href: "/dashboard/analytics?section=boutique", icon: BarChart2 },
+];
+
+const SETTINGS_SUBITEMS = [
+  {
+    id: "pixels-domain",
+    label: "Pixels & Domaine",
+    tab: "pixels-domain",
+    icon: Globe,
+  },
+  {
+    id: "contact-slip",
+    label: "Coordonnées & Bordereau",
+    tab: "contact-slip",
+    icon: FileText,
+  },
+  {
+    id: "cod-security",
+    label: "Sécurité COD & Anti-Fake",
+    tab: "cod-security",
+    icon: ShieldAlert,
+  },
+  {
+    id: "carrier-notifications",
+    label: "Transport & Alertes",
+    tab: "carrier-notifications",
+    icon: Truck,
+  },
+  {
+    id: "account-billing",
+    label: "Compte & Abonnement",
+    tab: "account-billing",
+    icon: CreditCard,
+  },
 ];
 
 interface SidebarNavProps {
@@ -88,6 +128,25 @@ export default function SidebarNav({ onNavigate }: SidebarNavProps = {}) {
       if (typeof window !== "undefined") localStorage.setItem("active_section", "funnels");
     }
   }, [pathname, sectionParam]);
+
+  const isSettingsActive = pathname.startsWith("/dashboard/settings");
+  const [settingsOpen, setSettingsOpen] = useState(isSettingsActive);
+
+  useEffect(() => {
+    if (isSettingsActive) {
+      setSettingsOpen(true);
+    }
+  }, [isSettingsActive]);
+
+  const currentSettingsTab = searchParams.get("tab") || "pixels-domain";
+  const storeParam = searchParams.get("store") || searchParams.get("store_id");
+
+  const buildSettingsUrl = (tab: string) => {
+    const params = new URLSearchParams();
+    params.set("tab", tab);
+    if (storeParam) params.set("store", storeParam);
+    return `/dashboard/settings?${params.toString()}`;
+  };
 
   const handleTabChange = (tab: "funnels" | "boutiques") => {
     setActiveTab(tab);
@@ -226,12 +285,88 @@ export default function SidebarNav({ onNavigate }: SidebarNavProps = {}) {
           {/* Divider */}
           <div className="border-t border-slate-200/80 dark:border-white/[0.07] my-2 mx-1" />
 
-          {/* Paramètres Link */}
-          {renderNavItem({
-            label: "Paramètres",
-            href: "/dashboard/settings",
-            icon: Settings,
-          })}
+          {/* Paramètres Expandable Item with Sub-menu */}
+          <div className="space-y-0.5">
+            <button
+              type="button"
+              onClick={() => {
+                if (!isSettingsActive) {
+                  setSettingsOpen(true);
+                  router.push(buildSettingsUrl(currentSettingsTab));
+                  onNavigate?.();
+                } else {
+                  setSettingsOpen((prev) => !prev);
+                }
+              }}
+              className={`w-full group relative flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 ${
+                isSettingsActive
+                  ? "bg-accent/10 dark:bg-accent/20 text-accent dark:text-white font-semibold border border-accent/25 dark:border-sky/30 shadow-sm"
+                  : "text-slate-600 dark:text-white/60 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:translate-x-0.5"
+              }`}
+            >
+              {isSettingsActive && (
+                <div className="absolute left-0 w-1 h-4 bg-accent dark:bg-gradient-to-b dark:from-sky dark:via-accent dark:to-accent rounded-r-full shadow-[0_0_8px_rgba(37,64,234,0.4)] dark:shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+              )}
+              <div className="flex items-center gap-3 min-w-0">
+                <Settings
+                  className={`w-4 h-4 transition-transform duration-150 group-hover:scale-105 shrink-0 ${
+                    isSettingsActive
+                      ? "text-accent dark:text-sky"
+                      : "text-slate-400 dark:text-white/45 group-hover:text-slate-700 dark:group-hover:text-white/80"
+                  }`}
+                />
+                <span className="truncate">Paramètres</span>
+              </div>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
+                  settingsOpen
+                    ? "rotate-0 text-accent dark:text-sky"
+                    : "-rotate-90 text-slate-400 dark:text-white/40"
+                }`}
+              />
+            </button>
+
+            {/* Sub-menu tree */}
+            <AnimatePresence initial={false}>
+              {settingsOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.18, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="ml-4 pl-2.5 border-l-2 border-slate-200/90 dark:border-white/10 space-y-0.5 py-1">
+                    {SETTINGS_SUBITEMS.map((sub) => {
+                      const SubIcon = sub.icon;
+                      const isSubActive = isSettingsActive && currentSettingsTab === sub.tab;
+                      return (
+                        <Link
+                          key={sub.id}
+                          href={buildSettingsUrl(sub.tab)}
+                          onClick={() => onNavigate?.()}
+                          className={`group flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-150 ${
+                            isSubActive
+                              ? "bg-accent/15 dark:bg-accent/25 text-accent dark:text-sky font-bold border border-accent/25 dark:border-sky/30 shadow-xs"
+                              : "text-slate-600 dark:text-white/60 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:translate-x-0.5"
+                          }`}
+                        >
+                          <SubIcon
+                            className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                              isSubActive
+                                ? "text-accent dark:text-sky"
+                                : "text-slate-400 dark:text-white/40 group-hover:text-slate-700 dark:group-hover:text-white/80"
+                            }`}
+                          />
+                          <span className="truncate text-[11px]">{sub.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </nav>
       </div>
 

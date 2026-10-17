@@ -160,7 +160,26 @@ function SettingsContent() {
 
   const [stores, setStores] = useState<StoreSettingsData[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState<string>(urlStoreParam || "");
-  const [activeTab, setActiveTab] = useState<SettingsTab>("pixels-domain");
+  const tabParam = searchParams.get("tab") as SettingsTab | null;
+  const validTabs: SettingsTab[] = [
+    "pixels-domain",
+    "contact-slip",
+    "cod-security",
+    "carrier-notifications",
+    "account-billing",
+  ];
+
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+    if (tabParam && validTabs.includes(tabParam)) return tabParam;
+    return "pixels-domain";
+  });
+
+  useEffect(() => {
+    if (tabParam && validTabs.includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -485,6 +504,9 @@ function SettingsContent() {
     },
   ];
 
+  const currentTabObj = TABS.find((t) => t.id === activeTab) || TABS[0]!;
+  const CurrentTabIcon = currentTabObj.icon;
+
   return (
     <div className="space-y-7 pb-20 max-w-5xl">
       {/* ── En-tête & Sélecteur de Boutique ───────────────────────────────────── */}
@@ -521,26 +543,27 @@ function SettingsContent() {
         )}
       </div>
 
-      {/* ── Barre de Navigation des 5 Onglets ─────────────────────────────────── */}
-      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.08] overflow-x-auto no-scrollbar">
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                isActive
-                  ? "bg-white dark:bg-[#14152b] text-slate-950 dark:text-white shadow-sm border border-slate-200/60 dark:border-white/10"
-                  : "text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/[0.02]"
-              }`}
-            >
-              <Icon className={`w-4 h-4 ${isActive ? "text-accent dark:text-sky-400" : ""}`} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* ── En-tête de Section Active (Piloté par le sous-menu latéral) ────────── */}
+      <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-white/[0.08]">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-accent/10 dark:bg-accent/20 border border-accent/25 dark:border-sky/30 flex items-center justify-center text-accent dark:text-sky shrink-0 shadow-xs">
+            <CurrentTabIcon className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
+                Paramètres
+              </span>
+              <span className="text-slate-300 dark:text-white/20">/</span>
+              <span className="text-xs font-extrabold text-accent dark:text-sky">
+                {currentTabObj.label}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-white/60 font-medium mt-0.5">
+              {currentTabObj.desc}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════
