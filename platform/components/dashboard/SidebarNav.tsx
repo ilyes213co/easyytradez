@@ -22,8 +22,8 @@ import {
   CreditCard,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import StoreSwitcher from "@/components/dashboard/StoreSwitcher";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useUserPlan } from "@/lib/use-user-plan";
 
 interface NavItemConfig {
   label: string;
@@ -93,6 +93,7 @@ export default function SidebarNav({ onNavigate }: SidebarNavProps = {}) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const userPlan = useUserPlan();
 
   const sectionParam = searchParams.get("section");
 
@@ -271,10 +272,6 @@ export default function SidebarNav({ onNavigate }: SidebarNavProps = {}) {
           </button>
         </div>
 
-        {/* Active Store / Funnel Switcher */}
-        <div className="shrink-0">
-          <StoreSwitcher typeOverride={activeTab === "funnels" ? "funnel" : "boutique"} />
-        </div>
 
         {/* Navigation Links - Solid rendering with no disappearing items */}
         <nav className="space-y-0.5 pt-1">
@@ -373,17 +370,19 @@ export default function SidebarNav({ onNavigate }: SidebarNavProps = {}) {
       {/* Bottom Upgrade Card & User Profile */}
       <div className="p-3 border-t border-slate-200/80 dark:border-white/[0.07] bg-slate-50/50 dark:bg-white/[0.015] relative z-10 shrink-0">
         <div className="rounded-2xl p-2.5 bg-gradient-to-b from-indigo-50/80 dark:from-accent/15 via-white/50 dark:via-accent/5 to-slate-50/50 dark:to-white/[0.02] border border-indigo-100 dark:border-sky/20 shadow-sm dark:shadow-lg space-y-2">
-          {/* Upgrade button */}
-          <Link
-            href="/dashboard/upgrade"
-            onClick={() => onNavigate?.()}
-            className="flex items-center justify-between w-full px-3 py-2 rounded-xl bg-white dark:bg-white/[0.06] hover:bg-slate-50 dark:hover:bg-white/[0.1] border border-slate-200/80 dark:border-white/10 transition-all text-xs font-semibold text-slate-800 dark:text-white group shadow-sm"
-          >
-            <span className="truncate">Mettre à niveau vers</span>
-            <span className="bg-accent text-white px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide shadow-sm group-hover:bg-accent/90 transition-colors shrink-0 ml-2">
-              Pro
-            </span>
-          </Link>
+          {/* Upgrade button - Masqué dès que l'utilisateur est Pro ou Business */}
+          {userPlan.isFree && (
+            <Link
+              href="/dashboard/upgrade"
+              onClick={() => onNavigate?.()}
+              className="flex items-center justify-between w-full px-3 py-2 rounded-xl bg-white dark:bg-white/[0.06] hover:bg-slate-50 dark:hover:bg-white/[0.1] border border-slate-200/80 dark:border-white/10 transition-all text-xs font-semibold text-slate-800 dark:text-white group shadow-sm"
+            >
+              <span className="truncate">Mettre à niveau vers</span>
+              <span className="bg-accent text-white px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide shadow-sm group-hover:bg-accent/90 transition-colors shrink-0 ml-2">
+                Pro
+              </span>
+            </Link>
+          )}
 
           {/* User profile row */}
           <div className="flex items-center justify-between pt-1 px-1">
@@ -392,9 +391,16 @@ export default function SidebarNav({ onNavigate }: SidebarNavProps = {}) {
                 {initial}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-slate-800 dark:text-white/90 truncate leading-tight">
-                  {displayName}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-semibold text-slate-800 dark:text-white/90 truncate leading-tight">
+                    {displayName}
+                  </p>
+                  {!userPlan.isFree && (
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-accent/15 text-accent dark:text-sky border border-accent/20 shrink-0">
+                      {userPlan.plan}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0">

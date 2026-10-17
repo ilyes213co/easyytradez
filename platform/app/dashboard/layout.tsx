@@ -68,9 +68,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <span className="text-[10px] font-semibold text-accent dark:text-sky-light/90 bg-accent/10 dark:bg-accent/20 px-2.5 py-1 rounded-full border border-accent/20 dark:border-sky/30 tracking-wider font-mono">
-            PRO
-          </span>
         </div>
       </header>
 
@@ -127,9 +124,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <EasyTradeLogo size={30} href="/dashboard" />
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <span className="text-[10px] font-semibold text-accent dark:text-sky-light/90 bg-accent/10 dark:bg-accent/20 px-2 py-0.5 rounded-full border border-accent/20 dark:border-sky/30 tracking-wider font-mono">
-              PRO
-            </span>
           </div>
         </div>
 
