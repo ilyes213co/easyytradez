@@ -514,11 +514,8 @@ function SettingsContent() {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              Paramètres de la Boutique
+              Paramètres
             </h1>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.08] text-slate-600 dark:text-white/70 border border-slate-200 dark:border-white/10 uppercase">
-              {currentStore?.type === "funnel" ? "Funnel" : "Boutique"}
-            </span>
           </div>
           <p className="text-slate-500 dark:text-white/60 text-xs sm:text-sm mt-1">
             Pilotez votre infrastructure de vente, vos pixels de conversion et votre logistique.
