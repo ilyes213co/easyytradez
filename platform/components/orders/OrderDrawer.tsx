@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import type { Order } from "@/lib/supabase";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -321,6 +321,13 @@ export function OrderDrawer({
   const [updating, setUpdating] = useState(false);
   const [payUpdating, setPayUpdating] = useState(false);
   const [slipModalOpen, setSlipModalOpen] = useState(false);
+  const [agentNotes, setAgentNotes] = useState(order?.agent_notes || "");
+  const [savingNotes, setSavingNotes] = useState(false);
+
+  // Sync agent notes whenever selected order changes
+  useEffect(() => {
+    setAgentNotes(order?.agent_notes || "");
+  }, [order?.id, order?.agent_notes]);
 
   if (!order) return null;
 
@@ -342,9 +349,6 @@ export function OrderDrawer({
 
   // Note client propre (sans JSON technique automatique)
   const cleanCustomerNote = getCleanCustomerNote(order.notes);
-
-  const [agentNotes, setAgentNotes] = useState(order?.agent_notes || "");
-  const [savingNotes, setSavingNotes] = useState(false);
 
   // ── Advance order status ─────────────────────────────────────────────────
   const handleStatusAdvance = async (next: Order["status"], cancelReason?: string) => {
