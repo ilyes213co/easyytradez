@@ -11,6 +11,7 @@ import EasyTradeLogo from "@/components/brand/EasyTradeLogo";
 import SidebarNav from "@/components/dashboard/SidebarNav";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import { useUserRole } from "@/lib/use-user-role";
+import { InvitationGateModal } from "@/components/dashboard/InvitationGateModal";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
@@ -25,10 +26,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [user, loading, router]);
 
-  // Verrouillage d'accès strict pour les confirmateurs / employés :
+  // Verrouillage d'accès strict pour les confirmateurs / employés (status = 'active') :
   // Redirection automatique vers /dashboard/orders si tentative d'accès à une autre route
   useEffect(() => {
-    if (!loading && !userRole.isLoading && userRole.isMember) {
+    if (!loading && !userRole.isLoading && userRole.isMember && !userRole.isOwner) {
       const isAllowed =
         pathname === "/dashboard/orders" ||
         pathname === "/dashboard/funnel/orders" ||
@@ -154,6 +155,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </div>
       </main>
+
+      {/* ─── Modale d'acceptation / refus d'invitation Call Center ─── */}
+      <InvitationGateModal />
     </div>
   );
 }

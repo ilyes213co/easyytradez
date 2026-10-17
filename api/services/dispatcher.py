@@ -65,11 +65,11 @@ def assign_order_smartly(
             )
             members = retro_res.data or []
 
-        # Filtrer uniquement les membres actifs
+        # Filtrer uniquement les membres actifs (qui ont accepté l'invitation)
         active_members: List[Dict[str, Any]] = [
             m for m in members
-            if m.get("is_active") is not False
-            and str(m.get("status", "")).lower() in ("active", "invited", "")
+            if m.get("is_active") is True
+            and str(m.get("status", "")).lower() == "active"
         ]
 
         if not active_members:
@@ -202,8 +202,8 @@ def rebalance_orders(
         members = members_res.data or []
         active_members: List[Dict[str, Any]] = [
             m for m in members
-            if m.get("is_active") is not False
-            and str(m.get("status", "")).lower() in ("active", "invited", "")
+            if m.get("is_active") is True
+            and str(m.get("status", "")).lower() == "active"
         ]
 
         if not active_members:

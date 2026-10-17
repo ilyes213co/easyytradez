@@ -67,8 +67,8 @@ export async function assignOrderSmartly(
 
     const activeMembers = (members || []).filter(
       (m: any) =>
-        m.is_active !== false &&
-        ["active", "invited", ""].includes(String(m.status || "").toLowerCase())
+        m.is_active === true &&
+        String(m.status || "").toLowerCase() === "active"
     );
 
     if (activeMembers.length === 0) {
@@ -210,8 +210,8 @@ export async function rebalanceOrders(
 
     const activeMembers = (members || []).filter(
       (m: any) =>
-        m.is_active !== false &&
-        ["active", "invited", ""].includes(String(m.status || "").toLowerCase())
+        m.is_active === true &&
+        String(m.status || "").toLowerCase() === "active"
     );
 
     if (!activeMembers.length) {

@@ -293,8 +293,8 @@ export default function TeamPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Équipe & Performance Téléopérateurs
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <span>Call Center & Équipe de Confirmation</span>
             </h1>
             <span
               className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
@@ -303,11 +303,11 @@ export default function TeamPage() {
                   : "bg-slate-100 text-slate-600 border-slate-300 dark:bg-white/[0.05] dark:text-slate-400 dark:border-white/[0.1]"
               }`}
             >
-              {isBusiness ? "Pack Business Actif" : "Exclusivité Business"}
+              {isBusiness ? "Call Center Actif" : "Exclusivité Business"}
             </span>
           </div>
           <p className="text-slate-500 dark:text-white/60 text-sm mt-1">
-            Smart Dispatch global multi-boutiques, suivi des appels COD et pilotage des confirmateurs.
+            Gestion du Call Center COD, invitation de téléopérateurs, Smart Dispatch multi-boutiques et suivi des confirmations en temps réel.
           </p>
         </div>
 
@@ -431,7 +431,7 @@ export default function TeamPage() {
 
             <div className="space-y-2">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                Déléguez et pilotez vos ventes avec votre équipe COD 👥
+                Pilotez vos ventes avec votre Call Center COD 🎧
               </h2>
               <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
                 Le Pack Business vous permet d&apos;inviter vos téléopérateurs de confirmation COD, de répartir automatiquement les commandes via le Smart Dispatch multi-funnels, et de mesurer le taux de confirmation de chaque employé en temps réel.
@@ -480,10 +480,10 @@ export default function TeamPage() {
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Performance & Leaderboard des Confirmateurs
+                Performance & Leaderboard du Call Center
               </h3>
               <p className="text-xs text-slate-500 dark:text-white/50">
-                Accès global sur tous vos Funnels et Boutiques. Les employés en pause ne reçoivent plus de commandes automatiques.
+                Accès global sur tous vos Funnels et Boutiques. Les téléopérateurs en pause ne reçoivent plus de commandes automatiques.
               </p>
             </div>
           </div>
@@ -709,7 +709,7 @@ export default function TeamPage() {
                   <UserPlus className="w-5 h-5" />
                 </div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Inviter un Confirmateur COD
+                  Inviter au Call Center COD
                 </h3>
               </div>
               <button
@@ -738,7 +738,7 @@ export default function TeamPage() {
                   />
                 </div>
                 <p className="text-[11px] text-slate-400 dark:text-white/40 mt-1">
-                  Ce membre aura un accès immédiat aux commandes de tous vos Funnels et Boutiques.
+                  Une invitation lui sera présentée dès sa connexion. Dès qu&apos;il l&apos;accepte, le Smart Dispatch lui attribuera ses commandes.
                 </p>
               </div>
 

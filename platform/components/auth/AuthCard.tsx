@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2, ArrowRight, ArrowLeft, Mail, KeyRound, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowRight, ArrowLeft, Mail, KeyRound, Sparkles, ExternalLink, RotateCw, Pencil } from "lucide-react";
 import EasyTradeLogo from "@/components/brand/EasyTradeLogo";
 import ThreeAmbientScene from "@/components/brand/ThreeAmbientScene";
 import OtpInput from "@/components/auth/OtpInput";
@@ -43,6 +43,84 @@ function AuthCardContent({ initialMode = "login" }: AuthCardProps) {
       toast.error(decodeURIComponent(errorParam));
     }
   }, [searchParams]);
+
+  // Cooldown for resending confirmation email
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  // Auto-detect confirmation: if user confirms via email in another tab/device, redirect automatically
+  useEffect(() => {
+    if (step !== "email_confirm_sent") return;
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        toast.success("Email confirmé avec succès ! Redirection vers votre tableau de bord...");
+        router.push("/dashboard");
+      }
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, [step, supabase, router]);
+
+  // Detect Webmail provider from email address
+  const getEmailProvider = (emailStr: string) => {
+    const domain = (emailStr.split("@")[1] || "").toLowerCase().trim();
+    if (domain.includes("gmail") || domain.includes("googlemail")) {
+      return {
+        name: "Gmail",
+        url: "https://mail.google.com",
+        type: "gmail",
+      };
+    }
+    if (
+      domain.includes("outlook") ||
+      domain.includes("hotmail") ||
+      domain.includes("live") ||
+      domain.includes("msn")
+    ) {
+      return {
+        name: "Outlook",
+        url: "https://outlook.live.com/mail/",
+        type: "outlook",
+      };
+    }
+    if (domain.includes("yahoo")) {
+      return {
+        name: "Yahoo Mail",
+        url: "https://mail.yahoo.com",
+        type: "yahoo",
+      };
+    }
+    if (domain.includes("icloud") || domain.includes("me.com") || domain.includes("mac.com")) {
+      return {
+        name: "iCloud Mail",
+        url: "https://www.icloud.com/mail",
+        type: "icloud",
+      };
+    }
+    if (domain.includes("proton")) {
+      return {
+        name: "Proton Mail",
+        url: "https://mail.proton.me",
+        type: "proton",
+      };
+    }
+    return {
+      name: "boîte mail",
+      url: null,
+      domain,
+      type: "custom",
+    };
+  };
 
   // Reset step if mode changes
   const switchMode = (newMode: "login" | "register") => {
@@ -464,73 +542,237 @@ function AuthCardContent({ initialMode = "login" }: AuthCardProps) {
           )}
 
           {/* STEP 3: Email Confirmation Sent Screen */}
-          {step === "email_confirm_sent" && (
-            <div className="space-y-6 text-center py-4">
-              <div
-                className="w-16 h-16 mx-auto rounded-full flex items-center justify-center shadow-lg"
-                style={{
-                  background: "rgba(37, 64, 234, 0.2)",
-                  border: "1px solid var(--border, rgba(96, 165, 250, 0.4))",
-                  boxShadow: "0 0 24px rgba(37, 64, 234, 0.4)",
-                }}
-              >
-                <Mail className="w-8 h-8 text-sky-300 animate-pulse" />
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white tracking-tight">
-                  Vérifiez votre boîte mail
-                </h3>
-                <p className="text-xs text-white/70 max-w-sm mx-auto leading-relaxed">
-                  Un email d&apos;activation a été envoyé à{" "}
-                  <strong className="text-white font-semibold">{email.trim()}</strong>.
-                  Veuillez cliquer sur le lien dans votre boîte de réception pour valider votre compte.
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 text-xs text-white/60 space-y-1 text-left">
-                <p className="font-semibold text-white/80">💡 Vous n&apos;avez rien reçu ?</p>
-                <p>Pensez à vérifier vos courriers indésirables (Spam) ou cliquez ci-dessous pour renvoyer le lien.</p>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const { error } = await supabase.auth.resend({
-                      type: "signup",
-                      email: email.trim(),
-                      options: {
-                        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-                      },
-                    });
-                    if (error) {
-                      toast.error(error.message);
-                    } else {
-                      toast.success("Lien de confirmation renvoyé avec succès !");
-                    }
-                  }}
-                  className="w-full py-3 rounded-xl font-bold text-xs text-white/90 hover:text-white bg-white/10 hover:bg-white/15 border border-white/10 transition-all"
-                >
-                  Renvoyer l&apos;email de confirmation
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    switchMode("login");
-                    setStep("form");
-                  }}
-                  className="w-full py-3 rounded-xl font-bold text-sm text-white bg-accent hover:bg-accent/90 transition-all shadow-md shadow-accent/30"
+          {step === "email_confirm_sent" && (() => {
+            const provider = getEmailProvider(email);
+            return (
+              <div className="space-y-6 text-center py-4">
+                <div
+                  className="w-16 h-16 mx-auto rounded-full flex items-center justify-center shadow-lg"
                   style={{
-                    background: "linear-gradient(135deg, var(--g, #2540ea) 0%, var(--gd, #1a2ca3) 100%)",
+                    background: "rgba(37, 64, 234, 0.2)",
+                    border: "1px solid var(--border, rgba(96, 165, 250, 0.4))",
+                    boxShadow: "0 0 24px rgba(37, 64, 234, 0.4)",
                   }}
                 >
-                  J&apos;ai confirmé mon email — Se connecter
-                </button>
+                  <Mail className="w-8 h-8 text-sky-300 animate-pulse" />
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-white tracking-tight">
+                    Vérifiez votre boîte mail
+                  </h3>
+                  <p className="text-xs text-white/70 max-w-sm mx-auto leading-relaxed">
+                    Un email d&apos;activation a été envoyé à :<br />
+                    <span className="text-sky-300 font-bold break-all inline-block mt-0.5">
+                      {email.trim()}
+                    </span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("register");
+                      setStep("form");
+                    }}
+                    className="text-[11px] text-white/50 hover:text-white transition inline-flex items-center justify-center gap-1 underline decoration-dotted mt-1"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    Modifier l&apos;adresse email
+                  </button>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 text-xs text-white/60 space-y-1 text-left">
+                  <p className="font-semibold text-white/80">💡 Vous n&apos;avez rien reçu ?</p>
+                  <p>Pensez à vérifier vos courriers indésirables (Spam) ou cliquez ci-dessous pour renvoyer le lien.</p>
+                </div>
+
+                <div className="space-y-2.5 pt-2">
+                  {/* Dynamic Primary Webmail Button(s) */}
+                  {provider.type === "gmail" && (
+                    <a
+                      href="https://mail.google.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2.5 transition active:scale-[0.99] shadow-lg shadow-blue-600/30"
+                      style={{
+                        background: "linear-gradient(135deg, var(--g, #2540ea) 0%, var(--gd, #1a2ca3) 100%)",
+                      }}
+                    >
+                      <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.66-5.17 3.66-9.12z" />
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.13C3.27 21.36 7.34 24 12 24z" />
+                        <path fill="#FBBC05" d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.58H1.26C.46 8.17 0 9.99 0 12s.46 3.83 1.26 5.42l4.02-3.13z" />
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.27 2.64 1.26 6.58l4.02 3.13c.95-2.83 3.6-4.96 6.72-4.96z" />
+                      </svg>
+                      <span>Ouvrir Gmail</span>
+                      <ExternalLink className="w-4 h-4 text-white/70 ml-0.5" />
+                    </a>
+                  )}
+
+                  {provider.type === "outlook" && (
+                    <a
+                      href="https://outlook.live.com/mail/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2.5 transition active:scale-[0.99] shadow-lg shadow-blue-600/30"
+                      style={{
+                        background: "linear-gradient(135deg, var(--g, #2540ea) 0%, var(--gd, #1a2ca3) 100%)",
+                      }}
+                    >
+                      <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
+                        <rect x="2" y="2" width="20" height="20" rx="4" fill="#0078D4" />
+                        <path d="M13 6h5v12h-5V6z" fill="#28A8EA" />
+                        <path d="M13 9.5h5v5h-5v-5z" fill="#50E6FF" />
+                        <circle cx="8.5" cy="12" r="3.5" fill="#FFFFFF" />
+                      </svg>
+                      <span>Ouvrir Outlook</span>
+                      <ExternalLink className="w-4 h-4 text-white/70 ml-0.5" />
+                    </a>
+                  )}
+
+                  {provider.type === "yahoo" && (
+                    <a
+                      href="https://mail.yahoo.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2.5 transition active:scale-[0.99] shadow-lg shadow-purple-600/30"
+                      style={{
+                        background: "linear-gradient(135deg, #6001D2 0%, #440099 100%)",
+                      }}
+                    >
+                      <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="#6001D2">
+                        <rect width="24" height="24" rx="4" fill="#6001D2" />
+                        <path d="M6 6l4.5 7.5V19h3v-5.5L18 6h-3.2l-2.8 5.2L9.2 6H6z" fill="#FFFFFF" />
+                      </svg>
+                      <span>Ouvrir Yahoo Mail</span>
+                      <ExternalLink className="w-4 h-4 text-white/70 ml-0.5" />
+                    </a>
+                  )}
+
+                  {provider.type === "icloud" && (
+                    <a
+                      href="https://www.icloud.com/mail"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2.5 transition active:scale-[0.99] shadow-lg shadow-blue-600/30"
+                      style={{
+                        background: "linear-gradient(135deg, var(--g, #2540ea) 0%, var(--gd, #1a2ca3) 100%)",
+                      }}
+                    >
+                      <Mail className="w-5 h-5 text-sky-300" />
+                      <span>Ouvrir iCloud Mail</span>
+                      <ExternalLink className="w-4 h-4 text-white/70 ml-0.5" />
+                    </a>
+                  )}
+
+                  {provider.type === "proton" && (
+                    <a
+                      href="https://mail.proton.me"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2.5 transition active:scale-[0.99] shadow-lg shadow-purple-600/30"
+                      style={{
+                        background: "linear-gradient(135deg, #6d4aff 0%, #4b2bd9 100%)",
+                      }}
+                    >
+                      <Mail className="w-5 h-5 text-purple-200" />
+                      <span>Ouvrir Proton Mail</span>
+                      <ExternalLink className="w-4 h-4 text-white/70 ml-0.5" />
+                    </a>
+                  )}
+
+                  {provider.type === "custom" && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <a
+                        href="https://mail.google.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="py-3 px-3 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 transition active:scale-[0.99] shadow-md shadow-blue-600/20"
+                        style={{
+                          background: "linear-gradient(135deg, var(--g, #2540ea) 0%, var(--gd, #1a2ca3) 100%)",
+                        }}
+                      >
+                        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.66-5.17 3.66-9.12z" />
+                          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.13C3.27 21.36 7.34 24 12 24z" />
+                          <path fill="#FBBC05" d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.58H1.26C.46 8.17 0 9.99 0 12s.46 3.83 1.26 5.42l4.02-3.13z" />
+                          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.27 2.64 1.26 6.58l4.02 3.13c.95-2.83 3.6-4.96 6.72-4.96z" />
+                        </svg>
+                        <span>Ouvrir Gmail</span>
+                        <ExternalLink className="w-3.5 h-3.5 text-white/70" />
+                      </a>
+                      <a
+                        href="https://outlook.live.com/mail/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="py-3 px-3 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 transition active:scale-[0.99] shadow-md shadow-blue-600/20"
+                        style={{
+                          background: "linear-gradient(135deg, var(--g, #2540ea) 0%, var(--gd, #1a2ca3) 100%)",
+                        }}
+                      >
+                        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
+                          <rect x="2" y="2" width="20" height="20" rx="4" fill="#0078D4" />
+                          <circle cx="8.5" cy="12" r="3.5" fill="#FFFFFF" />
+                        </svg>
+                        <span>Ouvrir Outlook</span>
+                        <ExternalLink className="w-3.5 h-3.5 text-white/70" />
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Resend Confirmation Email Button with 60s cooldown */}
+                  <button
+                    type="button"
+                    disabled={resendCooldown > 0}
+                    onClick={async () => {
+                      if (resendCooldown > 0) return;
+                      const { error } = await supabase.auth.resend({
+                        type: "signup",
+                        email: email.trim(),
+                        options: {
+                          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+                        },
+                      });
+                      if (error) {
+                        toast.error(error.message);
+                      } else {
+                        toast.success("Lien de confirmation renvoyé avec succès !");
+                        setResendCooldown(60);
+                      }
+                    }}
+                    className={`w-full py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 border ${
+                      resendCooldown > 0
+                        ? "bg-white/5 border-white/5 text-white/40 cursor-not-allowed"
+                        : "text-white/90 hover:text-white bg-white/10 hover:bg-white/15 border-white/10"
+                    }`}
+                  >
+                    <RotateCw className={`w-3.5 h-3.5 text-white/70 ${resendCooldown > 0 ? "animate-spin" : ""}`} />
+                    <span>
+                      {resendCooldown > 0
+                        ? `Renvoyer l'email (${resendCooldown}s)`
+                        : "Renvoyer l'email de confirmation"}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Subtle login link if already validated on mobile or another device */}
+                <div className="pt-2 text-center">
+                  <p className="text-xs text-white/50">
+                    Déjà validé sur un autre appareil ?{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        switchMode("login");
+                        setStep("form");
+                      }}
+                      className="text-sky-300 font-semibold hover:underline"
+                    >
+                      Se connecter
+                    </button>
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* STEP 1: Main Form */}
           {step === "form" && (

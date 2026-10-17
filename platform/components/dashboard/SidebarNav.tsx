@@ -20,6 +20,7 @@ import {
   ShieldAlert,
   Truck,
   CreditCard,
+  Headset,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -39,7 +40,7 @@ const FUNNEL_ITEMS: NavItemConfig[] = [
   { label: "Accueil",      href: "/dashboard?section=funnel",  icon: Home, exact: true },
   { label: "Commandes",    href: "/dashboard/funnel/orders",   icon: Package },
   { label: "Produits",     href: "/dashboard/funnel/products", icon: Tag },
-  { label: "Leads",        href: "/dashboard/team",            icon: Users },
+  { label: "Call Center",  href: "/dashboard/team",            icon: Headset },
   { label: "Funnels",      href: "/dashboard/funnel",          icon: Layers, exact: true },
   { label: "Analytiques",  href: "/dashboard/analytics?section=funnel", icon: BarChart2 },
 ];
@@ -48,7 +49,7 @@ const BOUTIQUE_ITEMS: NavItemConfig[] = [
   { label: "Accueil",      href: "/dashboard?section=boutique", icon: Home, exact: true },
   { label: "Commandes",    href: "/dashboard/boutique/orders",   icon: Package },
   { label: "Produits",     href: "/dashboard/boutique/products", icon: Tag },
-  { label: "Leads",        href: "/dashboard/team",              icon: Users },
+  { label: "Call Center",  href: "/dashboard/team",              icon: Headset },
   { label: "Boutique",     href: "/dashboard/boutique",          icon: Store, exact: true },
   { label: "Analytiques",  href: "/dashboard/analytics?section=boutique", icon: BarChart2 },
 ];

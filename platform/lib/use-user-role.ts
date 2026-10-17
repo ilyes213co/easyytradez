@@ -4,12 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 export interface UserRoleData {
-  role: "owner" | "member";
+  role: "owner" | "member" | "member_and_owner";
   isOwner: boolean;
   isMember: boolean;
   ownerId?: string | null;
   memberId?: string | null;
   memberRole?: string | null;
+  hasPendingInvitations?: boolean;
   isLoading: boolean;
   refetch: () => void;
 }
@@ -21,6 +22,7 @@ const DEFAULT_ROLE: UserRoleData = {
   ownerId: null,
   memberId: null,
   memberRole: null,
+  hasPendingInvitations: false,
   isLoading: false,
   refetch: () => {},
 };
@@ -60,6 +62,7 @@ export function useUserRole(): UserRoleData {
     ownerId: data.ownerId || null,
     memberId: data.memberId || null,
     memberRole: data.memberRole || null,
+    hasPendingInvitations: Boolean(data.hasPendingInvitations),
     isLoading: false,
     refetch,
   };

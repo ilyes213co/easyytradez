@@ -244,15 +244,24 @@ export default function OrdersView({ type }: OrdersViewProps) {
       };
     }) as Order[];
 
-    // Pour un employé / confirmateur : ne voir que les commandes qui lui sont assignées
+    // Pour un employé / confirmateur : ne voir que les commandes qui lui sont assignées + commandes en attente non assignées
     const isMemberUser = memberRole || userRole.isMember;
     let effectiveOrders = mappedOrders;
     if (isMemberUser) {
       const myUserId = user.id;
       const myMemberId = userRole.memberId;
-      effectiveOrders = mappedOrders.filter(
-        (o) => o.assigned_to === myUserId || (myMemberId && o.assigned_to === myMemberId)
-      );
+      const myEmail = (user.email || "").toLowerCase().trim();
+      effectiveOrders = mappedOrders.filter((o) => {
+        const isAssignedToMe =
+          o.assigned_to === myUserId ||
+          (myMemberId && o.assigned_to === myMemberId) ||
+          ((o as any).assigned_to_email &&
+            String((o as any).assigned_to_email).toLowerCase().trim() === myEmail);
+
+        const isUnassignedPending = !o.assigned_to && o.status === "pending";
+
+        return isAssignedToMe || isUnassignedPending;
+      });
     }
 
     setOrders(effectiveOrders);
@@ -295,13 +304,18 @@ export default function OrdersView({ type }: OrdersViewProps) {
           const raw = payload.new as any;
           if (!raw || (raw.store_id && !storeIds.includes(raw.store_id))) return;
 
-          // Si employé, ignorer les commandes non assignées à cet employé
+          // Si employé, autoriser les commandes assignées OU les commandes pending non assignées
           const isMemberUser = isMember || userRole.isMember;
           if (isMemberUser) {
+            const userEmail = (user?.email || "").toLowerCase().trim();
             const isMine =
               raw.assigned_to === user?.id ||
-              (userRole.memberId && raw.assigned_to === userRole.memberId);
-            if (!isMine) return;
+              (userRole.memberId && raw.assigned_to === userRole.memberId) ||
+              (raw.assigned_to_email &&
+                String(raw.assigned_to_email).toLowerCase().trim() === userEmail);
+            const isUnassignedPending = !raw.assigned_to && raw.status === "pending";
+
+            if (!isMine && !isUnassignedPending) return;
           }
 
           const st = storesMap.get(raw.store_id);

@@ -10,27 +10,20 @@ export async function GET(req: NextRequest) {
 
     const admin = getAdminClient();
 
-    // 1. Vérifier si l'utilisateur possède des boutiques
-    const { count: storeCount, error: storeErr } = await admin
-      .from("stores")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", user.id);
-
-    if (storeErr) {
-      console.warn("Error checking store ownership:", storeErr);
-    }
-
-    if (storeCount && storeCount > 0) {
-      return NextResponse.json({
-        role: "owner",
-        isOwner: true,
-        isMember: false,
-        ownerId: user.id,
-      });
-    }
-
-    // 2. Si aucune boutique possédée, vérifier s'il est membre actif d'une équipe
     const userEmail = (user.email || "").toLowerCase().trim();
+
+    // 1. Relier automatiquement user_id si une invitation correspond à cet email (laisse status intact)
+    try {
+      await admin
+        .from("store_members")
+        .update({ user_id: user.id })
+        .is("user_id", null)
+        .or(`email.eq.${userEmail},user_email.eq.${userEmail}`);
+    } catch (linkErr) {
+      console.warn("Error auto-linking user_id in store_members:", linkErr);
+    }
+
+    // 2. Récupérer toutes les adhésions de l'utilisateur
     const { data: memberships, error: memberErr } = await admin
       .from("store_members")
       .select("id, owner_id, role, is_active, status")
@@ -40,11 +33,29 @@ export async function GET(req: NextRequest) {
       console.warn("Error checking store memberships:", memberErr);
     }
 
+    // Un membre n'est ACTIF que s'il a explicitement accepté l'invitation (status = 'active' et is_active = true)
     const activeMember = (memberships || []).find(
-      (m: any) => m.is_active !== false && (m.status === "active" || m.status === "invited" || !m.status)
+      (m: any) => m.is_active === true && String(m.status || "").toLowerCase() === "active"
     );
 
-    if (activeMember) {
+    const pendingInvites = (memberships || []).filter(
+      (m: any) => String(m.status || "").toLowerCase() === "invited"
+    );
+
+    // 3. Vérifier si l'utilisateur possède des boutiques
+    const { count: storeCount, error: storeErr } = await admin
+      .from("stores")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", user.id);
+
+    if (storeErr) {
+      console.warn("Error checking store ownership:", storeErr);
+    }
+
+    const hasStores = Boolean(storeCount && storeCount > 0);
+
+    // Cas 1 : Utilisateur confirmateur pur (sans boutique propre) avec adhésion acceptée
+    if (activeMember && !hasStores) {
       return NextResponse.json({
         role: "member",
         isOwner: false,
@@ -52,15 +63,31 @@ export async function GET(req: NextRequest) {
         ownerId: activeMember.owner_id,
         memberId: activeMember.id,
         memberRole: activeMember.role || "support",
+        hasPendingInvitations: pendingInvites.length > 0,
       });
     }
 
-    // 3. Nouvel utilisateur sans boutique ni équipe = compte propriétaire standard
+    // Cas 2 : Propriétaire ayant ses propres boutiques (et potentiellement membre actif d'un autre call center)
+    if (hasStores) {
+      return NextResponse.json({
+        role: activeMember ? "member_and_owner" : "owner",
+        isOwner: true,
+        isMember: Boolean(activeMember),
+        ownerId: user.id,
+        memberId: activeMember?.id || null,
+        memberRole: activeMember?.role || null,
+        memberOwnerId: activeMember?.owner_id || null,
+        hasPendingInvitations: pendingInvites.length > 0,
+      });
+    }
+
+    // Cas 3 : Nouvel utilisateur sans boutique ni adhésion active
     return NextResponse.json({
       role: "owner",
       isOwner: true,
       isMember: false,
       ownerId: user.id,
+      hasPendingInvitations: pendingInvites.length > 0,
     });
   } catch (err: any) {
     console.error("Error in /api/user/role:", err);

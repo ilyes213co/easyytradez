@@ -98,14 +98,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Rechercher si l'utilisateur invité possède déjà un compte pour lier son user_id
+    let existingUserId: string | null = null;
+    try {
+      const { data: authUsers } = await admin.auth.admin.listUsers();
+      const found = (authUsers?.users || []).find(
+        (u) => (u.email || "").toLowerCase().trim() === userEmail
+      );
+      if (found?.id) {
+        existingUserId = found.id;
+      }
+    } catch (e) {
+      console.warn("Could not check auth.users on invite:", e);
+    }
+
     const memberPayload = {
       owner_id: user.id,
       store_id: storeId || null,
       email: userEmail,
       user_email: userEmail,
+      user_id: existingUserId,
       role,
       status: "invited",
-      is_active: true,
+      is_active: false,
     };
 
     // 3. Vérification des doublons

@@ -6,9 +6,21 @@ import { getAuthUser, safeUpdate } from "@/lib/api-auth";
 
 
 function getSupabaseAdmin() {
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!
+    serviceKey,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    }
   );
 }
 
@@ -378,7 +390,7 @@ export async function GET(req: NextRequest) {
         .or(`user_id.eq.${user.id},email.eq.${userEmail},user_email.eq.${userEmail}`);
 
       const activeMemberships = (memberships || []).filter(
-        (m: any) => m.status === "active" || m.status === "invited" || !m.status
+        (m: any) => m.is_active === true && m.status === "active"
       );
 
       memberIds = activeMemberships.map((m: any) => m.id).filter(Boolean);
@@ -447,10 +459,19 @@ export async function GET(req: NextRequest) {
 
     let finalOrders = formattedOrders;
     if (userRole === "member") {
-      const allowedAssignees = new Set([user.id, ...memberIds]);
-      finalOrders = formattedOrders.filter(
-        (o: any) => o.assigned_to && allowedAssignees.has(o.assigned_to)
-      );
+      const allowedAssignees = new Set([user.id, ...memberIds].filter(Boolean));
+      const userEmail = (user.email || "").toLowerCase().trim();
+      finalOrders = formattedOrders.filter((o: any) => {
+        // 1. Commande assignée à ce téléopérateur (via auth.uid() ou store_members.id ou email)
+        const isAssignedToMe =
+          (o.assigned_to && allowedAssignees.has(o.assigned_to)) ||
+          (o.assigned_to_email && String(o.assigned_to_email).toLowerCase().trim() === userEmail);
+
+        // 2. Commande non encore assignée (en attente dans le pool de l'équipe du propriétaire)
+        const isUnassignedPending = !o.assigned_to && o.status === "pending";
+
+        return isAssignedToMe || isUnassignedPending;
+      });
     }
 
     return NextResponse.json({

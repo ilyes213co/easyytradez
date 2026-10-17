@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import type { Order } from "@/lib/supabase";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   generateWhatsAppUrl,
   formatWhatsAppPhone,
@@ -316,6 +317,7 @@ export function OrderDrawer({
   store,
 }: OrderDrawerProps) {
   const supabase = getSupabaseBrowserClient();
+  const { user } = useAuth();
   const [updating, setUpdating] = useState(false);
   const [payUpdating, setPayUpdating] = useState(false);
   const [slipModalOpen, setSlipModalOpen] = useState(false);
@@ -347,12 +349,20 @@ export function OrderDrawer({
   // ── Advance order status ─────────────────────────────────────────────────
   const handleStatusAdvance = async (next: Order["status"], cancelReason?: string) => {
     setUpdating(true);
+    const nowIso = new Date().toISOString();
     const updatePayload: Record<string, any> = { status: next };
     if (cancelReason) {
       updatePayload.cancel_reason = cancelReason;
     }
     if (next === "confirmed") {
-      updatePayload.confirmed_at = new Date().toISOString();
+      updatePayload.confirmed_at = nowIso;
+      if (user?.id) {
+        updatePayload.confirmed_by = user.id;
+      }
+    }
+    if (!order.assigned_to && user?.id) {
+      updatePayload.assigned_to = user.id;
+      updatePayload.assigned_at = nowIso;
     }
     if (next === "no_answer" || next === "callback") {
       updatePayload.call_attempts = Number(order.call_attempts || 0) + 1;
