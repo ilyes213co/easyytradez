@@ -36,6 +36,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
     alternates: {
       canonical: storeUrl,
     },
+    icons: store.logo_url ? [{ url: store.logo_url }] : undefined,
     openGraph: {
       title: store.name,
       description: store.description ?? `Découvrez les produits de ${store.name}`,

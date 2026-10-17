@@ -41,12 +41,15 @@ import {
   ChevronDown,
   ChevronUp,
   RotateCcw,
+  Upload,
+  ImagePlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useUserPlan } from "@/lib/use-user-plan";
 import UpgradeModal from "@/components/dashboard/UpgradeModal";
+import { uploadApi, storesApi } from "@/lib/api";
 
 const DZ_WILAYAS = [
   { id: 1, name: "01 - Adrar" },
@@ -121,6 +124,7 @@ interface StoreSettingsData {
   name: string;
   slug: string;
   type: string;
+  logo_url?: string | null;
   custom_domain?: string | null;
   whatsapp_phone?: string | null;
   facebook_pixel_id?: string | null;
@@ -202,6 +206,8 @@ function SettingsContent() {
 
   // Form Fields State
   // Tab 1: Pixels & Domain
+  const [logoUrl, setLogoUrl] = useState("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [customDomain, setCustomDomain] = useState("");
   const [fbPixelId, setFbPixelId] = useState("");
   const [tiktokPixelId, setTiktokPixelId] = useState("");
@@ -287,6 +293,7 @@ function SettingsContent() {
   // Populate fields from store object
   const populateFields = (store: StoreSettingsData) => {
     const s = store.settings || {};
+    setLogoUrl(store.logo_url || "");
     setCustomDomain(store.custom_domain || "");
     setFbPixelId(store.facebook_pixel_id || "");
     setTiktokPixelId(store.tiktok_pixel_id || "");
@@ -339,6 +346,51 @@ function SettingsContent() {
     setCopiedUrl(true);
     toast.success("Lien de la boutique copié !");
     setTimeout(() => setCopiedUrl(false), 2500);
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentStore) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Veuillez sélectionner un fichier image valide (PNG, JPG, WebP, SVG)");
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const res = await uploadApi.logo(file, currentStore.id);
+      if (res?.url) {
+        await storesApi.update(currentStore.id, { logo_url: res.url });
+        setLogoUrl(res.url);
+        setStores((prev) =>
+          prev.map((s) => (s.id === currentStore.id ? { ...s, logo_url: res.url } : s))
+        );
+        toast.success("Logo de la marque enregistré avec succès !");
+      }
+    } catch (err: any) {
+      console.error("Erreur upload logo:", err);
+      toast.error(err.message || "Erreur lors de l'enregistrement du logo");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    if (!currentStore) return;
+    setUploadingLogo(true);
+    try {
+      await storesApi.update(currentStore.id, { logo_url: null });
+      setLogoUrl("");
+      setStores((prev) =>
+        prev.map((s) => (s.id === currentStore.id ? { ...s, logo_url: null } : s))
+      );
+      toast.success("Logo supprimé de la boutique");
+    } catch (err: any) {
+      toast.error("Erreur lors de la suppression du logo");
+    } finally {
+      setUploadingLogo(false);
+    }
   };
 
   // Generic Save Handler for Settings
@@ -728,6 +780,89 @@ function SettingsContent() {
 
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 font-mono text-xs text-slate-800 dark:text-white/80">
               {subDomainUrl}
+            </div>
+          </div>
+
+          {/* Logo de la Marque & Favicon Onglet Client */}
+          <div className="rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0d1c] p-6 sm:p-7 space-y-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                  <ImagePlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                    Logo Officiel de la Marque & Favicon
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-white/50">
+                    S&apos;affiche dans l&apos;en-tête de votre boutique ou funnel et remplace le logo EasyTradez dans l&apos;onglet du navigateur.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl bg-slate-50/80 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5">
+              {/* Preview container */}
+              <div className="relative w-28 h-28 rounded-2xl bg-white dark:bg-[#050611] border-2 border-dashed border-slate-200 dark:border-white/15 flex items-center justify-center p-2.5 overflow-hidden shadow-inner shrink-0 group">
+                {logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={logoUrl}
+                    alt={currentStore?.name || "Logo"}
+                    className="w-full h-full object-contain transition-transform group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="text-center p-2">
+                    <span className="text-2xl block mb-1">🏷️</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-white/30 uppercase tracking-wider block">
+                      Sans Logo
+                    </span>
+                  </div>
+                )}
+                {uploadingLogo && (
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center text-white">
+                    <Loader2 className="w-6 h-6 animate-spin text-accent" />
+                  </div>
+                )}
+              </div>
+
+              {/* Upload actions and recommendations */}
+              <div className="flex-1 text-center sm:text-left space-y-2">
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    {logoUrl ? "Logo de marque actif" : "Personnalisez votre boutique avec votre propre logo"}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-white/50 mt-0.5">
+                    Format recommandé : PNG transparent, SVG ou WebP (min. 200×200 px). Apparaît automatiquement sur votre site public et en favicon.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5 justify-center sm:justify-start pt-1">
+                  <label className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-accent hover:bg-accent/90 shadow-sm transition-all cursor-pointer active:scale-95">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{logoUrl ? "Changer le logo" : "Importer un logo"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      disabled={uploadingLogo}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {logoUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveLogo}
+                      disabled={uploadingLogo}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Supprimer</span>
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
