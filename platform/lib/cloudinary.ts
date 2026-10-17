@@ -43,32 +43,75 @@ export async function uploadImageFile(file: File | Blob, folder: string, storeId
     }
   }
 
-  // 2. Fallback: Supabase Storage
+  // 2. Fallback: Supabase Storage (store-assets, products, public)
   try {
     const admin = getAdminClient();
     const ext = (file as any).name?.split(".").pop() || "png";
     const fileName = `${storeId || "misc"}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
     
-    // Ensure bucket exists or upload to 'products' or 'public'
-    const bucket = "products";
+    const candidateBuckets = ["store-assets", "products", "public"];
+    let uploadSuccess = false;
+    let finalUrl = "";
+    let lastError: any = null;
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const { data, error } = await admin.storage
-      .from(bucket)
-      .upload(fileName, buffer, {
-        contentType: (file as any).type || "image/png",
-        upsert: true,
-      });
+    for (const b of candidateBuckets) {
+      try {
+        const { error: upErr } = await admin.storage
+          .from(b)
+          .upload(fileName, buffer, {
+            contentType: (file as any).type || "image/png",
+            upsert: true,
+          });
 
-    if (error) {
-      console.warn("Supabase storage upload error:", error);
-      throw error;
+        if (!upErr) {
+          const { data: pubData } = admin.storage.from(b).getPublicUrl(fileName);
+          if (pubData?.publicUrl) {
+            finalUrl = pubData.publicUrl;
+            uploadSuccess = true;
+            break;
+          }
+        }
+
+        // Si le bucket n'existe pas, tente de le créer automatiquement
+        if (
+          upErr?.message?.toLowerCase().includes("not found") ||
+          (upErr as any)?.statusCode === "404" ||
+          (upErr as any)?.error === "Bucket not found"
+        ) {
+          await admin.storage.createBucket(b, { public: true }).catch(() => {});
+          const { error: retryErr } = await admin.storage
+            .from(b)
+            .upload(fileName, buffer, {
+              contentType: (file as any).type || "image/png",
+              upsert: true,
+            });
+
+          if (!retryErr) {
+            const { data: pubData } = admin.storage.from(b).getPublicUrl(fileName);
+            if (pubData?.publicUrl) {
+              finalUrl = pubData.publicUrl;
+              uploadSuccess = true;
+              break;
+            }
+          }
+          lastError = retryErr;
+        } else {
+          lastError = upErr;
+        }
+      } catch (bucketErr) {
+        lastError = bucketErr;
+      }
     }
 
-    const { data: publicUrlData } = admin.storage.from(bucket).getPublicUrl(fileName);
+    if (!uploadSuccess || !finalUrl) {
+      throw lastError || new Error("Impossible de téléverser l'image dans le stockage Supabase");
+    }
+
     return {
-      url: publicUrlData.publicUrl,
+      url: finalUrl,
       public_id: fileName,
       width: 800,
       height: 800,
